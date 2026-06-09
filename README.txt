@@ -1,6 +1,6 @@
 BTC Loan Signal · MVRV Analyzer
 ================================
-https://0xtrvkc.github.io/dynamic-btc-analytics-dashboard/
+https://0xtrvkc.github.io/btcLoanAnalyzer/
 
 Single-file dashboard for deciding whether current BTC on-chain conditions
 make it reasonable to take a collateralized loan (Binance Flexible Loan).
@@ -30,9 +30,8 @@ Not live — refresh the hardcoded values manually when you want an update.
 
 Usage
 -----
-Just open the HTML. Or drop it on any static host / gh-pages.
-For the AI analyzer to work the page needs to be served (not file://) 
-since it calls the Anthropic API.
+Download .txt > https://0xtrvkc.github.io/dynamic-btc-analytics-dashboard/
+Then upload to this site.
 
 Notes
 -----

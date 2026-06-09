@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -7,6 +7,7 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Inter:wght@300;400;500;600&display=swap');
 
+  /* ── THEMES ───────────────────────────────────────── */
   :root {
     --ivory:    #F7F5F0;
     --ivory-2:  #EFEDE7;
@@ -18,6 +19,14 @@
     --grey-400: #9A9895;
     --grey-200: #D4D2CC;
     --white:    #FFFFFF;
+    --bg:       #F7F5F0;
+    --surface:  #FFFFFF;
+    --surface-2:#EFEDE7;
+    --surface-3:#E5E2DA;
+    --border:   #D4D2CC;
+    --text:     #111110;
+    --text-mid: #6B6A66;
+    --text-dim: #9A9895;
 
     --signal-good:    #1A7A4A;
     --signal-good-bg: #EBF5EF;
@@ -30,26 +39,53 @@
     --sans: 'Inter', sans-serif;
   }
 
+  [data-theme="dark"] {
+    --ivory:    #1A1917;
+    --ivory-2:  #222120;
+    --ivory-3:  #2A2927;
+    --black:    #F0EEE9;
+    --grey-900: #E8E6E1;
+    --grey-700: #C8C6C2;
+    --grey-500: #9A9895;
+    --grey-400: #6B6A66;
+    --grey-200: #3A3936;
+    --white:    #1E1D1B;
+    --bg:       #111110;
+    --surface:  #1A1917;
+    --surface-2:#222120;
+    --surface-3:#2A2927;
+    --border:   #3A3936;
+    --text:     #F0EEE9;
+    --text-mid: #9A9895;
+    --text-dim: #6B6A66;
+
+    --signal-good:    #4ABA7A;
+    --signal-good-bg: #0D2B1A;
+    --signal-warn:    #C49A3A;
+    --signal-warn-bg: #2B2210;
+    --signal-bad:     #D45A5A;
+    --signal-bad-bg:  #2B1010;
+  }
+
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   html { font-size: 15px; }
-
   body {
-    background: var(--ivory);
-    color: var(--black);
+    background: var(--bg);
+    color: var(--text);
     font-family: var(--sans);
     font-weight: 400;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     min-height: 100vh;
+    transition: background 0.2s ease, color 0.2s ease;
   }
 
   /* ── HEADER ───────────────────────────────────────── */
   header {
-    border-bottom: 1px solid var(--grey-200);
-    padding: 24px 40px;
+    border-bottom: 1px solid var(--border);
+    padding: 20px 40px;
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: 16px;
   }
   .logo-mark {
@@ -58,21 +94,122 @@
     font-weight: 500;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--grey-500);
+    color: var(--text-mid);
   }
-  .logo-divider { color: var(--grey-200); }
+  .logo-divider { color: var(--border); }
   .logo-title {
     font-family: var(--sans);
     font-weight: 600;
     font-size: 14px;
-    color: var(--black);
+    color: var(--text);
     letter-spacing: -0.01em;
   }
   .header-date {
     margin-left: auto;
     font-family: var(--mono);
     font-size: 11px;
-    color: var(--grey-400);
+    color: var(--text-dim);
+  }
+
+  /* ── DARK MODE TOGGLE ─────────────────────────────── */
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 20px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .theme-toggle-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  .toggle-switch {
+    width: 34px;
+    height: 18px;
+    background: var(--border);
+    border-radius: 9px;
+    position: relative;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .toggle-switch::after {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--surface);
+    top: 3px;
+    left: 3px;
+    transition: transform 0.2s, background 0.2s;
+  }
+  [data-theme="dark"] .toggle-switch {
+    background: var(--text-mid);
+  }
+  [data-theme="dark"] .toggle-switch::after {
+    transform: translateX(16px);
+    background: var(--bg);
+  }
+
+  /* ── INPUTS BAR ───────────────────────────────────── */
+  .inputs-bar {
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 40px;
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+  .inputs-bar-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+  .input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .input-group label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-mid);
+    white-space: nowrap;
+  }
+  .input-group input {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 5px 10px;
+    width: 120px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .input-group input:focus {
+    border-color: var(--text-mid);
+  }
+  .input-group .unit {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .recalc-note {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
+    margin-left: auto;
   }
 
   /* ── MAIN LAYOUT ──────────────────────────────────── */
@@ -86,8 +223,8 @@
   .verdict-hero {
     margin-top: 48px;
     padding: 36px 40px;
-    border: 1px solid var(--grey-200);
-    background: var(--white);
+    border: 1px solid var(--border);
+    background: var(--surface);
     position: relative;
     overflow: hidden;
   }
@@ -103,7 +240,7 @@
     font-size: 10px;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--grey-400);
+    color: var(--text-dim);
     margin-bottom: 12px;
   }
   .verdict-main {
@@ -118,33 +255,28 @@
     font-weight: 600;
     letter-spacing: -0.02em;
     line-height: 1.2;
-    color: var(--black);
+    color: var(--text);
   }
-  .verdict-text h1 span {
-    color: var(--signal-good);
-  }
+  .verdict-text h1 span { color: var(--signal-good); }
   .verdict-sub {
     margin-top: 8px;
     font-size: 14px;
-    color: var(--grey-500);
+    color: var(--text-mid);
     max-width: 560px;
   }
-  .verdict-score {
-    text-align: right;
-    flex-shrink: 0;
-  }
+  .verdict-score { text-align: right; flex-shrink: 0; }
   .score-num {
     font-family: var(--mono);
     font-size: 52px;
     font-weight: 300;
     line-height: 1;
-    color: var(--black);
+    color: var(--text);
     letter-spacing: -0.03em;
   }
   .score-label {
     font-family: var(--mono);
     font-size: 11px;
-    color: var(--grey-400);
+    color: var(--text-dim);
     letter-spacing: 0.1em;
     text-transform: uppercase;
     margin-top: 4px;
@@ -156,11 +288,11 @@
     font-size: 10px;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--grey-400);
+    color: var(--text-dim);
     margin-top: 48px;
     margin-bottom: 16px;
     padding-bottom: 8px;
-    border-bottom: 1px solid var(--grey-200);
+    border-bottom: 1px solid var(--border);
   }
 
   /* ── LOAN MATH TABLE ──────────────────────────────── */
@@ -168,41 +300,41 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1px;
-    background: var(--grey-200);
-    border: 1px solid var(--grey-200);
+    background: var(--border);
+    border: 1px solid var(--border);
     margin-top: 16px;
   }
   .math-cell {
-    background: var(--white);
+    background: var(--surface);
     padding: 20px 24px;
   }
   .math-cell-full {
     grid-column: 1 / -1;
-    background: var(--ivory-2);
+    background: var(--surface-2);
   }
   .math-label {
     font-family: var(--mono);
     font-size: 10px;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--grey-400);
+    color: var(--text-dim);
     margin-bottom: 6px;
   }
   .math-value {
     font-family: var(--mono);
     font-size: 22px;
     font-weight: 400;
-    color: var(--black);
+    color: var(--text);
     letter-spacing: -0.02em;
   }
   .math-sub {
     font-size: 11px;
-    color: var(--grey-500);
+    color: var(--text-mid);
     margin-top: 3px;
   }
   .math-value.highlight { color: var(--signal-good); }
-  .math-value.warn { color: var(--signal-warn); }
-  .math-value.danger { color: var(--signal-bad); }
+  .math-value.warn      { color: var(--signal-warn); }
+  .math-value.danger    { color: var(--signal-bad); }
 
   /* ── SCENARIO TABLE ───────────────────────────────── */
   .scenario-grid {
@@ -212,55 +344,35 @@
     margin-top: 16px;
   }
   .scenario-card {
-    border: 1px solid var(--grey-200);
-    background: var(--white);
+    border: 1px solid var(--border);
+    background: var(--surface);
     padding: 24px;
     position: relative;
   }
   .scenario-card.best::before {
     content: 'BEST CASE';
-    font-family: var(--mono);
-    font-size: 9px;
-    letter-spacing: 0.18em;
-    background: var(--signal-good-bg);
-    color: var(--signal-good);
-    padding: 3px 8px;
-    display: inline-block;
-    margin-bottom: 14px;
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em;
+    background: var(--signal-good-bg); color: var(--signal-good);
+    padding: 3px 8px; display: inline-block; margin-bottom: 14px;
   }
   .scenario-card.worst::before {
     content: 'WORST CASE';
-    font-family: var(--mono);
-    font-size: 9px;
-    letter-spacing: 0.18em;
-    background: var(--signal-bad-bg);
-    color: var(--signal-bad);
-    padding: 3px 8px;
-    display: inline-block;
-    margin-bottom: 14px;
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em;
+    background: var(--signal-bad-bg); color: var(--signal-bad);
+    padding: 3px 8px; display: inline-block; margin-bottom: 14px;
   }
   .scenario-card h3 {
-    font-size: 15px;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    color: var(--black);
-    margin-bottom: 10px;
+    font-size: 15px; font-weight: 600; letter-spacing: -0.01em;
+    color: var(--text); margin-bottom: 10px;
   }
   .scenario-stat {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    padding: 6px 0;
-    border-bottom: 1px solid var(--ivory-3);
-    font-size: 13px;
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 6px 0; border-bottom: 1px solid var(--surface-3); font-size: 13px;
   }
   .scenario-stat:last-child { border-bottom: none; }
-  .scenario-stat .key { color: var(--grey-500); }
+  .scenario-stat .key { color: var(--text-mid); }
   .scenario-stat .val {
-    font-family: var(--mono);
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--black);
+    font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--text);
   }
   .scenario-stat .val.up { color: var(--signal-good); }
   .scenario-stat .val.dn { color: var(--signal-bad); }
@@ -270,299 +382,183 @@
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 1px;
-    background: var(--grey-200);
-    border: 1px solid var(--grey-200);
+    background: var(--border);
+    border: 1px solid var(--border);
     margin-top: 16px;
   }
-  .signal-cell {
-    background: var(--white);
-    padding: 18px 20px;
-  }
+  .signal-cell { background: var(--surface); padding: 18px 20px; }
   .sig-label {
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--grey-400);
-    margin-bottom: 8px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--text-dim); margin-bottom: 8px;
   }
   .sig-val {
-    font-family: var(--mono);
-    font-size: 19px;
-    font-weight: 400;
-    color: var(--black);
-    letter-spacing: -0.01em;
+    font-family: var(--mono); font-size: 19px; font-weight: 400;
+    color: var(--text); letter-spacing: -0.01em;
   }
-  .sig-context {
-    font-size: 11px;
-    color: var(--grey-500);
-    margin-top: 4px;
-    line-height: 1.4;
-  }
+  .sig-context { font-size: 11px; color: var(--text-mid); margin-top: 4px; line-height: 1.4; }
   .badge {
     display: inline-block;
-    font-family: var(--mono);
-    font-size: 9px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    padding: 2px 7px;
-    margin-top: 6px;
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em;
+    text-transform: uppercase; padding: 2px 7px; margin-top: 6px;
   }
-  .badge-good { background: var(--signal-good-bg); color: var(--signal-good); }
-  .badge-warn { background: var(--signal-warn-bg); color: var(--signal-warn); }
-  .badge-bad  { background: var(--signal-bad-bg);  color: var(--signal-bad); }
-  .badge-neutral { background: var(--ivory-3); color: var(--grey-700); }
+  .badge-good    { background: var(--signal-good-bg); color: var(--signal-good); }
+  .badge-warn    { background: var(--signal-warn-bg); color: var(--signal-warn); }
+  .badge-bad     { background: var(--signal-bad-bg);  color: var(--signal-bad); }
+  .badge-neutral { background: var(--surface-3); color: var(--text-mid); }
 
   /* ── CYCLE CONTEXT ────────────────────────────────── */
   .cycle-bar-wrap {
-    margin-top: 16px;
-    background: var(--white);
-    border: 1px solid var(--grey-200);
-    padding: 24px 28px;
+    margin-top: 16px; background: var(--surface);
+    border: 1px solid var(--border); padding: 24px 28px;
   }
   .cycle-bar-label {
-    display: flex;
-    justify-content: space-between;
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--grey-400);
-    margin-bottom: 8px;
+    display: flex; justify-content: space-between;
+    font-family: var(--mono); font-size: 11px; color: var(--text-dim); margin-bottom: 8px;
   }
-  .cycle-bar-track {
-    height: 6px;
-    background: var(--ivory-3);
-    position: relative;
-  }
+  .cycle-bar-track { height: 6px; background: var(--surface-3); position: relative; }
   .cycle-bar-fill {
-    height: 100%;
-    background: var(--black);
-    width: 54.1%;
-    transition: width 1s ease;
+    height: 100%; background: var(--text);
+    width: 54.1%; transition: width 1s ease;
   }
   .cycle-bar-marker {
-    position: absolute;
-    top: -4px;
-    left: 54.1%;
-    width: 2px;
-    height: 14px;
-    background: var(--black);
+    position: absolute; top: -4px; left: 54.1%;
+    width: 2px; height: 14px; background: var(--text);
   }
   .cycle-meta {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1px;
-    background: var(--grey-200);
-    border: 1px solid var(--grey-200);
-    margin-top: 16px;
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 1px; background: var(--border);
+    border: 1px solid var(--border); margin-top: 16px;
   }
-  .cycle-meta-cell {
-    background: var(--ivory-2);
-    padding: 14px 18px;
-  }
+  .cycle-meta-cell { background: var(--surface-2); padding: 14px 18px; }
 
   /* ── LIQUIDATION GAUGE ────────────────────────────── */
   .liq-table {
-    background: var(--white);
-    border: 1px solid var(--grey-200);
-    margin-top: 16px;
-    overflow: hidden;
+    background: var(--surface); border: 1px solid var(--border);
+    margin-top: 16px; overflow: hidden;
   }
   .liq-row {
-    display: grid;
-    grid-template-columns: 160px 1fr auto auto;
-    gap: 0;
-    align-items: center;
-    padding: 12px 24px;
-    border-bottom: 1px solid var(--ivory-3);
-    font-size: 13px;
+    display: grid; grid-template-columns: 160px 1fr auto auto;
+    align-items: center; padding: 12px 24px;
+    border-bottom: 1px solid var(--surface-3); font-size: 13px;
   }
   .liq-row:last-child { border-bottom: none; }
   .liq-row.header-row {
-    background: var(--ivory-2);
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--grey-400);
-    padding: 10px 24px;
-    border-bottom: 1px solid var(--grey-200);
+    background: var(--surface-2); font-family: var(--mono);
+    font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-dim); padding: 10px 24px; border-bottom: 1px solid var(--border);
   }
   .liq-price {
-    font-family: var(--mono);
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--black);
+    font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--text);
   }
-  .liq-action {
-    font-size: 12px;
-    color: var(--grey-600);
-  }
+  .liq-action { font-size: 12px; color: var(--text-mid); }
   .liq-drop {
-    font-family: var(--mono);
-    font-size: 12px;
-    text-align: right;
-    padding-right: 24px;
+    font-family: var(--mono); font-size: 12px; text-align: right; padding-right: 24px;
   }
   .liq-bar-col { padding: 0 24px 0 16px; }
-  .liq-bar {
-    height: 4px;
-    background: var(--ivory-3);
-    position: relative;
-  }
-  .liq-bar-fill {
-    height: 100%;
-    background: var(--grey-200);
-  }
+  .liq-bar { height: 4px; background: var(--surface-3); position: relative; }
+  .liq-bar-fill { height: 100%; background: var(--border); }
 
   /* ── PRO/CON LIST ─────────────────────────────────── */
-  .procon-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-top: 16px;
-  }
+  .procon-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
   .procon-card {
-    border: 1px solid var(--grey-200);
-    background: var(--white);
-    padding: 24px;
+    border: 1px solid var(--border); background: var(--surface); padding: 24px;
   }
   .procon-card h4 {
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--grey-500);
-    margin-bottom: 14px;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text-mid); margin-bottom: 14px;
   }
   .procon-item {
-    display: flex;
-    gap: 10px;
-    padding: 7px 0;
-    font-size: 13px;
-    color: var(--grey-700);
-    border-bottom: 1px solid var(--ivory-3);
-    line-height: 1.45;
+    display: flex; gap: 10px; padding: 7px 0; font-size: 13px;
+    color: var(--text-mid); border-bottom: 1px solid var(--surface-3); line-height: 1.45;
   }
   .procon-item:last-child { border-bottom: none; }
   .procon-icon { flex-shrink: 0; margin-top: 1px; }
 
+  /* ── QUANT SUMMARY ────────────────────────────────── */
+  .quant-box {
+    background: var(--text);
+    color: var(--bg);
+    padding: 28px 32px;
+    margin-top: 16px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.9;
+    letter-spacing: 0.01em;
+    transition: background 0.2s, color 0.2s;
+  }
+  .quant-box-header {
+    font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+    margin-bottom: 14px; opacity: 0.4;
+  }
+
   /* ── UPLOAD ANALYZER ──────────────────────────────── */
   .upload-zone {
-    margin-top: 16px;
-    border: 1px dashed var(--grey-200);
-    background: var(--white);
-    padding: 40px;
-    text-align: center;
-    cursor: pointer;
-    transition: background 0.15s ease, border-color 0.15s ease;
+    margin-top: 16px; border: 1px dashed var(--border);
+    background: var(--surface); padding: 40px; text-align: center;
+    cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease;
     position: relative;
   }
-  .upload-zone:hover { background: var(--ivory-2); border-color: var(--grey-400); }
-  .upload-zone.drag-over { background: var(--ivory-2); border-color: var(--black); }
+  .upload-zone:hover { background: var(--surface-2); border-color: var(--text-mid); }
+  .upload-zone.drag-over { background: var(--surface-2); border-color: var(--text); }
   .upload-icon { font-size: 28px; margin-bottom: 10px; opacity: 0.4; }
   .upload-text {
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--grey-400);
-    letter-spacing: 0.05em;
+    font-family: var(--mono); font-size: 12px; color: var(--text-dim); letter-spacing: 0.05em;
   }
-  .upload-text strong { color: var(--black); }
+  .upload-text strong { color: var(--text); }
   #file-input { display: none; }
 
   /* ── AI RESULT PANEL ──────────────────────────────── */
-  #ai-result {
-    display: none;
-    margin-top: 16px;
-  }
+  #ai-result { display: none; margin-top: 16px; }
   .ai-loading {
-    background: var(--white);
-    border: 1px solid var(--grey-200);
-    padding: 32px 28px;
-    text-align: center;
-    display: none;
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 32px 28px; text-align: center; display: none;
   }
   .ai-loading-text {
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--grey-400);
-    letter-spacing: 0.08em;
+    font-family: var(--mono); font-size: 12px; color: var(--text-dim); letter-spacing: 0.08em;
   }
   .spinner {
-    display: inline-block;
-    width: 16px; height: 16px;
-    border: 2px solid var(--grey-200);
-    border-top-color: var(--black);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin-right: 10px;
-    vertical-align: middle;
+    display: inline-block; width: 16px; height: 16px;
+    border: 2px solid var(--border); border-top-color: var(--text);
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+    margin-right: 10px; vertical-align: middle;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
-
   .ai-output {
-    background: var(--white);
-    border: 1px solid var(--grey-200);
-    padding: 28px 32px;
+    background: var(--surface); border: 1px solid var(--border); padding: 28px 32px;
   }
   .ai-output pre {
-    font-family: var(--mono);
-    font-size: 12px;
-    white-space: pre-wrap;
-    color: var(--grey-700);
-    line-height: 1.7;
+    font-family: var(--mono); font-size: 12px; white-space: pre-wrap;
+    color: var(--text-mid); line-height: 1.7;
   }
   .ai-verdict-banner {
-    padding: 14px 20px;
-    margin-bottom: 20px;
-    font-family: var(--mono);
-    font-size: 13px;
-    font-weight: 500;
-    letter-spacing: 0.04em;
+    padding: 14px 20px; margin-bottom: 20px;
+    font-family: var(--mono); font-size: 13px; font-weight: 500; letter-spacing: 0.04em;
   }
 
   /* ── FOOTER ───────────────────────────────────────── */
   footer {
-    border-top: 1px solid var(--grey-200);
-    padding: 20px 40px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 60px;
+    border-top: 1px solid var(--border); padding: 20px 40px;
+    display: flex; justify-content: space-between; align-items: center; margin-top: 60px;
   }
   .footer-note {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--grey-400);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    font-family: var(--mono); font-size: 10px; color: var(--text-dim);
+    letter-spacing: 0.06em; text-transform: uppercase;
   }
 
-  /* ── RISK METER SVG ───────────────────────────────── */
+  /* ── RISK METER ───────────────────────────────────── */
   .risk-meter-wrap {
-    background: var(--white);
-    border: 1px solid var(--grey-200);
-    padding: 24px 28px;
-    margin-top: 16px;
-    display: flex;
-    align-items: center;
-    gap: 32px;
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 24px 28px; margin-top: 16px;
+    display: flex; align-items: center; gap: 32px;
   }
   .risk-meter-text { flex: 1; }
-  .risk-meter-text h3 {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--black);
-    margin-bottom: 6px;
-  }
-  .risk-meter-text p {
-    font-size: 13px;
-    color: var(--grey-500);
-    line-height: 1.5;
-  }
+  .risk-meter-text h3 { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .risk-meter-text p { font-size: 13px; color: var(--text-mid); line-height: 1.5; }
 
   /* ── RESPONSIVE ───────────────────────────────────── */
   @media (max-width: 700px) {
     header { padding: 16px 20px; }
+    .inputs-bar { padding: 12px 20px; gap: 16px; }
     .container { padding: 0 20px 60px; }
     .loan-math { grid-template-columns: 1fr 1fr; }
     .scenario-grid { grid-template-columns: 1fr; }
@@ -571,6 +567,7 @@
     .procon-grid { grid-template-columns: 1fr; }
     .verdict-main { flex-direction: column; }
     .verdict-score { text-align: left; }
+    .header-date { display: none; }
   }
 </style>
 </head>
@@ -581,22 +578,50 @@
   <span class="logo-divider">·</span>
   <span class="logo-title">BTC Loan Signal Analyzer</span>
   <span class="header-date">Data: 2026-06-05 · Built 2026-06-09</span>
+  <label class="theme-toggle" id="theme-toggle" title="Toggle dark mode">
+    <span class="theme-toggle-label" id="theme-label">Light</span>
+    <div class="toggle-switch"></div>
+  </label>
 </header>
+
+<!-- ── INPUTS BAR ── -->
+<div class="inputs-bar">
+  <span class="inputs-bar-label">Position Inputs</span>
+
+  <div class="input-group">
+    <label for="inp-btc">BTC Amount</label>
+    <input type="number" id="inp-btc" value="0.337" step="0.001" min="0.001" max="1000" />
+    <span class="unit">BTC</span>
+  </div>
+
+  <div class="input-group">
+    <label for="inp-price">BTC Price</label>
+    <input type="number" id="inp-price" value="62000" step="100" min="1000" max="10000000" />
+    <span class="unit">USD</span>
+  </div>
+
+  <div class="input-group">
+    <label for="inp-ltv">LTV</label>
+    <input type="number" id="inp-ltv" value="40" step="1" min="10" max="80" />
+    <span class="unit">%</span>
+  </div>
+
+  <span class="recalc-note" id="recalc-note">↺ All figures update live</span>
+</div>
 
 <div class="container">
 
-  <!-- ═══════════════════════════════════════════════
-       VERDICT HERO
-  ════════════════════════════════════════════════ -->
+  <!-- VERDICT HERO -->
   <div class="verdict-hero">
     <div class="verdict-eyebrow">Current Cycle Signal</div>
     <div class="verdict-main">
       <div class="verdict-text">
-        <h1>Conditionally <span>Borrow-Ready</span></h1>
-        <p class="verdict-sub">
+        <h1 id="verdict-title">Conditionally <span id="verdict-span">Borrow-Ready</span></h1>
+        <p class="verdict-sub" id="verdict-sub">
           MVRV at 1.167 sits below the historical mean (1.921) and at the cycle trough.
           Z-score of −1.426 signals deep undervaluation. Floor models peg support at $61k.
-          LTV 40% starts at $24,800 borrowed — a <strong>37% decline buffer</strong> before margin call territory.
+          LTV <span id="v-ltv">40</span>% starts at $<span id="v-loan">24,800</span> borrowed — a
+          <strong><span id="v-buffer">37</span>% decline buffer</strong> before margin call territory.
         </p>
       </div>
       <div class="verdict-score">
@@ -606,59 +631,53 @@
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════
-       YOUR LOAN MATH
-  ════════════════════════════════════════════════ -->
-  <div class="section-label">Your Loan Math · 0.337 BTC @ $62,000</div>
+  <!-- LOAN MATH -->
+  <div class="section-label" id="loan-section-label">Your Loan Math · <span id="sl-btc">0.337</span> BTC @ $<span id="sl-price">62,000</span></div>
 
   <div class="loan-math">
     <div class="math-cell">
       <div class="math-label">Collateral Value</div>
-      <div class="math-value">$20,894</div>
-      <div class="math-sub">0.337 BTC × $62,000</div>
+      <div class="math-value" id="lm-collateral">$20,894</div>
+      <div class="math-sub"><span id="lm-btc">0.337</span> BTC × $<span id="lm-price">62,000</span></div>
     </div>
     <div class="math-cell">
-      <div class="math-label">Loan Amount (LTV 40%)</div>
-      <div class="math-value highlight">$8,358</div>
+      <div class="math-label">Loan Amount (LTV <span id="lm-ltv-label">40</span>%)</div>
+      <div class="math-value highlight" id="lm-loan">$8,358</div>
       <div class="math-sub">USDT to your spot wallet</div>
     </div>
     <div class="math-cell">
       <div class="math-label">Interest Est. (1% APR)</div>
-      <div class="math-value">~$84/yr</div>
+      <div class="math-value" id="lm-interest">~$84/yr</div>
       <div class="math-sub">Binance flexible rate ≈ 1–2% APR</div>
     </div>
 
     <div class="math-cell">
       <div class="math-label">Margin Call LTV</div>
       <div class="math-value warn">85%</div>
-      <div class="math-sub">BTC price ≈ $38,930</div>
+      <div class="math-sub">BTC price ≈ $<span id="lm-mc-price">38,930</span></div>
     </div>
     <div class="math-cell">
       <div class="math-label">Liquidation LTV</div>
       <div class="math-value danger">91%</div>
-      <div class="math-sub">BTC price ≈ $36,365 · −41.3%</div>
+      <div class="math-sub">BTC price ≈ $<span id="lm-liq-price">36,365</span> · <span id="lm-liq-drop">−41.3%</span></div>
     </div>
     <div class="math-cell">
       <div class="math-label">Safety Buffer</div>
-      <div class="math-value highlight">$23,035</div>
+      <div class="math-value highlight" id="lm-buffer">$23,035</div>
       <div class="math-sub">Price room before any margin call</div>
     </div>
 
     <div class="math-cell math-cell-full">
       <div class="math-label">Margin Call Trigger Formula</div>
-      <div style="font-family:var(--mono);font-size:13px;color:var(--grey-700);margin-top:4px;">
-        Margin Call Price = Loan Amount / (Collateral BTC × Margin Call LTV)<br>
-        <strong style="color:var(--black);">= $8,358 / (0.337 × 0.85) = $29,199 per BTC</strong>
-        &nbsp;·&nbsp; Liquidation = $8,358 / (0.337 × 0.91) = <strong style="color:var(--signal-bad);">$27,260</strong>
+      <div style="font-family:var(--mono);font-size:13px;color:var(--text-mid);margin-top:4px;" id="lm-formula">
+        Margin Call Price = Loan / (BTC × 0.85) = <strong style="color:var(--text);" id="lm-formula-mc"></strong>
+        &nbsp;·&nbsp; Liquidation = Loan / (BTC × 0.91) = <strong style="color:var(--signal-bad);" id="lm-formula-liq"></strong>
       </div>
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════
-       BEST / WORST SCENARIOS
-  ════════════════════════════════════════════════ -->
+  <!-- OUTCOME SCENARIOS -->
   <div class="section-label">Outcome Scenarios</div>
-
   <div class="scenario-grid">
     <div class="scenario-card best">
       <h3>Upside Case — Cycle Resumes</h3>
@@ -668,11 +687,11 @@
       </div>
       <div class="scenario-stat">
         <span class="key">Your BTC value at target</span>
-        <span class="val up">$40,637</span>
+        <span class="val up" id="sc-btc-up">$40,637</span>
       </div>
       <div class="scenario-stat">
-        <span class="key">Net gain (after repay $8,358)</span>
-        <span class="val up">+$19,743</span>
+        <span class="key">Net gain (after repay loan)</span>
+        <span class="val up" id="sc-net-gain">+$19,743</span>
       </div>
       <div class="scenario-stat">
         <span class="key">MVRV upside model target</span>
@@ -680,11 +699,11 @@
       </div>
       <div class="scenario-stat">
         <span class="key">Estimated return on BTC hold</span>
-        <span class="val up">+94% from here</span>
+        <span class="val up" id="sc-pct-gain">+94% from here</span>
       </div>
       <div class="scenario-stat">
         <span class="key">Loan effectively costs</span>
-        <span class="val up">~$84 interest</span>
+        <span class="val up" id="sc-loan-cost">~$84 interest</span>
       </div>
       <div class="scenario-stat">
         <span class="key">Why this is plausible</span>
@@ -703,12 +722,12 @@
         <span class="val dn">$10,700</span>
       </div>
       <div class="scenario-stat">
-        <span class="key">If BTC drops to $38,930</span>
-        <span class="val dn">Margin call triggered</span>
+        <span class="key">Margin call triggered at</span>
+        <span class="val dn" id="sc-mc-trigger">$38,930 (−37.2%)</span>
       </div>
       <div class="scenario-stat">
-        <span class="key">If BTC drops to $27,260</span>
-        <span class="val dn">Full liquidation (−56%)</span>
+        <span class="key">Full liquidation at</span>
+        <span class="val dn" id="sc-liq-trigger">$27,260 (−56%)</span>
       </div>
       <div class="scenario-stat">
         <span class="key">Worst historical cycle drawdown</span>
@@ -720,16 +739,13 @@
       </div>
       <div class="scenario-stat">
         <span class="key">What happens to you</span>
-        <span class="val dn">Lose 0.337 BTC, keep $8,358</span>
+        <span class="val dn" id="sc-worst-outcome">Lose 0.337 BTC, keep $8,358</span>
       </div>
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════
-       MVRV SIGNAL CARDS
-  ════════════════════════════════════════════════ -->
+  <!-- MVRV SIGNALS -->
   <div class="section-label">MVRV On-Chain Signals · as of 2026-06-05</div>
-
   <div class="signal-grid">
     <div class="signal-cell">
       <div class="sig-label">MVRV Ratio</div>
@@ -768,38 +784,35 @@
       <span class="badge badge-good">Deep Dip</span>
     </div>
     <div class="signal-cell">
-      <div class="sig-label">C4 MVRV Trough</div>
-      <div class="sig-val">1.167</div>
-      <div class="sig-context">C4 regression model predicted floor: 1.026–1.088. We're there.</div>
-      <span class="badge badge-good">At Model Floor</span>
+      <div class="sig-label">LTV / Risk</div>
+      <div class="sig-val" id="sig-ltv-risk">40% / Med</div>
+      <div class="sig-context" id="sig-ltv-ctx">Buffer to margin call: <span id="sig-buf-pct">37%</span> price drop</div>
+      <span class="badge" id="sig-ltv-badge">Moderate</span>
     </div>
     <div class="signal-cell">
       <div class="sig-label">Price vs ATH</div>
-      <div class="sig-val">−51.1%</div>
-      <div class="sig-context">ATH was $124,728 (Oct '25). C4 drawdown typical</div>
+      <div class="sig-val" id="sig-ath-drop">−51.1%</div>
+      <div class="sig-context" id="sig-ath-ctx">ATH was $124,728 (Oct '25). C4 drawdown typical</div>
       <span class="badge badge-neutral">Drawdown Phase</span>
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════
-       CYCLE PROGRESS
-  ════════════════════════════════════════════════ -->
+  <!-- CYCLE PROGRESS -->
   <div class="section-label">Cycle 4 Context (2024–2027)</div>
-
   <div class="cycle-bar-wrap">
     <div class="cycle-bar-label">
       <span>Cycle Start (Apr 2024)</span>
-      <span style="color:var(--black);font-weight:500;">TODAY — 54.1% elapsed</span>
+      <span style="color:var(--text);font-weight:500;">TODAY — 54.1% elapsed</span>
       <span>Est. End (2027)</span>
     </div>
     <div class="cycle-bar-track">
       <div class="cycle-bar-fill"></div>
       <div class="cycle-bar-marker"></div>
     </div>
-    <div style="margin-top:12px;font-size:12px;color:var(--grey-500);">
+    <div style="margin-top:12px;font-size:12px;color:var(--text-mid);">
       In prior cycles: MVRV troughed mid-cycle, then price recovered strongly into the second half.
-      C4 MVRV regression floor: <strong style="color:var(--black);">1.026–1.088</strong> · Current: 1.167 → right at or just above predicted floor.
-      Next halving (C5): <strong style="color:var(--black);">Mar 2028</strong> (656 days away).
+      C4 MVRV regression floor: <strong style="color:var(--text);">1.026–1.088</strong> · Current: 1.167 → right at or just above predicted floor.
+      Next halving (C5): <strong style="color:var(--text);">Mar 2028</strong> (656 days away).
     </div>
   </div>
 
@@ -821,141 +834,51 @@
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════
-       LIQUIDATION RISK LEVELS
-  ════════════════════════════════════════════════ -->
+  <!-- LIQUIDATION LEVELS -->
   <div class="section-label">Liquidation Levels · Your Position</div>
-
-  <div class="liq-table">
+  <div class="liq-table" id="liq-table">
     <div class="liq-row header-row">
       <span>BTC Price</span>
       <span>Action Required</span>
-      <span style="padding-right:24px;">Drop from $62k</span>
+      <span style="padding-right:24px;">Drop from current</span>
       <span></span>
     </div>
-    <div class="liq-row">
-      <span class="liq-price">$62,000</span>
-      <span class="liq-action">Current price — LTV = 40%</span>
-      <span class="liq-drop" style="color:var(--grey-400);">0%</span>
-      <div class="liq-bar-col"><div class="liq-bar"><div class="liq-bar-fill" style="width:44%;background:var(--signal-good);"></div></div></div>
-    </div>
-    <div class="liq-row">
-      <span class="liq-price">$50,000</span>
-      <span class="liq-action">LTV rises to ~49.7% — monitor</span>
-      <span class="liq-drop" style="color:var(--grey-500);">−19%</span>
-      <div class="liq-bar-col"><div class="liq-bar"><div class="liq-bar-fill" style="width:55%;background:var(--grey-400);"></div></div></div>
-    </div>
-    <div class="liq-row">
-      <span class="liq-price" style="color:var(--signal-warn);">$38,930</span>
-      <span class="liq-action" style="color:var(--signal-warn);">⚠ Margin Call — LTV = 85%</span>
-      <span class="liq-drop" style="color:var(--signal-warn);">−37.2%</span>
-      <div class="liq-bar-col"><div class="liq-bar"><div class="liq-bar-fill" style="width:94%;background:var(--signal-warn);"></div></div></div>
-    </div>
-    <div class="liq-row">
-      <span class="liq-price" style="color:var(--signal-bad);">$27,260</span>
-      <span class="liq-action" style="color:var(--signal-bad);">✕ Full Liquidation — LTV = 91%</span>
-      <span class="liq-drop" style="color:var(--signal-bad);">−56.0%</span>
-      <div class="liq-bar-col"><div class="liq-bar"><div class="liq-bar-fill" style="width:100%;background:var(--signal-bad);"></div></div></div>
-    </div>
+    <!-- dynamically rendered -->
   </div>
 
-  <!-- ═══════════════════════════════════════════════
-       PRO / CON
-  ════════════════════════════════════════════════ -->
-  <div class="section-label">Analyst View · Pro & Con</div>
-
+  <!-- PRO / CON -->
+  <div class="section-label">Analyst View · Pro &amp; Con</div>
   <div class="procon-grid">
     <div class="procon-card">
       <h4>✓ Case for borrowing now</h4>
-      <div class="procon-item">
-        <span class="procon-icon">↗</span>
-        <span>MVRV Z-score at −1.426 — historically a strong accumulation zone, not seen since early bear market capitulations.</span>
-      </div>
-      <div class="procon-item">
-        <span class="procon-icon">↗</span>
-        <span>C4 MVRV regression floor is 1.026–1.088. At 1.167, you're borrowing near the statistical bottom, not in the middle of a run.</span>
-      </div>
-      <div class="procon-item">
-        <span class="procon-icon">↗</span>
-        <span>Liquidation requires a −56% drop from current price to $27,260 — no prior cycle has seen that kind of continuation after an already −57% MVRV drawdown.</span>
-      </div>
-      <div class="procon-item">
-        <span class="procon-icon">↗</span>
-        <span>Binance Flexible Loan APR is ≈1%. Your $8,358 loan costs ~$7/month — negligible carry cost if you redeploy into yield or opportunistic buys.</span>
-      </div>
-      <div class="procon-item">
-        <span class="procon-icon">↗</span>
-        <span>No taxable event. You keep BTC exposure throughout. If C4 follows C3's pattern, price could recover 100%+ from current levels before the next halving.</span>
-      </div>
-      <div class="procon-item">
-        <span class="procon-icon">↗</span>
-        <span>Floor consensus model ($61,076) is almost exactly today's price — this level has held as a floor in multiple models.</span>
-      </div>
+      <div class="procon-item"><span class="procon-icon">↗</span><span>MVRV Z-score at −1.426 — historically a strong accumulation zone, not seen since early bear market capitulations.</span></div>
+      <div class="procon-item"><span class="procon-icon">↗</span><span>C4 MVRV regression floor is 1.026–1.088. At 1.167, you're borrowing near the statistical bottom, not in the middle of a run.</span></div>
+      <div class="procon-item"><span class="procon-icon">↗</span><span id="pro-3">Liquidation requires a −56% drop from current price — no prior cycle has seen that kind of continuation after an already −57% MVRV drawdown.</span></div>
+      <div class="procon-item"><span class="procon-icon">↗</span><span id="pro-4">Binance Flexible Loan APR is ≈1%. Loan costs ~$84/yr — negligible carry if you redeploy into yield or opportunistic buys.</span></div>
+      <div class="procon-item"><span class="procon-icon">↗</span><span>No taxable event. You keep BTC exposure throughout. If C4 follows C3's pattern, price could recover 100%+ before the next halving.</span></div>
+      <div class="procon-item"><span class="procon-icon">↗</span><span>Floor consensus model ($61,076) is almost exactly today's price — this level has held as a floor in multiple models.</span></div>
     </div>
     <div class="procon-card">
       <h4>✕ Risks to manage</h4>
-      <div class="procon-item">
-        <span class="procon-icon">↘</span>
-        <span>MA stack is bearish (MA20 &lt; MA50 &lt; MA200). Trend confirmation has not happened. You'd be borrowing into a downtrend technically.</span>
-      </div>
-      <div class="procon-item">
-        <span class="procon-icon">↘</span>
-        <span>C4 peak MVRV (2.733) was lower than all prior cycles (C1: 5.9, C2: 4.6, C3: 3.9). Diminishing returns cycle — upside ceiling shrinks each time.</span>
-      </div>
-      <div class="procon-item">
-        <span class="procon-icon">↘</span>
-        <span>Ceiling models have historically massive error rates (+290% avg overshoot on consensus). Target $120k is a median guess, not a guarantee.</span>
-      </div>
-      <div class="procon-item">
-        <span class="procon-icon">↘</span>
-        <span>Same-pair borrowing not supported: you cannot pledge BTC to borrow BTC. You'll receive USDT — make sure you have a clear plan for where those funds go.</span>
-      </div>
-      <div class="procon-item">
-        <span class="procon-icon">↘</span>
-        <span>Margin call notifications are best-effort only. Binance explicitly states delivery is not guaranteed. You must monitor manually or set price alerts.</span>
-      </div>
-      <div class="procon-item">
-        <span class="procon-icon">↘</span>
-        <span>MVRV downside model still shows $10,700 as a theoretical floor — while extreme, the data doesn't rule it out if macro conditions deteriorate hard.</span>
-      </div>
+      <div class="procon-item"><span class="procon-icon">↘</span><span>MA stack is bearish (MA20 &lt; MA50 &lt; MA200). Trend confirmation has not happened. Borrowing into a downtrend technically.</span></div>
+      <div class="procon-item"><span class="procon-icon">↘</span><span>C4 peak MVRV (2.733) was lower than all prior cycles. Diminishing returns — upside ceiling shrinks each cycle.</span></div>
+      <div class="procon-item"><span class="procon-icon">↘</span><span>Ceiling models have historically massive error rates (+290% avg overshoot). $120k target is a median guess, not a guarantee.</span></div>
+      <div class="procon-item"><span class="procon-icon">↘</span><span>Same-pair borrowing not supported: pledging BTC yields USDT. Have a clear deployment plan before borrowing.</span></div>
+      <div class="procon-item"><span class="procon-icon">↘</span><span>Margin call notifications are best-effort only. Binance explicitly states delivery is not guaranteed. Monitor manually.</span></div>
+      <div class="procon-item"><span class="procon-icon">↘</span><span id="con-6">Downside model still shows $10,700 as a theoretical floor — extreme, but data doesn't rule it out if macro deteriorates hard.</span></div>
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════
-       QUANT SUMMARY BOX
-  ════════════════════════════════════════════════ -->
+  <!-- QUANT SUMMARY -->
   <div class="section-label">Quant Summary</div>
-
-  <div style="background:var(--black);color:var(--ivory);padding:28px 32px;margin-top:16px;font-family:var(--mono);font-size:12.5px;line-height:1.9;letter-spacing:0.01em;">
-    <div style="color:var(--grey-400);font-size:10px;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:14px;">Senior Analyst · Position Assessment</div>
-    POSITION: 0.337 BTC collateral · $8,358 USDT drawn · LTV 40%<br><br>
-    SIGNAL COMPOSITE:<br>
-    &nbsp;&nbsp;MVRV (1.167) ........... BULLISH — 39% below historical mean<br>
-    &nbsp;&nbsp;Z-Score (−1.426) ....... BULLISH — deep undervaluation<br>
-    &nbsp;&nbsp;Cycle Position (54%) ... NEUTRAL — past midpoint, recovery typical<br>
-    &nbsp;&nbsp;MA Stack (Bearish) ..... BEARISH — trend not confirmed<br>
-    &nbsp;&nbsp;ROC 30d (−0.8%) ........ NEUTRAL — slow, not crashing<br>
-    &nbsp;&nbsp;Floor Models ($61k) .... BULLISH — price at statistical support<br><br>
-    COMPOSITE SCORE: <span style="color:#a8d8b0;">6.8 / 10 → Conditionally Favorable</span><br><br>
-    KEY RISK: Margin call at BTC $38,930 (−37%). Liquidation at $27,260 (−56%).<br>
-    Prior C4 low was $53,483. Current price $62,000 = $8,517 above prior cycle low.<br>
-    That's a thin buffer on the downside — <span style="color:#d8a8a8;">you are NOT deep in safety territory.</span><br><br>
-    VERDICT: Borrow is reasonable at this MVRV level. Keep additional collateral ready<br>
-    to top up if BTC approaches $45,000. Deploy loan into stable yield (&gt;5% APR) or<br>
-    DCA into spot BTC to lower cost basis. Do not use proceeds for leverage trading.<br><br>
-    <span style="color:var(--grey-400);">NOT FINANCIAL ADVICE. Do your own research.</span>
+  <div class="quant-box" id="quant-box">
+    <div class="quant-box-header">Senior Analyst · Position Assessment</div>
+    <span id="qb-text"></span>
   </div>
 
-  <!-- ═══════════════════════════════════════════════
-       UPLOAD + AI ANALYZER
-  ════════════════════════════════════════════════ -->
+  <!-- UPLOAD + AI ANALYZER -->
   <div class="section-label">Analyze Your Own MVRV Data</div>
-
-  <div
-    class="upload-zone"
-    id="upload-zone"
-    onclick="document.getElementById('file-input').click()"
-  >
+  <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
     <div class="upload-icon">⬆</div>
     <div class="upload-text">
       <strong>Drop your MVRV .txt file here</strong> or click to browse<br>
@@ -963,19 +886,12 @@
     </div>
     <input type="file" id="file-input" accept=".txt,.csv" />
   </div>
-
   <div class="ai-loading" id="ai-loading">
-    <div class="ai-loading-text">
-      <span class="spinner"></span>
-      Analyzing on-chain data with Claude…
-    </div>
+    <div class="ai-loading-text"><span class="spinner"></span>Analyzing on-chain data with Claude…</div>
   </div>
-
   <div id="ai-result">
     <div class="ai-verdict-banner" id="ai-banner"></div>
-    <div class="ai-output">
-      <pre id="ai-text"></pre>
-    </div>
+    <div class="ai-output"><pre id="ai-text"></pre></div>
   </div>
 
 </div><!-- /container -->
@@ -987,50 +903,227 @@
 </footer>
 
 <script>
-/* ──────────────────────────────────────────────
+/* ─────────────────────────────────────────────────────
+   CONSTANTS
+───────────────────────────────────────────────────── */
+const ATH        = 124728;
+const MC_LTV     = 0.85;
+const LIQ_LTV    = 0.91;
+const APR        = 0.01;
+const CEIL_PRICE = 120584;
+const CEIL_HIGH  = 136631;
+
+/* ─────────────────────────────────────────────────────
+   DARK MODE
+───────────────────────────────────────────────────── */
+const toggle = document.getElementById('theme-toggle');
+const label  = document.getElementById('theme-label');
+
+function setTheme(dark) {
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  label.textContent = dark ? 'Dark' : 'Light';
+  localStorage.setItem('theme', dark ? 'dark' : 'light');
+}
+
+toggle.addEventListener('click', () => {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  setTheme(!isDark);
+});
+
+// Restore saved preference
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved) { setTheme(saved === 'dark'); return; }
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) setTheme(true);
+})();
+
+/* ─────────────────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────────────────── */
+function fmt(n, dec=0)    { return n.toLocaleString('en-US', {minimumFractionDigits:dec,maximumFractionDigits:dec}); }
+function fmtUSD(n, dec=0) { return '$' + fmt(n, dec); }
+function fmtPct(n, dec=1) { return (n >= 0 ? '+' : '') + n.toFixed(dec) + '%'; }
+function pctDrop(from, to){ return ((to - from) / from * 100).toFixed(1); }
+function el(id)           { return document.getElementById(id); }
+
+/* ─────────────────────────────────────────────────────
+   CORE CALCULATION
+───────────────────────────────────────────────────── */
+function calc() {
+  const btc       = parseFloat(el('inp-btc').value)   || 0.337;
+  const price     = parseFloat(el('inp-price').value) || 62000;
+  const ltvPct    = parseFloat(el('inp-ltv').value)   || 40;
+  const ltv       = ltvPct / 100;
+
+  const collateral = btc * price;
+  const loan       = collateral * ltv;
+  const interest   = loan * APR;
+  const mcPrice    = loan / (btc * MC_LTV);
+  const liqPrice   = loan / (btc * LIQ_LTV);
+  const buffer     = price - mcPrice;
+  const bufferPct  = (buffer / price * 100);
+  const liqDropPct = parseFloat(pctDrop(price, liqPrice));
+
+  // Scenario upside
+  const btcAtCeil  = btc * CEIL_PRICE;
+  const netGain    = btcAtCeil - collateral - loan;
+  const pctGain    = (CEIL_PRICE / price - 1) * 100;
+  const athDropPct = (price / ATH - 1) * 100;
+
+  return { btc, price, ltv, ltvPct, collateral, loan, interest, mcPrice, liqPrice, buffer, bufferPct, liqDropPct, btcAtCeil, netGain, pctGain, athDropPct };
+}
+
+/* ─────────────────────────────────────────────────────
+   RENDER
+───────────────────────────────────────────────────── */
+function render() {
+  const d = calc();
+
+  // Section label
+  el('sl-btc').textContent   = d.btc;
+  el('sl-price').textContent = fmt(d.price);
+
+  // Verdict sub
+  el('v-ltv').textContent    = d.ltvPct;
+  el('v-loan').textContent   = fmt(d.loan, 0);
+  el('v-buffer').textContent = d.bufferPct.toFixed(0);
+
+  // Loan math grid
+  el('lm-collateral').textContent  = fmtUSD(d.collateral);
+  el('lm-btc').textContent         = d.btc;
+  el('lm-price').textContent       = fmt(d.price);
+  el('lm-ltv-label').textContent   = d.ltvPct;
+  el('lm-loan').textContent        = fmtUSD(d.loan);
+  el('lm-interest').textContent    = '~' + fmtUSD(d.interest) + '/yr';
+  el('lm-mc-price').textContent    = fmt(d.mcPrice);
+  el('lm-liq-price').textContent   = fmt(d.liqPrice);
+  el('lm-liq-drop').textContent    = d.liqDropPct.toFixed(1) + '%';
+  el('lm-buffer').textContent      = fmtUSD(d.buffer);
+  el('lm-formula-mc').textContent  = fmtUSD(d.mcPrice) + ' per BTC';
+  el('lm-formula-liq').textContent = fmtUSD(d.liqPrice);
+
+  // Scenarios
+  el('sc-btc-up').textContent      = fmtUSD(d.btcAtCeil);
+  el('sc-net-gain').textContent    = (d.netGain >= 0 ? '+' : '') + fmtUSD(d.netGain);
+  el('sc-pct-gain').textContent    = '+' + d.pctGain.toFixed(0) + '% from here';
+  el('sc-loan-cost').textContent   = '~' + fmtUSD(d.interest) + ' interest';
+  el('sc-mc-trigger').textContent  = fmtUSD(d.mcPrice) + ' (' + pctDrop(d.price, d.mcPrice) + '%)';
+  el('sc-liq-trigger').textContent = fmtUSD(d.liqPrice) + ' (' + pctDrop(d.price, d.liqPrice) + '%)';
+  el('sc-worst-outcome').textContent = 'Lose ' + d.btc + ' BTC, keep ' + fmtUSD(d.loan);
+
+  // Dynamic signal cards
+  el('sig-ltv-risk').textContent = d.ltvPct + '% / ' + (d.ltvPct <= 30 ? 'Low' : d.ltvPct <= 50 ? 'Med' : 'High');
+  el('sig-buf-pct').textContent  = d.bufferPct.toFixed(1) + '%';
+  const ltvBadge = el('sig-ltv-badge');
+  ltvBadge.textContent = d.ltvPct <= 30 ? 'Conservative' : d.ltvPct <= 50 ? 'Moderate' : d.ltvPct <= 65 ? 'Aggressive' : 'High Risk';
+  ltvBadge.className   = 'badge ' + (d.ltvPct <= 30 ? 'badge-good' : d.ltvPct <= 50 ? 'badge-warn' : 'badge-bad');
+  el('sig-ath-drop').textContent = d.athDropPct.toFixed(1) + '%';
+
+  // Pro/Con dynamic lines
+  el('pro-3').textContent = `Liquidation requires a ${Math.abs(d.liqDropPct).toFixed(0)}% drop to ${fmtUSD(d.liqPrice)} — no prior cycle has seen that continuation after an already −57% MVRV drawdown.`;
+  el('pro-4').textContent = `Binance Flexible Loan APR ≈1%. Loan costs ~${fmtUSD(d.interest)}/yr — negligible carry if you redeploy into yield or opportunistic buys.`;
+
+  // Liquidation table
+  renderLiqTable(d);
+
+  // Quant summary box
+  renderQuant(d);
+}
+
+function renderLiqTable(d) {
+  const rows = [
+    { price: d.price,    label: 'Current price — LTV = ' + d.ltvPct + '%',       drop: 0,         color: 'var(--signal-good)',  barW: (d.ltvPct / 100 * 48) + '%' },
+    { price: d.price * 0.8, label: 'LTV rises to ~' + (d.ltv / 0.8 * 100).toFixed(1) + '% — monitor', drop: -20, color: 'var(--text-dim)',   barW: '55%' },
+    { price: d.mcPrice,  label: '⚠ Margin Call — LTV = 85%',                    drop: parseFloat(pctDrop(d.price, d.mcPrice)), color: 'var(--signal-warn)', barW: '78%' },
+    { price: d.liqPrice, label: '✕ Full Liquidation — LTV = 91%',               drop: parseFloat(pctDrop(d.price, d.liqPrice)), color: 'var(--signal-bad)',  barW: '100%' },
+  ];
+
+  const table = el('liq-table');
+  // keep header
+  table.innerHTML = `
+    <div class="liq-row header-row">
+      <span>BTC Price</span><span>Action Required</span>
+      <span style="padding-right:24px;">Drop from ${fmtUSD(d.price)}</span><span></span>
+    </div>`;
+
+  rows.forEach(r => {
+    const dropStr = r.drop === 0 ? '0%' : r.drop.toFixed(1) + '%';
+    table.innerHTML += `
+      <div class="liq-row">
+        <span class="liq-price" style="color:${r.color}">${fmtUSD(r.price)}</span>
+        <span class="liq-action" style="color:${r.color}">${r.label}</span>
+        <span class="liq-drop" style="color:${r.color}">${dropStr}</span>
+        <div class="liq-bar-col"><div class="liq-bar">
+          <div class="liq-bar-fill" style="width:${r.barW};background:${r.color};"></div>
+        </div></div>
+      </div>`;
+  });
+}
+
+function renderQuant(d) {
+  const riskLevel = d.ltvPct <= 30 ? 'LOW' : d.ltvPct <= 50 ? 'MEDIUM' : d.ltvPct <= 65 ? 'HIGH' : 'VERY HIGH';
+  const composite = d.ltvPct <= 30 ? 'Favorable' : d.ltvPct <= 50 ? 'Conditionally Favorable' : 'Elevated Risk';
+  const score     = d.ltvPct <= 30 ? '7.8' : d.ltvPct <= 50 ? '6.8' : '5.2';
+
+  el('qb-text').innerHTML = `POSITION: ${d.btc} BTC collateral · ${fmtUSD(d.loan)} USDT drawn · LTV ${d.ltvPct}%<br><br>SIGNAL COMPOSITE:<br>&nbsp;&nbsp;MVRV (1.167) ........... BULLISH — 39% below historical mean<br>&nbsp;&nbsp;Z-Score (−1.426) ....... BULLISH — deep undervaluation<br>&nbsp;&nbsp;Cycle Position (54%) ... NEUTRAL — past midpoint, recovery typical<br>&nbsp;&nbsp;MA Stack (Bearish) ..... BEARISH — trend not confirmed<br>&nbsp;&nbsp;ROC 30d (−0.8%) ........ NEUTRAL — slow, not crashing<br>&nbsp;&nbsp;Floor Models ($61k) .... BULLISH — price at statistical support<br><br>COMPOSITE SCORE: <span style="color:#a8d8b0;">${score} / 10 → ${composite}</span><br><br>KEY RISK: Margin call at BTC ${fmtUSD(d.mcPrice)} (−${Math.abs(parseFloat(pctDrop(d.price, d.mcPrice))).toFixed(1)}%). Liquidation at ${fmtUSD(d.liqPrice)} (${pctDrop(d.price, d.liqPrice)}%).<br>Risk level: <span style="color:${d.ltvPct<=30?'#a8d8b0':d.ltvPct<=50?'#d8c8a8':'#d8a8a8'}">${riskLevel}</span>${d.ltvPct > 50 ? ' — consider reducing LTV to ≤50% for safety margin.' : d.ltvPct > 30 ? ' — keep additional collateral ready if BTC approaches ' + fmtUSD(d.price * 0.75) + '.' : ''}<br><br>VERDICT: ${d.ltvPct <= 30 ? 'Conservative position. Strong MVRV signal with wide safety buffer. Well-structured.' : d.ltvPct <= 50 ? 'Borrow is reasonable at this MVRV level. Keep additional collateral ready to top up if BTC approaches ' + fmtUSD(d.price * 0.75) + '. Deploy loan into stable yield (>5% APR) or DCA into spot BTC.' : 'High LTV increases liquidation risk materially. MVRV signals are positive but the buffer at ' + d.ltvPct + '% LTV is thin. Reduce LTV or maintain 2× collateral buffer in reserve.'}<br><br><span style="opacity:0.4;">NOT FINANCIAL ADVICE. Do your own research.</span>`;
+}
+
+/* ─────────────────────────────────────────────────────
+   INPUT LISTENERS
+───────────────────────────────────────────────────── */
+['inp-btc','inp-price','inp-ltv'].forEach(id => {
+  el(id).addEventListener('input', () => {
+    render();
+    const note = el('recalc-note');
+    note.textContent = '✓ Updated';
+    setTimeout(() => { note.textContent = '↺ All figures update live'; }, 1200);
+  });
+});
+
+/* ─────────────────────────────────────────────────────
    UPLOAD + CLAUDE AI ANALYSIS
-────────────────────────────────────────────── */
-const zone    = document.getElementById('upload-zone');
-const input   = document.getElementById('file-input');
-const loading = document.getElementById('ai-loading');
-const result  = document.getElementById('ai-result');
-const banner  = document.getElementById('ai-banner');
-const aiText  = document.getElementById('ai-text');
+───────────────────────────────────────────────────── */
+const zone    = el('upload-zone');
+const input   = el('file-input');
+const loading = el('ai-loading');
+const result  = el('ai-result');
+const banner  = el('ai-banner');
+const aiText  = el('ai-text');
 
 zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
 zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
 zone.addEventListener('drop', e => {
-  e.preventDefault();
-  zone.classList.remove('drag-over');
-  const file = e.dataTransfer.files[0];
-  if (file) processFile(file);
+  e.preventDefault(); zone.classList.remove('drag-over');
+  if (e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]);
 });
-input.addEventListener('change', () => {
-  if (input.files[0]) processFile(input.files[0]);
-});
+input.addEventListener('change', () => { if (input.files[0]) processFile(input.files[0]); });
 
 async function processFile(file) {
+  const d    = calc();
   const text = await file.text();
-  zone.style.display = 'none';
+  zone.style.display   = 'none';
   loading.style.display = 'block';
   result.style.display  = 'none';
 
-  try {
-    const prompt = `You are a senior Bitcoin quant analyst. The user has uploaded their MVRV summary data file.
-Analyze the data and give a clear verdict on whether NOW is a good or bad time to borrow against BTC using a collateralized loan (LTV 40%).
+  const prompt = `You are a senior Bitcoin quant analyst. The user has uploaded their MVRV summary data file.
+Their current position: ${d.btc} BTC collateral, BTC price $${fmt(d.price)}, LTV ${d.ltvPct}%, loan amount ${fmtUSD(d.loan)}.
+Margin call triggers at $${fmt(d.mcPrice)} (−${Math.abs(parseFloat(pctDrop(d.price, d.mcPrice))).toFixed(1)}%), liquidation at $${fmt(d.liqPrice)}.
+
+Analyze the data and give a clear verdict on whether NOW is a good or bad time to borrow against BTC using a collateralized loan.
 
 Structure your answer in these exact sections:
 1. VERDICT LINE (one sentence: Good / Neutral / Caution / Bad time to borrow and why)
 2. KEY SIGNALS (bullet list of 5 most important data points from the file)
-3. RISK LEVEL (Low / Medium / High — explain in 2 sentences)
+3. RISK LEVEL (Low / Medium / High — explain in 2 sentences, reference their specific LTV and prices)
 4. LOAN TIMING SCORE (X/10 with 2-sentence justification)
 5. ONE THING TO WATCH (the single most important metric to monitor)
 
-Keep the tone professional, precise, data-driven. No fluff. Reference specific numbers from the data.
+Keep the tone professional, precise, data-driven. No fluff. Reference specific numbers from both the data and their position.
 
 MVRV DATA:
 ${text.slice(0, 8000)}`;
 
+  try {
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1040,45 +1133,43 @@ ${text.slice(0, 8000)}`;
         messages: [{ role: 'user', content: prompt }]
       })
     });
-
-    const data = await resp.json();
+    const data   = await resp.json();
     const output = (data.content || []).map(b => b.text || '').join('\n').trim();
 
     loading.style.display = 'none';
     result.style.display  = 'block';
 
-    // Detect verdict for banner color
     const upper = output.toUpperCase();
     if (upper.includes('GOOD TIME')) {
       banner.style.background = 'var(--signal-good-bg)';
       banner.style.color      = 'var(--signal-good)';
-      banner.textContent = '✓ AI Verdict: Good Time to Borrow';
+      banner.textContent      = '✓ AI Verdict: Good Time to Borrow';
     } else if (upper.includes('BAD TIME') || upper.includes('CAUTION')) {
       banner.style.background = 'var(--signal-bad-bg)';
       banner.style.color      = 'var(--signal-bad)';
-      banner.textContent = '✕ AI Verdict: Caution / Not Recommended';
+      banner.textContent      = '✕ AI Verdict: Caution / Not Recommended';
     } else {
       banner.style.background = 'var(--signal-warn-bg)';
       banner.style.color      = 'var(--signal-warn)';
-      banner.textContent = '⚠ AI Verdict: Neutral / Conditional';
+      banner.textContent      = '⚠ AI Verdict: Neutral / Conditional';
     }
-
     aiText.textContent = output;
 
   } catch (err) {
-    loading.style.display = 'none';
-    result.style.display  = 'block';
+    loading.style.display   = 'none';
+    result.style.display    = 'block';
     banner.style.background = 'var(--signal-bad-bg)';
     banner.style.color      = 'var(--signal-bad)';
-    banner.textContent = 'Analysis error';
-    aiText.textContent = 'Could not reach the analysis API. Please check your connection and try again.\n\n' + err.message;
+    banner.textContent      = 'Analysis error';
+    aiText.textContent      = 'Could not reach the analysis API. Please check your connection and try again.\n\n' + err.message;
   }
 }
 
-/* ──────────────────────────────────────────────
-   ANIMATE BAR ON LOAD
-────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────
+   INIT
+───────────────────────────────────────────────────── */
 window.addEventListener('load', () => {
+  render();
   const fill = document.querySelector('.cycle-bar-fill');
   if (fill) { fill.style.width = '0'; setTimeout(() => fill.style.width = '54.1%', 300); }
 });

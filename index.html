@@ -86,170 +86,68 @@
     align-items: center;
     gap: 16px;
   }
-  .logo-mark {
-    font-family: var(--mono);
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--text-mid);
-  }
+  .logo-mark { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-mid); }
   .logo-divider { color: var(--border); }
-  .logo-title {
-    font-family: var(--sans);
-    font-weight: 600;
-    font-size: 14px;
-    color: var(--text);
-    letter-spacing: -0.01em;
-  }
-  .header-date {
-    margin-left: auto;
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--text-dim);
-  }
+  .logo-title { font-family: var(--sans); font-weight: 600; font-size: 14px; color: var(--text); letter-spacing: -0.01em; }
+  .header-date { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--text-dim); }
 
-  .theme-toggle {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-left: 20px;
-    cursor: pointer;
-    user-select: none;
-  }
-  .theme-toggle-label {
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--text-dim);
-  }
-  .toggle-switch {
-    width: 34px;
-    height: 18px;
-    background: var(--border);
-    border-radius: 9px;
-    position: relative;
-    transition: background 0.2s;
-    flex-shrink: 0;
-  }
-  .toggle-switch::after {
-    content: '';
-    position: absolute;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: var(--surface);
-    top: 3px;
-    left: 3px;
-    transition: transform 0.2s, background 0.2s;
-  }
+  .theme-toggle { display: flex; align-items: center; gap: 8px; margin-left: 20px; cursor: pointer; user-select: none; }
+  .theme-toggle-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); }
+  .toggle-switch { width: 34px; height: 18px; background: var(--border); border-radius: 9px; position: relative; transition: background 0.2s; flex-shrink: 0; }
+  .toggle-switch::after { content: ''; position: absolute; width: 12px; height: 12px; border-radius: 50%; background: var(--surface); top: 3px; left: 3px; transition: transform 0.2s, background 0.2s; }
   [data-theme="dark"] .toggle-switch { background: var(--text-mid); }
   [data-theme="dark"] .toggle-switch::after { transform: translateX(16px); background: var(--bg); }
 
-  /* DATA BAR */
-  .upload-bar {
-    background: var(--surface-2);
-    border-bottom: 1px solid var(--border);
+  /* STALE DATA BANNER */
+  .stale-banner {
+    display: none;
+    background: var(--signal-bad-bg);
+    border-bottom: 2px solid var(--signal-bad);
     padding: 10px 40px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-  .upload-bar-label {
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    flex-shrink: 0;
-  }
-  .refresh-btn {
     font-family: var(--mono);
     font-size: 11px;
-    color: var(--text);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    padding: 5px 14px;
-    cursor: pointer;
-    transition: border-color 0.15s, background 0.15s;
-    white-space: nowrap;
-    display: flex;
+    color: var(--signal-bad);
+    letter-spacing: 0.06em;
     align-items: center;
-    gap: 6px;
+    gap: 10px;
   }
+  .stale-banner.visible { display: flex; }
+  .stale-banner-icon { font-size: 14px; flex-shrink: 0; }
+
+  /* DATA BAR */
+  .upload-bar { background: var(--surface-2); border-bottom: 1px solid var(--border); padding: 10px 40px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .upload-bar-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-dim); flex-shrink: 0; }
+  .refresh-btn { font-family: var(--mono); font-size: 11px; color: var(--text); background: var(--surface); border: 1px solid var(--border); padding: 5px 14px; cursor: pointer; transition: border-color 0.15s, background 0.15s; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
   .refresh-btn:hover { border-color: var(--text-mid); background: var(--surface-2); }
   .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .spin { display: inline-block; animation: spin 1s linear infinite; }
   @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-  .upload-filename {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--text-mid);
-  }
-  .upload-status {
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.06em;
-  }
+  .upload-filename { font-family: var(--mono); font-size: 11px; color: var(--text-mid); }
+  .upload-status { font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; }
   .upload-status.ok  { color: var(--signal-good); }
   .upload-status.err { color: var(--signal-bad);  }
 
-
-  /* INPUTS BAR */
-  .inputs-bar {
-    background: var(--surface-2);
-    border-bottom: 1px solid var(--border);
-    padding: 14px 40px;
-    display: flex;
-    align-items: center;
-    gap: 32px;
-    flex-wrap: wrap;
-  }
-  .inputs-bar-label {
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    flex-shrink: 0;
-  }
+  /* INPUTS BAR — now includes APR + threshold fields */
+  .inputs-bar { background: var(--surface-2); border-bottom: 1px solid var(--border); padding: 14px 40px; display: flex; align-items: center; gap: 32px; flex-wrap: wrap; }
+  .inputs-bar-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-dim); flex-shrink: 0; }
   .input-group { display: flex; align-items: center; gap: 8px; }
   .input-group label { font-family: var(--mono); font-size: 11px; color: var(--text-mid); white-space: nowrap; }
-  .input-group input {
-    font-family: var(--mono);
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    padding: 5px 10px;
-    width: 120px;
-    outline: none;
-    transition: border-color 0.15s;
-  }
+  .input-group input { font-family: var(--mono); font-size: 14px; font-weight: 500; color: var(--text); background: var(--surface); border: 1px solid var(--border); padding: 5px 10px; width: 110px; outline: none; transition: border-color 0.15s; }
   .input-group input:focus { border-color: var(--text-mid); }
+  .input-group input.input-error { border-color: var(--signal-bad); background: var(--signal-bad-bg); }
+  .input-group input.input-ok { border-color: var(--signal-good); }
   .input-group .unit { font-family: var(--mono); font-size: 11px; color: var(--text-dim); }
+  .input-error-msg { font-family: var(--mono); font-size: 10px; color: var(--signal-bad); margin-top: 2px; display: none; }
+  .input-error-msg.visible { display: block; }
   .recalc-note { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.04em; margin-left: auto; }
+  .inputs-section { display: flex; align-items: flex-start; gap: 32px; flex-wrap: wrap; }
+  .inputs-divider { width: 1px; background: var(--border); align-self: stretch; margin: 0 4px; }
+  .inputs-group-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 6px; }
 
   .container { max-width: 960px; margin: 0 auto; padding: 0 40px 80px; }
 
-  .verdict-hero {
-    margin-top: 48px;
-    padding: 36px 40px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    position: relative;
-    overflow: hidden;
-  }
-  .verdict-hero::before {
-    content: '';
-    position: absolute;
-    left: 0; top: 0; bottom: 0;
-    width: 4px;
-    background: var(--signal-good);
-  }
+  .verdict-hero { margin-top: 48px; padding: 36px 40px; border: 1px solid var(--border); background: var(--surface); position: relative; overflow: hidden; }
+  .verdict-hero::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--signal-good); }
   .verdict-eyebrow { font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 12px; }
   .verdict-main { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 20px; }
   .verdict-text h1 { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; color: var(--text); }
@@ -258,6 +156,14 @@
   .verdict-score { text-align: right; flex-shrink: 0; }
   .score-num { font-family: var(--mono); font-size: 52px; font-weight: 300; line-height: 1; color: var(--text); letter-spacing: -0.03em; }
   .score-label { font-family: var(--mono); font-size: 11px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 4px; }
+
+  /* SIGNAL WEIGHTS PANEL */
+  .weights-panel { background: var(--surface-2); border: 1px solid var(--border); padding: 16px 24px; margin-top: 12px; }
+  .weights-panel-title { font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 12px; }
+  .weights-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  .weight-item label { font-family: var(--mono); font-size: 10px; color: var(--text-mid); display: block; margin-bottom: 4px; letter-spacing: 0.06em; }
+  .weight-item input[type=range] { width: 100%; accent-color: var(--text-mid); }
+  .weight-val { font-family: var(--mono); font-size: 11px; color: var(--text); text-align: right; margin-top: 2px; }
 
   .section-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-dim); margin-top: 48px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
 
@@ -271,10 +177,22 @@
   .math-value.warn      { color: var(--signal-warn); }
   .math-value.danger    { color: var(--signal-bad); }
 
+  /* INTEREST RANGE DISPLAY */
+  .interest-range { font-size: 11px; color: var(--text-mid); margin-top: 4px; }
+  .interest-range span { font-family: var(--mono); }
+  .interest-range .ir-low  { color: var(--signal-good); }
+  .interest-range .ir-high { color: var(--signal-bad); }
+
+  /* PROBABILITY + KELLY CELLS */
+  .prob-cell { font-family: var(--mono); font-size: 18px; font-weight: 400; letter-spacing: -0.01em; }
+  .prob-cell.safe  { color: var(--signal-good); }
+  .prob-cell.warn  { color: var(--signal-warn); }
+  .prob-cell.risky { color: var(--signal-bad); }
+
   .scenario-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
   .scenario-card { border: 1px solid var(--border); background: var(--surface); padding: 24px; position: relative; }
-  .scenario-card.best::before { content: 'BEST CASE'; font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; background: var(--signal-good-bg); color: var(--signal-good); padding: 3px 8px; display: inline-block; margin-bottom: 14px; }
-  .scenario-card.worst::before { content: 'WORST CASE'; font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; background: var(--signal-bad-bg); color: var(--signal-bad); padding: 3px 8px; display: inline-block; margin-bottom: 14px; }
+  .scenario-card.best::before  { content: 'BEST CASE';  font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; background: var(--signal-good-bg); color: var(--signal-good); padding: 3px 8px; display: inline-block; margin-bottom: 14px; }
+  .scenario-card.worst::before { content: 'WORST CASE'; font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; background: var(--signal-bad-bg);  color: var(--signal-bad);  padding: 3px 8px; display: inline-block; margin-bottom: 14px; }
   .scenario-card h3 { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; color: var(--text); margin-bottom: 10px; }
   .scenario-stat { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--surface-3); font-size: 13px; }
   .scenario-stat:last-child { border-bottom: none; }
@@ -282,6 +200,14 @@
   .scenario-stat .val { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--text); }
   .scenario-stat .val.up { color: var(--signal-good); }
   .scenario-stat .val.dn { color: var(--signal-bad); }
+
+  /* TIME-TO-ACT STRESS BOX */
+  .stress-box { background: var(--signal-bad-bg); border: 1px solid var(--signal-bad); padding: 16px 24px; margin-top: 16px; }
+  .stress-box-title { font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--signal-bad); margin-bottom: 10px; }
+  .stress-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .stress-item .sl { font-family: var(--mono); font-size: 10px; color: var(--text-mid); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+  .stress-item .sv { font-family: var(--mono); font-size: 15px; font-weight: 500; color: var(--signal-bad); }
+  .stress-item .sm { font-size: 11px; color: var(--text-mid); margin-top: 2px; }
 
   .signal-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); margin-top: 16px; }
   .signal-cell { background: var(--surface); padding: 18px 20px; }
@@ -293,6 +219,12 @@
   .badge-warn    { background: var(--signal-warn-bg); color: var(--signal-warn); }
   .badge-bad     { background: var(--signal-bad-bg);  color: var(--signal-bad); }
   .badge-neutral { background: var(--surface-3); color: var(--text-mid); }
+
+  /* MVRV PERCENTILE BAR */
+  .percentile-bar-wrap { margin-top: 6px; }
+  .percentile-bar-track { height: 4px; background: var(--surface-3); border-radius: 2px; position: relative; overflow: hidden; }
+  .percentile-bar-fill { height: 100%; background: var(--signal-good); border-radius: 2px; transition: width 0.8s ease; }
+  .percentile-label { font-family: var(--mono); font-size: 10px; color: var(--text-dim); margin-top: 3px; }
 
   .cycle-bar-wrap { margin-top: 16px; background: var(--surface); border: 1px solid var(--border); padding: 24px 28px; }
   .cycle-bar-label { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 11px; color: var(--text-dim); margin-bottom: 8px; }
@@ -306,11 +238,11 @@
   .liq-row { display: grid; grid-template-columns: 160px 1fr auto auto; align-items: center; padding: 12px 24px; border-bottom: 1px solid var(--surface-3); font-size: 13px; }
   .liq-row:last-child { border-bottom: none; }
   .liq-row.header-row { background: var(--surface-2); font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); padding: 10px 24px; border-bottom: 1px solid var(--border); }
-  .liq-price { font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--text); }
+  .liq-price  { font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--text); }
   .liq-action { font-size: 12px; color: var(--text-mid); }
-  .liq-drop { font-family: var(--mono); font-size: 12px; text-align: right; padding-right: 24px; }
+  .liq-drop   { font-family: var(--mono); font-size: 12px; text-align: right; padding-right: 24px; }
   .liq-bar-col { padding: 0 24px 0 16px; }
-  .liq-bar { height: 4px; background: var(--surface-3); position: relative; }
+  .liq-bar      { height: 4px; background: var(--surface-3); position: relative; }
   .liq-bar-fill { height: 100%; background: var(--border); }
 
   .procon-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
@@ -323,13 +255,21 @@
   .quant-box { background: var(--text); color: var(--bg); padding: 28px 32px; margin-top: 16px; font-family: var(--mono); font-size: 12.5px; line-height: 1.9; letter-spacing: 0.01em; transition: background 0.2s, color 0.2s; }
   .quant-box-header { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 14px; opacity: 0.4; }
 
+  /* SNAPSHOT HISTORY SPARKLINE */
+  .history-bar { background: var(--surface); border: 1px solid var(--border); padding: 16px 24px; margin-top: 16px; display: flex; align-items: flex-start; gap: 24px; }
+  .history-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-dim); flex-shrink: 0; padding-top: 4px; }
+  .sparkline-wrap { flex: 1; overflow-x: auto; }
+  .sparkline-entries { display: flex; gap: 12px; align-items: flex-end; min-height: 56px; }
+  .spark-entry { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: default; }
+  .spark-bar { width: 20px; background: var(--border); border-radius: 2px; transition: background 0.2s; min-height: 4px; }
+  .spark-bar.bull { background: var(--signal-good); }
+  .spark-bar.neutral { background: var(--signal-warn); }
+  .spark-bar.bear { background: var(--signal-bad); }
+  .spark-date { font-family: var(--mono); font-size: 9px; color: var(--text-dim); white-space: nowrap; }
+  .spark-val  { font-family: var(--mono); font-size: 9px; color: var(--text-mid); }
+
   footer { border-top: 1px solid var(--border); padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; margin-top: 60px; }
   .footer-note { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.06em; text-transform: uppercase; }
-
-  .risk-meter-wrap { background: var(--surface); border: 1px solid var(--border); padding: 24px 28px; margin-top: 16px; display: flex; align-items: center; gap: 32px; }
-  .risk-meter-text { flex: 1; }
-  .risk-meter-text h3 { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
-  .risk-meter-text p { font-size: 13px; color: var(--text-mid); line-height: 1.5; }
 
   @media (max-width: 700px) {
     header { padding: 16px 20px; }
@@ -343,6 +283,8 @@
     .verdict-main { flex-direction: column; }
     .verdict-score { text-align: left; }
     .header-date { display: none; }
+    .weights-grid { grid-template-columns: 1fr 1fr; }
+    .stress-grid { grid-template-columns: 1fr 1fr; }
   }
 </style>
 </head>
@@ -359,6 +301,12 @@
   </label>
 </header>
 
+<!-- STALE DATA BANNER — shown when data is older than 24h or fallback is used -->
+<div class="stale-banner" id="stale-banner">
+  <span class="stale-banner-icon">⚠</span>
+  <span id="stale-banner-msg">STALE DATA — Using built-in snapshot. All scores, prices, and risk figures may be outdated. Refresh or check your connection.</span>
+</div>
+
 <!-- DATA BAR -->
 <div class="upload-bar">
   <span class="upload-bar-label">Live Data</span>
@@ -369,29 +317,99 @@
   <span class="upload-status" id="upload-status"></span>
 </div>
 
-<!-- INPUTS BAR -->
+<!-- INPUTS BAR — Position + Loan parameters -->
 <div class="inputs-bar">
-  <span class="inputs-bar-label">Position Inputs</span>
-
-  <div class="input-group">
-    <label for="inp-btc">BTC Amount</label>
-    <input type="number" id="inp-btc" value="0.337" step="0.001" min="0.001" max="1000" />
-    <span class="unit">BTC</span>
+  <div>
+    <div class="inputs-group-label">Position</div>
+    <div class="inputs-section">
+      <div class="input-group">
+        <label for="inp-btc">BTC Amount</label>
+        <input type="number" id="inp-btc" value="0.337" step="0.001" min="0.001" max="1000" />
+        <span class="unit">BTC</span>
+      </div>
+      <div class="input-group">
+        <label for="inp-price">BTC Price</label>
+        <input type="number" id="inp-price" value="62000" step="100" min="1000" max="10000000" />
+        <span class="unit">USD</span>
+      </div>
+      <div class="input-group">
+        <label for="inp-ltv">LTV</label>
+        <input type="number" id="inp-ltv" value="40" step="1" min="1" max="89" />
+        <span class="unit">%</span>
+      </div>
+    </div>
   </div>
-
-  <div class="input-group">
-    <label for="inp-price">BTC Price</label>
-    <input type="number" id="inp-price" value="62000" step="100" min="1000" max="10000000" />
-    <span class="unit">USD</span>
+  <div class="inputs-divider"></div>
+  <div>
+    <div class="inputs-group-label">Loan Parameters (editable)</div>
+    <div class="inputs-section">
+      <div class="input-group">
+        <label for="inp-mc-ltv">MC LTV</label>
+        <input type="number" id="inp-mc-ltv" value="85" step="1" min="50" max="98" title="Margin call LTV threshold — check your lender's current FAQ" />
+        <span class="unit">%</span>
+      </div>
+      <div class="input-group">
+        <label for="inp-liq-ltv">Liq LTV</label>
+        <input type="number" id="inp-liq-ltv" value="90" step="1" min="55" max="99" title="Liquidation LTV threshold — check your lender's current FAQ" />
+        <span class="unit">%</span>
+      </div>
+      <div class="input-group">
+        <label for="inp-apr">APR</label>
+        <input type="number" id="inp-apr" value="1.0" step="0.1" min="0.1" max="30" title="Current loan APR — flexible rates fluctuate; verify on your platform" />
+        <span class="unit">%</span>
+      </div>
+      <div class="input-group">
+        <label for="inp-vol">30d Vol</label>
+        <input type="number" id="inp-vol" value="65" step="1" min="10" max="200" title="30-day annualised BTC volatility in % — used for P(liq) calculation" />
+        <span class="unit">%ann</span>
+      </div>
+      <div class="input-group">
+        <label for="inp-entry">My Entry</label>
+        <input type="number" id="inp-entry" value="0" step="100" min="0" max="10000000" title="Your average BTC cost basis — 0 to skip" />
+        <span class="unit">USD</span>
+      </div>
+    </div>
   </div>
-
-  <div class="input-group">
-    <label for="inp-ltv">LTV</label>
-    <input type="number" id="inp-ltv" value="40" step="1" min="10" max="80" />
-    <span class="unit">%</span>
-  </div>
-
   <span class="recalc-note" id="recalc-note">↺ All figures update live</span>
+</div>
+
+<!-- SIGNAL WEIGHT PANEL (collapsible) -->
+<div class="upload-bar" style="flex-direction:column;align-items:flex-start;gap:8px;padding-top:12px;padding-bottom:12px;">
+  <div style="display:flex;align-items:center;gap:12px;width:100%;">
+    <span class="upload-bar-label">Composite Score Weights</span>
+    <button class="refresh-btn" id="weights-toggle" onclick="toggleWeights()" style="font-size:10px;padding:3px 10px;">▾ Adjust</button>
+    <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-left:auto;" id="weights-sum-note">Total: 100%</span>
+  </div>
+  <div id="weights-panel" class="weights-panel" style="width:100%;display:none;">
+    <div class="weights-grid">
+      <div class="weight-item">
+        <label>MVRV</label>
+        <input type="range" id="w-mvrv" min="0" max="50" value="30" oninput="updateWeightDisplay()">
+        <div class="weight-val" id="wv-mvrv">30%</div>
+      </div>
+      <div class="weight-item">
+        <label>Z-Score</label>
+        <input type="range" id="w-zscore" min="0" max="50" value="25" oninput="updateWeightDisplay()">
+        <div class="weight-val" id="wv-zscore">25%</div>
+      </div>
+      <div class="weight-item">
+        <label>MA Stack</label>
+        <input type="range" id="w-ma" min="0" max="50" value="20" oninput="updateWeightDisplay()">
+        <div class="weight-val" id="wv-ma">20%</div>
+      </div>
+      <div class="weight-item">
+        <label>ROC 30d</label>
+        <input type="range" id="w-roc" min="0" max="50" value="10" oninput="updateWeightDisplay()">
+        <div class="weight-val" id="wv-roc">10%</div>
+      </div>
+      <div class="weight-item">
+        <label>Cycle Pos.</label>
+        <input type="range" id="w-cycle" min="0" max="50" value="15" oninput="updateWeightDisplay()">
+        <div class="weight-val" id="wv-cycle">15%</div>
+      </div>
+    </div>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:10px;">Weights are normalized to 100% automatically. Drag to reprioritize signals.</div>
+  </div>
 </div>
 
 <div class="container">
@@ -406,7 +424,7 @@
       </div>
       <div class="verdict-score">
         <div class="score-num" id="score-num">6.8</div>
-        <div class="score-label">/ 10 timing score</div>
+        <div class="score-label">/ 10 weighted score</div>
       </div>
     </div>
   </div>
@@ -426,19 +444,20 @@
       <div class="math-sub">USDT to your spot wallet</div>
     </div>
     <div class="math-cell">
-      <div class="math-label">Interest Est. (1% APR)</div>
+      <div class="math-label">Interest Est. (<span id="lm-apr-label">1.0</span>% APR)</div>
       <div class="math-value" id="lm-interest">~$84/yr</div>
-      <div class="math-sub">Binance flexible rate ≈ 1–2% APR</div>
+      <div class="interest-range" id="lm-interest-range"></div>
+      <div class="math-sub">Flexible rates fluctuate — verify on platform</div>
     </div>
 
     <div class="math-cell">
       <div class="math-label">Margin Call LTV</div>
-      <div class="math-value warn">85%</div>
+      <div class="math-value warn" id="lm-mc-ltv-display">85%</div>
       <div class="math-sub">BTC price ≈ $<span id="lm-mc-price">38,930</span></div>
     </div>
     <div class="math-cell">
       <div class="math-label">Liquidation LTV</div>
-      <div class="math-value danger">90%</div>
+      <div class="math-value danger" id="lm-liq-ltv-display">90%</div>
       <div class="math-sub">BTC price ≈ $<span id="lm-liq-price">36,365</span> · <span id="lm-liq-drop">−41.3%</span></div>
     </div>
     <div class="math-cell">
@@ -447,11 +466,55 @@
       <div class="math-sub">Price room before any margin call</div>
     </div>
 
+    <!-- P(LIQUIDATION) + KELLY CELLS -->
+    <div class="math-cell">
+      <div class="math-label">P(Liq) in 90 days</div>
+      <div class="prob-cell" id="lm-pliq">—</div>
+      <div class="math-sub">Lognormal at current vol · <span id="lm-vol-label">65</span>% ann.</div>
+    </div>
+    <div class="math-cell">
+      <div class="math-label">Kelly-Optimal LTV</div>
+      <div class="prob-cell" id="lm-kelly">—</div>
+      <div class="math-sub">Given MVRV edge + vol + ruin constraint</div>
+    </div>
+    <div class="math-cell">
+      <div class="math-label">Risk/Reward vs Unleveraged</div>
+      <div class="math-value" id="lm-rr">—</div>
+      <div class="math-sub" id="lm-rr-sub">Entry-to-target vs entry-to-liq</div>
+    </div>
+
     <div class="math-cell math-cell-full">
       <div class="math-label">Margin Call Trigger Formula</div>
       <div style="font-family:var(--mono);font-size:13px;color:var(--text-mid);margin-top:4px;" id="lm-formula">
-        Margin Call = Loan / (BTC × 0.85) = <strong style="color:var(--text);" id="lm-formula-mc"></strong>
-        &nbsp;·&nbsp; Liquidation = Loan / (BTC × 0.90) = <strong style="color:var(--signal-bad);" id="lm-formula-liq"></strong>
+        Margin Call = Loan / (BTC × <span id="lm-formula-mc-pct">0.85</span>) = <strong style="color:var(--text);" id="lm-formula-mc"></strong>
+        &nbsp;·&nbsp; Liquidation = Loan / (BTC × <span id="lm-formula-liq-pct">0.90</span>) = <strong style="color:var(--signal-bad);" id="lm-formula-liq"></strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIME-TO-ACT STRESS SCENARIO -->
+  <div class="stress-box" id="stress-box">
+    <div class="stress-box-title">⚠ Margin call stress scenario — what if BTC keeps falling after MC?</div>
+    <div class="stress-grid">
+      <div class="stress-item">
+        <div class="sl">MC triggers at</div>
+        <div class="sv" id="st-mc-price">—</div>
+        <div class="sm">You have ~24–48h to add collateral</div>
+      </div>
+      <div class="stress-item">
+        <div class="sl">At −2% per day</div>
+        <div class="sv" id="st-liq-24h">—</div>
+        <div class="sm">BTC price after 24h decline</div>
+      </div>
+      <div class="stress-item">
+        <div class="sl">At −5% per day</div>
+        <div class="sv" id="st-liq-48h">—</div>
+        <div class="sm">BTC price after 48h decline</div>
+      </div>
+      <div class="stress-item">
+        <div class="sl">Collateral to top up</div>
+        <div class="sv" id="st-topup">—</div>
+        <div class="sm">USDT needed to drop LTV to 70%</div>
       </div>
     </div>
   </div>
@@ -482,8 +545,12 @@
         <span class="val up" id="sc-pct-gain">+94% from here</span>
       </div>
       <div class="scenario-stat">
-        <span class="key">Loan effectively costs</span>
+        <span class="key">Loan effectively costs (low APR)</span>
         <span class="val up" id="sc-loan-cost">~$84 interest</span>
+      </div>
+      <div class="scenario-stat">
+        <span class="key">Loan cost at high APR (5%)</span>
+        <span class="val" id="sc-loan-cost-hi">—</span>
       </div>
       <div class="scenario-stat">
         <span class="key">ATH this cycle</span>
@@ -531,12 +598,20 @@
       <div class="sig-label">MVRV Ratio</div>
       <div class="sig-val" id="sig-mvrv">1.167</div>
       <div class="sig-context" id="sig-mvrv-ctx">Hist. mean: 1.921 · −39% below mean</div>
+      <div class="percentile-bar-wrap" id="mvrv-pct-wrap">
+        <div class="percentile-bar-track"><div class="percentile-bar-fill" id="mvrv-pct-bar" style="width:0%"></div></div>
+        <div class="percentile-label" id="mvrv-pct-label"></div>
+      </div>
       <span class="badge badge-good" id="sig-mvrv-badge">Undervalued</span>
     </div>
     <div class="signal-cell">
       <div class="sig-label">Z-Score</div>
       <div class="sig-val" id="sig-zscore">−1.426</div>
       <div class="sig-context" id="sig-zscore-ctx">Statistically cheap. Below 0 = below realized value mean</div>
+      <div class="percentile-bar-wrap" id="zscore-pct-wrap">
+        <div class="percentile-bar-track"><div class="percentile-bar-fill" id="zscore-pct-bar" style="width:0%"></div></div>
+        <div class="percentile-label" id="zscore-pct-label"></div>
+      </div>
       <span class="badge badge-good" id="sig-zscore-badge">Accumulate Zone</span>
     </div>
     <div class="signal-cell">
@@ -577,6 +652,16 @@
     </div>
   </div>
 
+  <!-- SIGNAL HISTORY SPARKLINE -->
+  <div class="history-bar" id="history-bar">
+    <div class="history-label">MVRV History</div>
+    <div class="sparkline-wrap">
+      <div class="sparkline-entries" id="sparkline-entries">
+        <span style="font-family:var(--mono);font-size:11px;color:var(--text-dim);">Loading snapshots…</span>
+      </div>
+    </div>
+  </div>
+
   <!-- CYCLE PROGRESS -->
   <div class="section-label" id="cycle-section-label">Cycle 4 Context (2024–2027)</div>
   <div class="cycle-bar-wrap">
@@ -614,35 +699,28 @@
 
   <!-- LIQUIDATION LEVELS -->
   <div class="section-label">Liquidation Levels · Your Position</div>
-  <div class="liq-table" id="liq-table">
-    <div class="liq-row header-row">
-      <span>BTC Price</span>
-      <span>Action Required</span>
-      <span style="padding-right:24px;">Drop from current</span>
-      <span></span>
-    </div>
-  </div>
+  <div class="liq-table" id="liq-table"></div>
 
   <!-- PRO / CON -->
   <div class="section-label">Analyst View · Pro &amp; Con</div>
   <div class="procon-grid">
     <div class="procon-card">
       <h4>✓ Case for borrowing now</h4>
-      <div class="procon-item"><span class="procon-icon">↗</span><span id="pro-1">MVRV Z-score at −1.426 — historically a strong accumulation zone.</span></div>
-      <div class="procon-item"><span class="procon-icon">↗</span><span id="pro-2">C4 MVRV regression floor is 1.026–1.088. At 1.167, borrowing near the statistical bottom.</span></div>
-      <div class="procon-item"><span class="procon-icon">↗</span><span id="pro-3">Liquidation requires a deep drop — no prior cycle has seen that continuation after an already large MVRV drawdown.</span></div>
-      <div class="procon-item"><span class="procon-icon">↗</span><span id="pro-4">Binance Flexible Loan APR ≈1%. Loan carry is minimal.</span></div>
+      <div class="procon-item"><span class="procon-icon">↗</span><span id="pro-1">MVRV Z-score — historically a strong accumulation zone.</span></div>
+      <div class="procon-item"><span class="procon-icon">↗</span><span id="pro-2">C4 MVRV regression floor — borrowing near the statistical bottom.</span></div>
+      <div class="procon-item"><span class="procon-icon">↗</span><span id="pro-3">Liquidation requires a deep drop.</span></div>
+      <div class="procon-item"><span class="procon-icon">↗</span><span id="pro-4">Loan carry is minimal relative to potential BTC upside.</span></div>
       <div class="procon-item"><span class="procon-icon">↗</span><span>No taxable event. You keep BTC exposure throughout.</span></div>
-      <div class="procon-item"><span class="procon-icon">↗</span><span id="pro-6">Floor consensus model is close to today's price — this level has held as a floor in multiple models.</span></div>
+      <div class="procon-item"><span class="procon-icon">↗</span><span id="pro-6">Floor consensus model close to today's price — held as floor in multiple models.</span></div>
     </div>
     <div class="procon-card">
       <h4>✕ Risks to manage</h4>
-      <div class="procon-item"><span class="procon-icon">↘</span><span id="con-1">MA stack is bearish. Trend confirmation has not happened. Borrowing into a downtrend technically.</span></div>
-      <div class="procon-item"><span class="procon-icon">↘</span><span id="con-2">C4 peak MVRV was lower than prior cycles. Diminishing returns — upside ceiling shrinks each cycle.</span></div>
-      <div class="procon-item"><span class="procon-icon">↘</span><span>Ceiling models have historically massive error rates. The consensus target is a median guess, not a guarantee.</span></div>
+      <div class="procon-item"><span class="procon-icon">↘</span><span id="con-1">MA stack — trend confirmation has not happened. Borrowing into a downtrend technically.</span></div>
+      <div class="procon-item"><span class="procon-icon">↘</span><span id="con-2">C4 peak MVRV lower than prior cycles. Diminishing returns — upside ceiling shrinks each cycle.</span></div>
+      <div class="procon-item"><span class="procon-icon">↘</span><span>Ceiling models have historically massive error rates. Consensus target is a median guess, not a guarantee.</span></div>
       <div class="procon-item"><span class="procon-icon">↘</span><span>Same-pair borrowing not supported: pledging BTC yields USDT. Have a clear deployment plan.</span></div>
-      <div class="procon-item"><span class="procon-icon">↘</span><span>Margin call notifications are best-effort only. Binance explicitly states delivery is not guaranteed. Monitor manually.</span></div>
-      <div class="procon-item"><span class="procon-icon">↘</span><span id="con-6">Downside model still shows a theoretical extreme floor — if macro deteriorates hard, the range is wide.</span></div>
+      <div class="procon-item"><span class="procon-icon">↘</span><span>⚠ Margin call notifications are best-effort only. Delivery is NOT guaranteed. Monitor manually — set price alerts independently.</span></div>
+      <div class="procon-item"><span class="procon-icon">↘</span><span id="con-6">Downside model shows a theoretical extreme floor — if macro deteriorates hard, the range is wide.</span></div>
     </div>
   </div>
 
@@ -657,23 +735,48 @@
 
 <footer>
   <span class="footer-note" id="footer-data">MVRV Data: loading…</span>
-  <span class="footer-note">Binance Flexible Loan · Margin Call: 85% LTV · Liquidation: 90% LTV · 2% fee</span>
+  <span class="footer-note" id="footer-params">Binance Flexible Loan · MC: 85% · Liq: 90% · APR: 1%</span>
   <span class="footer-note">Not financial advice</span>
 </footer>
 
 <script>
 /* ─────────────────────────────────────────────────────
-   BINANCE CONSTANTS (per official FAQ)
+   HELPERS
 ───────────────────────────────────────────────────── */
-const MC_LTV  = 0.85;   // Margin call at 85% LTV
-const LIQ_LTV = 0.90;   // Liquidation at 90% LTV (hard cap per Binance FAQ)
-const APR     = 0.01;   // ~1% APR flexible rate
+function fmt(n, dec=0)    { if (!isFinite(n)) return '—'; return n.toLocaleString('en-US', {minimumFractionDigits:dec, maximumFractionDigits:dec}); }
+function fmtUSD(n, dec=0) { if (!isFinite(n)) return '—'; return '$' + fmt(n, dec); }
+function pctDrop(from, to){ return ((to - from) / from * 100).toFixed(1); }
+function el(id)           { return document.getElementById(id); }
+
+/* Validated numeric input — returns parsed float or null, shows error styling */
+function readInput(id, min, max, fallback) {
+  const inp = el(id);
+  if (!inp) return fallback;
+  const raw = inp.value.trim();
+  const v = parseFloat(raw);
+  if (isNaN(v) || v < min || v > max) {
+    inp.classList.add('input-error');
+    inp.classList.remove('input-ok');
+    return fallback;
+  }
+  inp.classList.remove('input-error');
+  inp.classList.add('input-ok');
+  return v;
+}
+
+/* ─────────────────────────────────────────────────────
+   LOAN PARAMETER GETTERS (user-editable)
+───────────────────────────────────────────────────── */
+function getMcLtv()  { return readInput('inp-mc-ltv',  50, 98,  0.85) / 100; }
+function getLiqLtv() { return readInput('inp-liq-ltv', 55, 99,  0.90) / 100; }
+function getApr()    { return readInput('inp-apr',     0.1, 30, 1.0)  / 100; }
+function getVol()    { return readInput('inp-vol',     10, 200, 65)   / 100; }
+function getEntry()  { return readInput('inp-entry',   0, 10000000, 0); }
 
 /* ─────────────────────────────────────────────────────
    DATA STATE — populated from TXT or defaults
 ───────────────────────────────────────────────────── */
 let D = {
-  // Current status
   date: '2026-06-05',
   mvrv: 1.167,
   zscore: -1.426,
@@ -685,7 +788,6 @@ let D = {
   histMeanMvrv: 1.921,
   totalPoints: '838,063',
   dataRange: '2010-10-09 to 2026-06-05',
-  // Cycle
   cycleName: 'C4 (2024-27)',
   cyclePos: 54.1,
   cyclePeakMvrv: 2.733,
@@ -693,174 +795,192 @@ let D = {
   cyclePeakBtcPrice: 99013,
   cycleDrawdown: -57.3,
   mvrvVsCyclePeak: 43,
-  // Projections
   ceilPrice: 120584,
   ceilHigh: 340281,
   ceilLow: 99110,
   mvrvUpside: 136631,
   floorPrice: 61076,
   mvrvDownside: 10700,
-  // ATH
   c4Ath: 124728,
   c4AthDate: '2025-10-06',
   c4AthLeadLag: 318,
-  // Regression floor
   c4BottomLog: 1.026, c4BottomLin: 1.088,
-  // Next halving
   nextHalving: '2028-03-26',
   nextHalvingDays: 656,
+  worstCycleDrawdown: -90.7,
 };
 
-/* ─────────────────────────────────────────────────────
-   TXT PARSER
-───────────────────────────────────────────────────── */
-function parseTxt(text) {
-  const lines = text.split('\n').map(l => l.trim());
-  const nd = {...D}; // clone defaults
+/* Snapshot ring buffer — stores last 14 fetched daily summaries */
+const SNAPSHOT_KEY = 'btc_loan_snapshots_v2';
+let snapshots = [];
 
-  function getVal(label) {
-    const re = new RegExp('^' + label.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\s*:\\s*(.+)', 'i');
-    for (const l of lines) { const m = l.match(re); if (m) return m[1].trim(); }
-    return null;
-  }
-  function parseNum(s) { return s ? parseFloat(s.replace(/[$,%]/g, '').replace(/,/g, '').trim()) : null; }
+function loadSnapshots() {
+  try {
+    const raw = localStorage.getItem(SNAPSHOT_KEY);
+    if (raw) snapshots = JSON.parse(raw);
+  } catch(e) { snapshots = []; }
+}
 
-  const v = (label) => getVal(label);
-
-  // CURRENT STATUS
-  const date = v('Date'); if (date) nd.date = date;
-  const mvrv = v('MVRV'); if (mvrv) nd.mvrv = parseNum(mvrv);
-  const zsc  = v('Z-score'); if (zsc) nd.zscore = parseNum(zsc);
-  const sig  = v('Signal'); if (sig) nd.signal = sig;
-  const ma20 = v('MA20'); if (ma20) nd.ma20 = parseNum(ma20);
-  const ma50 = v('MA50'); if (ma50) nd.ma50 = parseNum(ma50);
-  const ma200= v('MA200'); if (ma200) nd.ma200 = parseNum(ma200);
-  const mas  = v('MA stack'); if (mas) nd.maStack = mas.split(' ')[0]; // 'Bearish' or 'Bullish'
-  const r30  = v('ROC 30d'); if (r30) nd.roc30 = parseNum(r30);
-  const r90  = v('ROC 90d'); if (r90) nd.roc90 = parseNum(r90);
-  const btcp = v('BTC Price'); if (btcp) nd.btcPrice = parseNum(btcp);
-  const hmv  = v('Historical mean MVRV'); if (hmv) nd.histMeanMvrv = parseNum(hmv);
-  const tp   = v('Total data points'); if (tp) nd.totalPoints = tp.replace(/,/g,'').trim();
-  const dr   = v('Data range'); if (dr) nd.dataRange = dr;
-
-  // CURRENT CYCLE POSITION
-  const cn   = v('Current cycle'); if (cn) nd.cycleName = cn;
-  const cp   = v('Cycle position'); if (cp) nd.cyclePos = parseNum(cp);
-  const cpk  = v('Cycle peak so far');
-  if (cpk) {
-    const m = cpk.match(/([\d.]+)\s+on\s+([\d-]+)/);
-    if (m) { nd.cyclePeakMvrv = parseFloat(m[1]); nd.cyclePeakDate = m[2]; }
-  }
-  const cdd  = v('Current drawdown from cycle peak'); if (cdd) nd.cycleDrawdown = parseNum(cdd);
-  const vcp  = v('Current MVRV vs cycle peak'); if (vcp) nd.mvrvVsCyclePeak = parseNum(vcp);
-
-  // CYCLE SUMMARY — get C4 BTC price at MVRV peak
-  for (let i=0; i<lines.length; i++) {
-    if (lines[i].includes('Cycle 4') && lines[i].includes(':')) {
-      for (let j=i+1; j<Math.min(i+10, lines.length); j++) {
-        const bm = lines[j].match(/BTC price at MVRV peak:\s*\$?([\d,]+)/i);
-        if (bm) { nd.cyclePeakBtcPrice = parseNum(bm[1]); break; }
-      }
-    }
-  }
-
-  // PRICE PROJECTIONS
-  const cupL = v('Ceiling consensus midpoint'); if (cupL) nd.ceilPrice = parseNum(cupL);
-  const cupR = v('Ceiling consensus range');
-  if (cupR) {
-    const m = cupR.match(/\$([\d,]+)\s*[–-]\s*\$([\d,]+)/);
-    if (m) { nd.ceilLow = parseNum(m[1]); nd.ceilHigh = parseNum(m[2]); }
-  }
-  const flp = v('Floor consensus midpoint'); if (flp) nd.floorPrice = parseNum(flp);
-
-  // Individual model values
-  for (const l of lines) {
-    const mu = l.match(/MVRV Upside:\s*\$([\d,]+)/i);
-    if (mu) nd.mvrvUpside = parseNum(mu[1]);
-    const md = l.match(/MVRV Downside:\s*\$([\d,]+)/i);
-    if (md) nd.mvrvDownside = parseNum(md[1]);
-  }
-
-  // ATH from PRICE PEAK DIVERGENCE section C4
-  for (let i=0; i<lines.length; i++) {
-    if (lines[i] === 'Cycle 4:' || lines[i].startsWith('Cycle 4:')) {
-      for (let j=i+1; j<Math.min(i+15, lines.length); j++) {
-        const bm = lines[j].match(/BTC ATH:\s*\$([\d,]+)\s+on\s+([\d-]+)/i);
-        if (bm) { nd.c4Ath = parseNum(bm[1]); nd.c4AthDate = bm[2]; }
-        const ll = lines[j].match(/Lead\/lag:.*?(\d+)d/i);
-        if (ll) nd.c4AthLeadLag = parseInt(ll[1]);
-        const pp = lines[j].match(/Price at MVRV peak:\s*\$([\d,]+)/i);
-        if (pp) nd.cyclePeakBtcPrice = parseNum(pp[1]);
-      }
-    }
-  }
-
-  // REGRESSION — C4 bottom
-  for (const l of lines) {
-    const m = l.match(/C4 bottom \(log\/linear\):\s*([\d.]+)\s*\/\s*([\d.]+)/i);
-    if (m) { nd.c4BottomLog = parseFloat(m[1]); nd.c4BottomLin = parseFloat(m[2]); }
-  }
-
-  // NEXT HALVING
-  for (const l of lines) {
-    const m = l.match(/C5 halving:.*?\[upcoming\s*·\s*(\d+)d/i);
-    if (m) nd.nextHalvingDays = parseInt(m[1]);
-    const d = l.match(/C5 halving:\s*([\d-]+)/i);
-    if (d) nd.nextHalving = d[1];
-  }
-
-  // HALVING DATES — worst cycle drawdown from DRAWDOWN section
-  let worstDd = -90.7;
-  for (const l of lines) {
-    const m = l.match(/Max drawdown:\s*(-[\d.]+)%/i);
-    if (m) { const v = parseFloat(m[1]); if (v < worstDd) worstDd = v; }
-  }
-  nd.worstCycleDrawdown = worstDd;
-
-  return nd;
+function saveSnapshot(data) {
+  loadSnapshots();
+  const existing = snapshots.findIndex(s => s.date === data.date);
+  if (existing >= 0) snapshots[existing] = { date: data.date, mvrv: data.mvrv, zscore: data.zscore, btcPrice: data.btcPrice };
+  else snapshots.unshift({ date: data.date, mvrv: data.mvrv, zscore: data.zscore, btcPrice: data.btcPrice });
+  snapshots = snapshots.slice(0, 14);
+  try { localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snapshots)); } catch(e) {}
 }
 
 /* ─────────────────────────────────────────────────────
-   DARK MODE
+   STALE DATA DETECTION
 ───────────────────────────────────────────────────── */
-const toggle = document.getElementById('theme-toggle');
-const label  = document.getElementById('theme-label');
-function setTheme(dark) {
-  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
-  label.textContent = dark ? 'Dark' : 'Light';
-  localStorage.setItem('theme', dark ? 'dark' : 'light');
+function getDataAgeHours(dateStr) {
+  if (!dateStr) return 999;
+  try {
+    const d = new Date(dateStr + 'T00:00:00Z');
+    return (Date.now() - d.getTime()) / 3600000;
+  } catch { return 999; }
 }
-toggle.addEventListener('click', () => {
-  setTheme(document.documentElement.getAttribute('data-theme') !== 'dark');
-});
-(function() {
-  const saved = localStorage.getItem('theme');
-  if (saved) { setTheme(saved === 'dark'); return; }
-  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) setTheme(true);
-})();
+
+function setStaleBanner(show, msg) {
+  const banner = el('stale-banner');
+  if (show) {
+    el('stale-banner-msg').textContent = msg || 'STALE DATA — figures may be outdated.';
+    banner.classList.add('visible');
+  } else {
+    banner.classList.remove('visible');
+  }
+}
 
 /* ─────────────────────────────────────────────────────
-   HELPERS
+   QUANTITATIVE CALCULATIONS
 ───────────────────────────────────────────────────── */
-function fmt(n, dec=0)    { return n.toLocaleString('en-US', {minimumFractionDigits:dec, maximumFractionDigits:dec}); }
-function fmtUSD(n, dec=0) { return '$' + fmt(n, dec); }
-function pctDrop(from, to){ return ((to - from) / from * 100).toFixed(1); }
-function el(id)           { return document.getElementById(id); }
+
+/* Lognormal P(price < target within T days)
+   Uses Black-Scholes style closed-form with drift = 0 (conservative) */
+function pLiqWithin(currentPrice, targetPrice, annVol, horizonDays) {
+  if (!isFinite(currentPrice) || !isFinite(targetPrice) || currentPrice <= 0 || targetPrice <= 0) return NaN;
+  const t = horizonDays / 365;
+  const sigma = annVol;
+  const x = (Math.log(targetPrice / currentPrice)) / (sigma * Math.sqrt(t));
+  return normalCDF(x);
+}
+
+/* Standard normal CDF via rational approximation (Abramowitz & Stegun) */
+function normalCDF(z) {
+  const a1=0.254829592, a2=-0.284496736, a3=1.421413741, a4=-1.453152027, a5=1.061405429, p=0.3275911;
+  const sign = z < 0 ? -1 : 1;
+  const absz = Math.abs(z);
+  const t = 1.0 / (1.0 + p * absz);
+  const poly = t*(a1+t*(a2+t*(a3+t*(a4+t*a5))));
+  const erf = 1.0 - poly * Math.exp(-absz * absz);
+  return 0.5 * (1.0 + sign * erf);
+}
+
+/* Kelly-optimal LTV:
+   Edge = MVRV signal score (0–1 mapped from composite score)
+   f* = (bp - q) / b  where b = upside/downside ratio, p = win prob, q = 1-p
+   We cap at LIQ LTV and halve for half-Kelly (standard risk practice) */
+function kellyOptimalLtv(compositeScore, upside, downside, liqLtv) {
+  if (!isFinite(upside) || !isFinite(downside) || downside <= 0) return NaN;
+  const p = 0.4 + (compositeScore / 10) * 0.3; // win prob: 40% at score=0, 70% at score=10
+  const q = 1 - p;
+  const b = upside / downside;
+  const fullKelly = (b * p - q) / b;
+  const halfKelly = Math.max(0, fullKelly * 0.5);
+  return Math.min(halfKelly, liqLtv - 0.05);
+}
+
+/* ─────────────────────────────────────────────────────
+   COMPOSITE SCORE ENGINE — weighted, dynamic
+───────────────────────────────────────────────────── */
+function getWeights() {
+  const raw = {
+    mvrv:   parseFloat(el('w-mvrv').value)   || 30,
+    zscore: parseFloat(el('w-zscore').value) || 25,
+    ma:     parseFloat(el('w-ma').value)     || 20,
+    roc:    parseFloat(el('w-roc').value)    || 10,
+    cycle:  parseFloat(el('w-cycle').value)  || 15,
+  };
+  const total = raw.mvrv + raw.zscore + raw.ma + raw.roc + raw.cycle;
+  if (total === 0) return { mvrv:0.30, zscore:0.25, ma:0.20, roc:0.10, cycle:0.15 };
+  return { mvrv: raw.mvrv/total, zscore: raw.zscore/total, ma: raw.ma/total, roc: raw.roc/total, cycle: raw.cycle/total };
+}
+
+function scoreSignals() {
+  const w = getWeights();
+
+  // MVRV score: 10 if at hist min, 5 at mean, 0 if 2x mean
+  const mvrvScore = Math.max(0, Math.min(10, 10 * (1 - (D.mvrv / (D.histMeanMvrv * 2)))));
+
+  // Z-score: 10 if ≤ -2, 5 at 0, 0 if ≥ +3
+  const zscoreScore = Math.max(0, Math.min(10, 10 * (1 - (D.zscore + 2) / 5)));
+
+  // MA stack: bullish = 8, bearish = 3
+  const maScore = D.maStack.toLowerCase().includes('bull') ? 8 : 3;
+
+  // ROC 30d: 10 if >10%, 5 if 0%, 2 if < -10%
+  const rocScore = D.roc30 > 10 ? 9 : D.roc30 > 0 ? 6 : D.roc30 > -10 ? 4 : 2;
+
+  // Cycle: early (0-35%) = 9, mid (35-65%) = 7, late (65%+) = 4
+  const cycleScore = D.cyclePos < 35 ? 9 : D.cyclePos < 65 ? 7 : 4;
+
+  const composite = (
+    w.mvrv   * mvrvScore +
+    w.zscore * zscoreScore +
+    w.ma     * maScore +
+    w.roc    * rocScore +
+    w.cycle  * cycleScore
+  );
+
+  return {
+    composite: Math.max(0, Math.min(10, composite)),
+    mvrvScore, zscoreScore, maScore, rocScore, cycleScore,
+    weights: w
+  };
+}
+
+/* MVRV historical percentile approximation
+   Based on empirical BTC MVRV distribution: roughly log-normal
+   mean ~1.9, rough percentile curve fitted from known data points */
+function mvrvPercentile(mvrv) {
+  const knownPts = [[0.7,5],[0.9,10],[1.1,20],[1.3,30],[1.5,42],[1.7,52],[1.9,60],[2.1,67],[2.5,78],[3.0,88],[4.0,96]];
+  if (mvrv <= knownPts[0][0]) return knownPts[0][1];
+  if (mvrv >= knownPts[knownPts.length-1][0]) return knownPts[knownPts.length-1][1];
+  for (let i = 0; i < knownPts.length - 1; i++) {
+    if (mvrv >= knownPts[i][0] && mvrv <= knownPts[i+1][0]) {
+      const t = (mvrv - knownPts[i][0]) / (knownPts[i+1][0] - knownPts[i][0]);
+      return knownPts[i][1] + t * (knownPts[i+1][1] - knownPts[i][1]);
+    }
+  }
+  return 50;
+}
+
+/* Z-score historical percentile — roughly normally distributed, shifted */
+function zscorePercentile(z) {
+  return Math.round(normalCDF(z / 1.2) * 100);
+}
 
 /* ─────────────────────────────────────────────────────
    CORE CALCULATION
 ───────────────────────────────────────────────────── */
 function calc() {
-  const btc    = parseFloat(el('inp-btc').value)   || 0.337;
-  const price  = parseFloat(el('inp-price').value) || D.btcPrice;
-  const ltvPct = parseFloat(el('inp-ltv').value)   || 40;
+  const btc    = readInput('inp-btc',   0.001, 1000,       0.337);
+  const price  = readInput('inp-price', 1000,  10000000,   D.btcPrice);
+  const ltvPct = readInput('inp-ltv',   1,     89,         40);
   const ltv    = ltvPct / 100;
+  const mcLtv  = getMcLtv();
+  const liqLtv = getLiqLtv();
+  const apr    = getApr();
+  const vol    = getVol();
+  const entry  = getEntry();
 
   const collateral = btc * price;
   const loan       = collateral * ltv;
-  const interest   = loan * APR;
-  const mcPrice    = loan / (btc * MC_LTV);
-  const liqPrice   = loan / (btc * LIQ_LTV);
+  const interest   = loan * apr;
+  const interestLo = loan * 0.01;
+  const interestHi = loan * 0.05;
+  const mcPrice    = loan / (btc * mcLtv);
+  const liqPrice   = loan / (btc * liqLtv);
   const buffer     = price - mcPrice;
   const bufferPct  = (buffer / price * 100);
   const liqDropPct = parseFloat(pctDrop(price, liqPrice));
@@ -869,7 +989,62 @@ function calc() {
   const netGain    = btcAtCeil - collateral - loan;
   const pctGain    = (D.ceilPrice / price - 1) * 100;
 
-  return { btc, price, ltv, ltvPct, collateral, loan, interest, mcPrice, liqPrice, buffer, bufferPct, liqDropPct, btcAtCeil, netGain, pctGain, athDropPct };
+  // P(liquidation within 90 days)
+  const pLiq90 = pLiqWithin(price, liqPrice, vol, 90);
+
+  // Scenario scores from scoreSignals
+  const signals = scoreSignals();
+  const score   = signals.composite;
+
+  // Kelly optimal LTV
+  const upsidePct  = (D.ceilPrice - price) / price;
+  const downsidePct = Math.abs((liqPrice - price) / price);
+  const kellyLtv   = kellyOptimalLtv(score, upsidePct, downsidePct, liqLtv);
+
+  // Risk/reward vs entry
+  let rrRatio = null;
+  if (entry > 0 && entry < price * 2) {
+    const upMove  = D.ceilPrice - entry;
+    const dnMove  = entry - liqPrice;
+    if (dnMove > 0) rrRatio = upMove / dnMove;
+  }
+
+  // Stress scenario
+  const mcP24h = mcPrice * Math.pow(0.98, 1);
+  const mcP48h = mcPrice * Math.pow(0.95, 2);
+  const topupNeeded = Math.max(0, loan / 0.70 - btc * mcPrice);
+
+  return {
+    btc, price, ltv, ltvPct, mcLtv, liqLtv, apr,
+    collateral, loan, interest, interestLo, interestHi,
+    mcPrice, liqPrice, buffer, bufferPct, liqDropPct,
+    athDropPct, btcAtCeil, netGain, pctGain,
+    pLiq90, score, signals, kellyLtv, rrRatio,
+    mcP24h, mcP48h, topupNeeded, entry, vol
+  };
+}
+
+/* ─────────────────────────────────────────────────────
+   WEIGHT DISPLAY
+───────────────────────────────────────────────────── */
+function updateWeightDisplay() {
+  const ids = ['mvrv','zscore','ma','roc','cycle'];
+  const vals = ids.map(id => parseFloat(el('w-'+id).value) || 0);
+  const total = vals.reduce((a,b) => a+b, 0);
+  ids.forEach((id, i) => {
+    const pct = total > 0 ? Math.round(vals[i] / total * 100) : 0;
+    el('wv-'+id).textContent = pct + '%';
+  });
+  el('weights-sum-note').textContent = 'Total: 100% (normalized)';
+  render();
+}
+
+function toggleWeights() {
+  const panel = el('weights-panel');
+  const btn   = el('weights-toggle');
+  const isHidden = panel.style.display === 'none';
+  panel.style.display = isHidden ? 'block' : 'none';
+  btn.textContent = isHidden ? '▴ Collapse' : '▾ Adjust';
 }
 
 /* ─────────────────────────────────────────────────────
@@ -884,11 +1059,37 @@ function renderSignals() {
   el('sig-mvrv-badge').className = 'badge ' + (mvrvBull ? 'badge-good' : 'badge-warn');
   el('sig-mvrv-badge').textContent = mvrvBull ? 'Undervalued' : 'Above Mean';
 
+  // MVRV percentile bar
+  const mvrvPct = Math.round(mvrvPercentile(D.mvrv));
+  setTimeout(() => {
+    const bar = el('mvrv-pct-bar');
+    if (bar) bar.style.width = mvrvPct + '%';
+  }, 400);
+  const mvrvPctLabel = el('mvrv-pct-label');
+  if (mvrvPctLabel) mvrvPctLabel.textContent = `${mvrvPct}th percentile historically — only ${mvrvPct}% of days were cheaper`;
+  const mvrvBar = el('mvrv-pct-bar');
+  if (mvrvBar) {
+    mvrvBar.style.background = mvrvPct < 30 ? 'var(--signal-good)' : mvrvPct < 60 ? 'var(--signal-warn)' : 'var(--signal-bad)';
+  }
+
   // Z-score
   el('sig-zscore').textContent = D.zscore.toFixed(3);
   const zBull = D.zscore < 0;
   el('sig-zscore-badge').className = 'badge ' + (zBull ? 'badge-good' : (D.zscore < 1.5 ? 'badge-warn' : 'badge-bad'));
   el('sig-zscore-badge').textContent = D.zscore < -0.5 ? 'Accumulate Zone' : D.zscore < 0 ? 'Cheap' : D.zscore < 2 ? 'Neutral' : 'Expensive';
+
+  // Z-score percentile bar
+  const zPct = zscorePercentile(D.zscore);
+  setTimeout(() => {
+    const bar = el('zscore-pct-bar');
+    if (bar) bar.style.width = zPct + '%';
+  }, 500);
+  const zPctLabel = el('zscore-pct-label');
+  if (zPctLabel) zPctLabel.textContent = `${zPct}th percentile — z-score cheaper ${100-zPct}% of history`;
+  const zBar = el('zscore-pct-bar');
+  if (zBar) {
+    zBar.style.background = zPct < 30 ? 'var(--signal-good)' : zPct < 60 ? 'var(--signal-warn)' : 'var(--signal-bad)';
+  }
 
   // MA Stack
   const maDir = D.maStack.toLowerCase();
@@ -916,19 +1117,20 @@ function renderSignals() {
   el('sig-vs-peak-badge').textContent = D.mvrvVsCyclePeak < 50 ? 'Deep Dip' : 'Partial Recovery';
 
   // Scenario data
-  el('sc-ceil-price').textContent = fmtUSD(D.ceilPrice);
-  el('sc-mvrv-up').textContent    = fmtUSD(D.mvrvUpside);
+  el('sc-ceil-price').textContent  = fmtUSD(D.ceilPrice);
+  el('sc-mvrv-up').textContent     = fmtUSD(D.mvrvUpside);
   el('sc-floor-price').textContent = fmtUSD(D.floorPrice);
-  el('sc-mvrv-dn').textContent    = fmtUSD(D.mvrvDownside);
-  el('sc-ath').textContent        = fmtUSD(D.c4Ath) + ' (' + fmtDate(D.c4AthDate) + ')';
-  el('sc-c4-dd').textContent      = D.cycleDrawdown.toFixed(1) + '% (already hit)';
+  el('sc-mvrv-dn').textContent     = fmtUSD(D.mvrvDownside);
+  el('sc-ath').textContent         = fmtUSD(D.c4Ath) + ' (' + fmtDate(D.c4AthDate) + ')';
+  el('sc-c4-dd').textContent       = D.cycleDrawdown.toFixed(1) + '% (already hit)';
+  el('sc-worst-dd').textContent    = (D.worstCycleDrawdown || -90.7).toFixed(1) + '% (C1)';
 
   // Cycle meta
-  el('cm-c4-peak').textContent     = D.cyclePeakMvrv.toFixed(3);
-  el('cm-c4-peak-date').textContent= formatDateShort(D.cyclePeakDate) + ' · ' + fmtUSD(D.cyclePeakBtcPrice);
-  el('cm-ath').textContent         = fmtUSD(D.c4Ath);
-  el('cm-ath-date').textContent    = fmtDate(D.c4AthDate) + ' · ' + D.c4AthLeadLag + 'd after MVRV peak';
-  el('cm-ceiling').textContent     = fmtUSD(D.ceilPrice);
+  el('cm-c4-peak').textContent      = D.cyclePeakMvrv.toFixed(3);
+  el('cm-c4-peak-date').textContent = formatDateShort(D.cyclePeakDate) + ' · ' + fmtUSD(D.cyclePeakBtcPrice);
+  el('cm-ath').textContent          = fmtUSD(D.c4Ath);
+  el('cm-ath-date').textContent     = fmtDate(D.c4AthDate) + ' · ' + D.c4AthLeadLag + 'd after MVRV peak';
+  el('cm-ceiling').textContent      = fmtUSD(D.ceilPrice);
   el('cm-ceiling-range').textContent = 'Range: ' + fmtUSD(D.ceilLow, 0) + ' – ' + fmtUSD(D.ceilHigh, 0);
 
   // Cycle bar
@@ -937,74 +1139,149 @@ function renderSignals() {
   setTimeout(() => { el('cycle-bar-fill').style.width = pct + '%'; }, 300);
   el('cycle-bar-marker').style.left = pct + '%';
   el('cycle-today-label').textContent = 'TODAY — ' + pct + '% elapsed';
-  el('cycle-floor-note').innerHTML  = `In prior cycles: MVRV troughed mid-cycle, then price recovered strongly.<br>C4 MVRV regression floor: <strong style="color:var(--text);">${D.c4BottomLog}–${D.c4BottomLin}</strong> · Current: ${D.mvrv.toFixed(3)} → right at or just above predicted floor.<br>Next halving (C5): <strong style="color:var(--text);">${D.nextHalving}</strong> (${D.nextHalvingDays} days away).`;
+  el('cycle-floor-note').innerHTML = `In prior cycles: MVRV troughed mid-cycle, then price recovered strongly.<br>C4 MVRV regression floor: <strong style="color:var(--text);">${D.c4BottomLog}–${D.c4BottomLin}</strong> · Current: ${D.mvrv.toFixed(3)} → right at or just above predicted floor.<br>Next halving (C5): <strong style="color:var(--text);">${D.nextHalving}</strong> (${D.nextHalvingDays} days away).`;
 
-  // Signals label
+  // Labels
   el('signals-label').textContent = 'MVRV On-Chain Signals · as of ' + D.date;
-
-  // Header date
   el('header-date').textContent = 'Data: ' + D.date;
 
   // Footer
-  const pts = parseInt(D.totalPoints.replace(/,/g,''));
+  const pts = parseInt((D.totalPoints || '').replace(/,/g,''));
   el('footer-data').textContent = 'MVRV Data: ' + D.dataRange + ' · ' + (pts ? pts.toLocaleString() : D.totalPoints) + ' data points';
 
   // Pro/Con dynamic items
   el('pro-1').textContent = `MVRV Z-score at ${D.zscore.toFixed(3)} — historically a strong accumulation zone.`;
   el('pro-2').textContent = `C4 MVRV regression floor is ${D.c4BottomLog}–${D.c4BottomLin}. At ${D.mvrv.toFixed(3)}, borrowing near statistical bottom.`;
-  el('pro-4').textContent = `Binance Flexible Loan APR ≈1%. Loan carry is minimal relative to potential BTC upside.`;
-  el('pro-6').textContent = `Floor consensus (${fmtUSD(D.floorPrice)}) is close to today's price — this level has held as a floor in multiple models.`;
+  el('pro-4').textContent = `Current APR input: ${readInput('inp-apr',0.1,30,1.0).toFixed(1)}%. If accurate, loan carry is minimal relative to potential BTC upside.`;
+  el('pro-6').textContent = `Floor consensus (${fmtUSD(D.floorPrice)}) is close to today's price — held as floor in multiple models.`;
   el('con-1').textContent = `MA stack is ${D.maStack.toLowerCase()}. Trend confirmation has not happened. Borrowing into a downtrend technically.`;
   el('con-2').textContent = `C4 peak MVRV (${D.cyclePeakMvrv}) was lower than all prior cycles. Diminishing returns — upside ceiling shrinks each cycle.`;
   el('con-6').textContent = `MVRV downside model still shows ${fmtUSD(D.mvrvDownside)} as a theoretical floor — extreme, but the range is wide.`;
+
+  renderSparkline();
 }
 
 /* ─────────────────────────────────────────────────────
-   RENDER (position-dependent)
+   RENDER SPARKLINE HISTORY
+───────────────────────────────────────────────────── */
+function renderSparkline() {
+  loadSnapshots();
+  const container = el('sparkline-entries');
+  if (!container) return;
+  if (!snapshots || snapshots.length < 2) {
+    container.innerHTML = '<span style="font-family:var(--mono);font-size:11px;color:var(--text-dim);">Accumulating history — check back after a few daily refreshes</span>';
+    return;
+  }
+
+  const sorted = [...snapshots].sort((a,b) => a.date.localeCompare(b.date));
+  const mvrvs  = sorted.map(s => s.mvrv).filter(Number.isFinite);
+  const minV   = Math.min(...mvrvs);
+  const maxV   = Math.max(...mvrvs);
+  const range  = maxV - minV || 1;
+  const maxH   = 44;
+
+  let html = '';
+  sorted.forEach(s => {
+    const h   = Math.round(8 + ((s.mvrv - minV) / range) * (maxH - 8));
+    const cls = s.mvrv < D.histMeanMvrv * 0.8 ? 'bull' : s.mvrv > D.histMeanMvrv * 1.2 ? 'bear' : 'neutral';
+    const dateShort = s.date ? s.date.slice(5) : '';
+    html += `<div class="spark-entry" title="MVRV: ${s.mvrv?.toFixed(3)} · BTC: ${fmtUSD(s.btcPrice)} · ${s.date}">
+      <div class="spark-bar ${cls}" style="height:${h}px;"></div>
+      <div class="spark-val">${s.mvrv?.toFixed(2)}</div>
+      <div class="spark-date">${dateShort}</div>
+    </div>`;
+  });
+  container.innerHTML = html;
+}
+
+/* ─────────────────────────────────────────────────────
+   MAIN RENDER (position-dependent)
 ───────────────────────────────────────────────────── */
 function render() {
   const d = calc();
 
-  // Section label
+  // Update footer params from current inputs
+  el('footer-params').textContent = `Binance Flexible Loan · MC: ${(d.mcLtv*100).toFixed(0)}% · Liq: ${(d.liqLtv*100).toFixed(0)}% · APR: ${(d.apr*100).toFixed(1)}%`;
+
+  // Loan math header
   el('sl-btc').textContent   = d.btc;
   el('sl-price').textContent = fmt(d.price);
 
-  // Verdict hero
-  const riskLevel = d.ltvPct <= 30 ? 'LOW' : d.ltvPct <= 50 ? 'MEDIUM' : d.ltvPct <= 65 ? 'HIGH' : 'VERY HIGH';
-  const composite = d.ltvPct <= 30 ? 'Favorable' : d.ltvPct <= 50 ? 'Conditionally Favorable' : 'Elevated Risk';
-  const verdictSpan = d.ltvPct <= 50 ? 'Borrow-Ready' : 'Use Caution';
-  el('verdict-span').textContent = verdictSpan;
-  el('verdict-span').style.color = d.ltvPct <= 50 ? 'var(--signal-good)' : 'var(--signal-warn)';
-  const score = d.ltvPct <= 30 ? '7.8' : d.ltvPct <= 50 ? '6.8' : '5.2';
-  el('score-num').textContent = score;
-  const mvrv = D.mvrv;
-  const meanDiff = ((mvrv - D.histMeanMvrv) / D.histMeanMvrv * 100).toFixed(0);
-  el('verdict-sub').innerHTML = `MVRV at ${mvrv.toFixed(3)} sits ${Math.abs(meanDiff)}% ${mvrv < D.histMeanMvrv ? 'below' : 'above'} the historical mean (${D.histMeanMvrv}). Z-score of ${D.zscore.toFixed(3)} signals ${D.zscore < -0.5 ? 'deep undervaluation' : 'cheap territory'}. LTV <span id="v-ltv">${d.ltvPct}</span>% starts at ${fmtUSD(d.loan)} borrowed — a <strong>${d.bufferPct.toFixed(0)}% decline buffer</strong> before margin call territory.`;
+  // APR label
+  el('lm-apr-label').textContent = (d.apr * 100).toFixed(1);
+  el('lm-vol-label').textContent = (d.vol * 100).toFixed(0);
 
-  // Loan math
-  el('lm-collateral').textContent  = fmtUSD(d.collateral);
-  el('lm-btc').textContent         = d.btc;
-  el('lm-price').textContent       = fmt(d.price);
-  el('lm-ltv-label').textContent   = d.ltvPct;
-  el('lm-loan').textContent        = fmtUSD(d.loan);
-  el('lm-interest').textContent    = '~' + fmtUSD(d.interest) + '/yr';
-  el('lm-mc-price').textContent    = fmt(d.mcPrice);
-  el('lm-liq-price').textContent   = fmt(d.liqPrice);
-  el('lm-liq-drop').textContent    = d.liqDropPct.toFixed(1) + '%';
-  el('lm-buffer').textContent      = fmtUSD(d.buffer);
+  // Loan math cells
+  el('lm-collateral').textContent = fmtUSD(d.collateral);
+  el('lm-btc').textContent        = d.btc;
+  el('lm-price').textContent      = fmt(d.price);
+  el('lm-ltv-label').textContent  = d.ltvPct;
+  el('lm-loan').textContent       = fmtUSD(d.loan);
+  el('lm-interest').textContent   = '~' + fmtUSD(d.interest) + '/yr';
+  el('lm-interest-range').innerHTML = `Range: <span class="ir-low">${fmtUSD(d.interestLo)}/yr (1%)</span> – <span class="ir-high">${fmtUSD(d.interestHi)}/yr (5%)</span>`;
+  el('lm-mc-ltv-display').textContent  = (d.mcLtv * 100).toFixed(0) + '%';
+  el('lm-liq-ltv-display').textContent = (d.liqLtv * 100).toFixed(0) + '%';
+  el('lm-mc-price').textContent   = fmt(d.mcPrice);
+  el('lm-liq-price').textContent  = fmt(d.liqPrice);
+  el('lm-liq-drop').textContent   = d.liqDropPct.toFixed(1) + '%';
+  el('lm-buffer').textContent     = fmtUSD(d.buffer);
+  el('lm-formula-mc-pct').textContent  = d.mcLtv.toFixed(2);
+  el('lm-formula-liq-pct').textContent = d.liqLtv.toFixed(2);
   el('lm-formula-mc').textContent  = fmtUSD(d.mcPrice) + ' per BTC';
   el('lm-formula-liq').textContent = fmtUSD(d.liqPrice);
 
-  // Scenarios
-  el('sc-btc-up').textContent      = fmtUSD(d.btcAtCeil);
-  el('sc-net-gain').textContent    = (d.netGain >= 0 ? '+' : '') + fmtUSD(d.netGain);
-  el('sc-pct-gain').textContent    = '+' + d.pctGain.toFixed(0) + '% from here';
-  el('sc-loan-cost').textContent   = '~' + fmtUSD(d.interest) + ' interest';
+  // P(liq)
+  const pliqEl = el('lm-pliq');
+  if (isFinite(d.pLiq90)) {
+    const pliqPct = (d.pLiq90 * 100).toFixed(1);
+    pliqEl.textContent = pliqPct + '%';
+    pliqEl.className = 'prob-cell ' + (d.pLiq90 < 0.05 ? 'safe' : d.pLiq90 < 0.15 ? 'warn' : 'risky');
+  } else {
+    pliqEl.textContent = '—';
+    pliqEl.className = 'prob-cell';
+  }
+
+  // Kelly
+  const kellyEl = el('lm-kelly');
+  if (isFinite(d.kellyLtv) && d.kellyLtv > 0) {
+    const kellyPct = (d.kellyLtv * 100).toFixed(0);
+    kellyEl.textContent = kellyPct + '%';
+    kellyEl.className = 'prob-cell ' + (d.ltvPct <= kellyPct * 1.1 ? 'safe' : d.ltvPct <= kellyPct * 1.5 ? 'warn' : 'risky');
+  } else {
+    kellyEl.textContent = 'No edge';
+    kellyEl.className = 'prob-cell warn';
+  }
+
+  // Risk/Reward
+  const rrEl  = el('lm-rr');
+  const rrSub = el('lm-rr-sub');
+  if (d.entry > 0 && isFinite(d.rrRatio)) {
+    rrEl.textContent = d.rrRatio.toFixed(2) + ':1';
+    rrEl.className   = 'math-value ' + (d.rrRatio > 2 ? 'highlight' : d.rrRatio > 1 ? '' : 'danger');
+    rrSub.textContent = `From entry ${fmtUSD(d.entry)}: ${fmtUSD(D.ceilPrice - d.entry)} up vs ${fmtUSD(d.entry - d.liqPrice)} to liq`;
+  } else {
+    rrEl.textContent  = 'Set entry';
+    rrEl.className    = 'math-value';
+    rrSub.textContent = 'Enter your avg cost basis in inputs above';
+  }
+
+  // Scenario: high APR cost
+  el('sc-btc-up').textContent    = fmtUSD(d.btcAtCeil);
+  el('sc-net-gain').textContent  = (d.netGain >= 0 ? '+' : '') + fmtUSD(d.netGain);
+  el('sc-pct-gain').textContent  = '+' + d.pctGain.toFixed(0) + '% from here';
+  el('sc-loan-cost').textContent = '~' + fmtUSD(d.interest) + ' interest';
+  el('sc-loan-cost-hi').textContent = '~' + fmtUSD(d.interestHi) + ' interest (5% APR)';
   el('sc-mc-trigger').textContent  = fmtUSD(d.mcPrice) + ' (' + pctDrop(d.price, d.mcPrice) + '%)';
   el('sc-liq-trigger').textContent = fmtUSD(d.liqPrice) + ' (' + pctDrop(d.price, d.liqPrice) + '%)';
   el('sc-worst-outcome').textContent = 'Lose ' + d.btc + ' BTC, keep ' + fmtUSD(d.loan);
 
-  // Dynamic signal cards
+  // Stress box
+  el('st-mc-price').textContent  = fmtUSD(d.mcPrice);
+  el('st-liq-24h').textContent   = fmtUSD(d.mcP24h);
+  el('st-liq-48h').textContent   = fmtUSD(d.mcP48h);
+  el('st-topup').textContent     = fmtUSD(d.topupNeeded);
+
+  // Signal cards
   el('sig-ltv-risk').textContent = d.ltvPct + '% / ' + (d.ltvPct <= 30 ? 'Low' : d.ltvPct <= 50 ? 'Med' : 'High');
   el('sig-buf-pct').textContent  = d.bufferPct.toFixed(1) + '%';
   const ltvBadge = el('sig-ltv-badge');
@@ -1013,51 +1290,117 @@ function render() {
   el('sig-ath-drop').textContent = d.athDropPct.toFixed(1) + '%';
   el('sig-ath-ctx').textContent  = 'ATH was ' + fmtUSD(D.c4Ath) + ' (' + fmtDate(D.c4AthDate) + '). C4 drawdown phase.';
 
-  // Pro-3 (position-dependent)
+  // Pro-3
   el('pro-3').textContent = `Liquidation requires a ${Math.abs(d.liqDropPct).toFixed(0)}% drop to ${fmtUSD(d.liqPrice)} — steep even vs prior cycle extremes.`;
+
+  // Verdict hero
+  const score = d.score;
+  const composite = score >= 7 ? 'Favorable' : score >= 5 ? 'Conditionally Favorable' : 'Elevated Risk';
+  const verdictSpan = score >= 5 ? 'Borrow-Ready' : 'Use Caution';
+  el('verdict-span').textContent = verdictSpan;
+  el('verdict-span').style.color = score >= 5 ? 'var(--signal-good)' : 'var(--signal-warn)';
+  el('score-num').textContent = score.toFixed(1);
+  const mvrv = D.mvrv;
+  const meanDiff = ((mvrv - D.histMeanMvrv) / D.histMeanMvrv * 100).toFixed(0);
+  el('verdict-sub').innerHTML = `MVRV at ${mvrv.toFixed(3)} sits ${Math.abs(meanDiff)}% ${mvrv < D.histMeanMvrv ? 'below' : 'above'} the historical mean (${D.histMeanMvrv}). Z-score of ${D.zscore.toFixed(3)} signals ${D.zscore < -0.5 ? 'deep undervaluation' : 'cheap territory'}. LTV <span id="v-ltv">${d.ltvPct}</span>% starts at ${fmtUSD(d.loan)} borrowed — a <strong>${d.bufferPct.toFixed(0)}% decline buffer</strong> before margin call territory. P(liq 90d): <strong>${isFinite(d.pLiq90) ? (d.pLiq90*100).toFixed(1)+'%' : '—'}</strong>`;
+
+  // Verdict border
+  el('verdict-hero').style.setProperty('--bar-color', score >= 7 ? 'var(--signal-good)' : score >= 5 ? 'var(--signal-warn)' : 'var(--signal-bad)');
+  el('verdict-hero').style.cssText += '; --bar-color: ' + (score >= 7 ? 'var(--signal-good)' : score >= 5 ? 'var(--signal-warn)' : 'var(--signal-bad)') + ';';
 
   renderLiqTable(d);
   renderQuant(d);
 }
 
+/* ─────────────────────────────────────────────────────
+   LIQ TABLE — fixed to use string builder, not += loop
+───────────────────────────────────────────────────── */
 function renderLiqTable(d) {
   const rows = [
-    { price: d.price,    label: 'Current price — LTV = ' + d.ltvPct + '%',           drop: 0,                                      color: 'var(--signal-good)',  barW: (d.ltvPct / 100 * 48) + '%' },
-    { price: d.price * 0.8, label: 'LTV rises to ~' + (d.ltv / 0.8 * 100).toFixed(1) + '% — monitor', drop: -20,                  color: 'var(--text-dim)',     barW: '55%' },
-    { price: d.mcPrice,  label: '⚠ Margin Call — LTV = 85%',                          drop: parseFloat(pctDrop(d.price, d.mcPrice)),  color: 'var(--signal-warn)', barW: '78%' },
-    { price: d.liqPrice, label: '✕ Full Liquidation — LTV = 90%',                     drop: parseFloat(pctDrop(d.price, d.liqPrice)), color: 'var(--signal-bad)',  barW: '100%' },
+    { price: d.price,        label: 'Current price — LTV = ' + d.ltvPct + '%',                        drop: 0,                                         color: 'var(--signal-good)', barW: Math.min(48, d.ltvPct / 100 * 48) + '%' },
+    { price: d.price * 0.8,  label: 'LTV rises to ~' + (d.ltv / 0.8 * 100).toFixed(1) + '% — monitor', drop: -20,                                       color: 'var(--text-dim)',    barW: '55%' },
+    { price: d.mcPrice,      label: '⚠ Margin Call — LTV = ' + (d.mcLtv*100).toFixed(0) + '%',         drop: parseFloat(pctDrop(d.price, d.mcPrice)),   color: 'var(--signal-warn)', barW: '78%' },
+    { price: d.liqPrice,     label: '✕ Full Liquidation — LTV = ' + (d.liqLtv*100).toFixed(0) + '%',   drop: parseFloat(pctDrop(d.price, d.liqPrice)),  color: 'var(--signal-bad)',  barW: '100%' },
   ];
 
-  const table = el('liq-table');
-  table.innerHTML = `
-    <div class="liq-row header-row">
+  // Build with string builder, set innerHTML once — no O(n²) re-parsing
+  const parts = [
+    `<div class="liq-row header-row">
       <span>BTC Price</span><span>Action Required</span>
       <span style="padding-right:24px;">Drop from ${fmtUSD(d.price)}</span><span></span>
-    </div>`;
+    </div>`
+  ];
 
   rows.forEach(r => {
     const dropStr = r.drop === 0 ? '0%' : r.drop.toFixed(1) + '%';
-    table.innerHTML += `
+    parts.push(`
       <div class="liq-row">
         <span class="liq-price" style="color:${r.color}">${fmtUSD(r.price)}</span>
         <span class="liq-action" style="color:${r.color}">${r.label}</span>
-        <span class="liq-drop" style="color:${r.color}">${dropStr}</span>
+        <span class="liq-drop"  style="color:${r.color}">${dropStr}</span>
         <div class="liq-bar-col"><div class="liq-bar">
           <div class="liq-bar-fill" style="width:${r.barW};background:${r.color};"></div>
         </div></div>
-      </div>`;
+      </div>`);
   });
+
+  el('liq-table').innerHTML = parts.join('');
 }
 
+/* ─────────────────────────────────────────────────────
+   QUANT SUMMARY — typed render, null-guarded
+───────────────────────────────────────────────────── */
 function renderQuant(d) {
-  const riskLevel = d.ltvPct <= 30 ? 'LOW' : d.ltvPct <= 50 ? 'MEDIUM' : d.ltvPct <= 65 ? 'HIGH' : 'VERY HIGH';
-  const composite = d.ltvPct <= 30 ? 'Favorable' : d.ltvPct <= 50 ? 'Conditionally Favorable' : 'Elevated Risk';
-  const score     = d.ltvPct <= 30 ? '7.8' : d.ltvPct <= 50 ? '6.8' : '5.2';
-  const maDir     = D.maStack.toLowerCase().includes('bull') ? 'BULLISH' : 'BEARISH';
-  const mvrv      = D.mvrv;
-  const zsc       = D.zscore;
+  if (!d || !D) return;
 
-  el('qb-text').innerHTML = `POSITION: ${d.btc} BTC collateral · ${fmtUSD(d.loan)} USDT drawn · LTV ${d.ltvPct}%<br><br>SIGNAL COMPOSITE:<br>&nbsp;&nbsp;MVRV (${mvrv.toFixed(3)}) ........... ${mvrv < D.histMeanMvrv ? 'BULLISH' : 'NEUTRAL'} — ${Math.abs(((mvrv-D.histMeanMvrv)/D.histMeanMvrv*100)).toFixed(0)}% ${mvrv < D.histMeanMvrv ? 'below' : 'above'} historical mean<br>&nbsp;&nbsp;Z-Score (${zsc.toFixed(3)}) ....... ${zsc < -0.5 ? 'BULLISH' : zsc < 0 ? 'LEAN BULL' : 'NEUTRAL'} — ${zsc < 0 ? 'below realized value mean' : 'above mean'}<br>&nbsp;&nbsp;Cycle Position (${D.cyclePos.toFixed(0)}%) ... NEUTRAL — past midpoint, recovery typical<br>&nbsp;&nbsp;MA Stack (${D.maStack}) ..... ${maDir} — trend ${maDir === 'BULLISH' ? 'confirmed' : 'not confirmed'}<br>&nbsp;&nbsp;ROC 30d (${D.roc30 >= 0 ? '+' : ''}${D.roc30.toFixed(1)}%) ........ ${D.roc30 > 0 ? 'NEUTRAL' : 'NEUTRAL'} — slow, not crashing<br>&nbsp;&nbsp;Floor Models (${fmtUSD(D.floorPrice)}) .... ${Math.abs(d.price - D.floorPrice) < 5000 ? 'BULLISH' : 'NEUTRAL'} — price ${d.price <= D.floorPrice ? 'at or below' : 'near'} statistical support<br><br>COMPOSITE SCORE: <span style="color:#a8d8b0;">${score} / 10 → ${composite}</span><br><br>KEY RISK: Margin call at BTC ${fmtUSD(d.mcPrice)} (${pctDrop(d.price, d.mcPrice)}%). Liquidation at ${fmtUSD(d.liqPrice)} (${pctDrop(d.price, d.liqPrice)}%).<br>Risk level: <span style="color:${d.ltvPct<=30?'#a8d8b0':d.ltvPct<=50?'#d8c8a8':'#d8a8a8'}">${riskLevel}</span>${d.ltvPct > 50 ? ' — consider reducing LTV to ≤50% for safety margin.' : d.ltvPct > 30 ? ' — keep additional collateral ready if BTC approaches ' + fmtUSD(d.price * 0.75) + '.' : ''}<br><br>VERDICT: ${d.ltvPct <= 30 ? 'Conservative position. Strong MVRV signal with wide safety buffer. Well-structured.' : d.ltvPct <= 50 ? 'Borrow is reasonable at this MVRV level. Keep additional collateral ready to top up if BTC approaches ' + fmtUSD(d.price * 0.75) + '. Deploy loan into stable yield (>5% APR) or DCA into spot BTC.' : 'High LTV increases liquidation risk materially. MVRV signals are positive but the buffer at ' + d.ltvPct + '% LTV is thin. Reduce LTV or maintain 2× collateral buffer in reserve.'}<br><br><span style="opacity:0.4;">NOT FINANCIAL ADVICE. Do your own research.</span>`;
+  const score    = isFinite(d.score) ? d.score.toFixed(1) : '—';
+  const riskLevel = d.ltvPct <= 30 ? 'LOW' : d.ltvPct <= 50 ? 'MEDIUM' : d.ltvPct <= 65 ? 'HIGH' : 'VERY HIGH';
+  const composite = d.score >= 7 ? 'Favorable' : d.score >= 5 ? 'Conditionally Favorable' : 'Elevated Risk';
+  const maDir    = D.maStack.toLowerCase().includes('bull') ? 'BULLISH' : 'BEARISH';
+  const mvrv     = isFinite(D.mvrv)    ? D.mvrv.toFixed(3)    : '—';
+  const zsc      = isFinite(D.zscore)  ? D.zscore.toFixed(3)  : '—';
+  const pliqStr  = isFinite(d.pLiq90) ? (d.pLiq90 * 100).toFixed(1) + '%' : '—';
+  const kellyStr = isFinite(d.kellyLtv) && d.kellyLtv > 0 ? (d.kellyLtv * 100).toFixed(0) + '%' : 'n/a';
+
+  const mvrvSignal  = D.mvrv < D.histMeanMvrv    ? 'BULLISH'    : 'NEUTRAL';
+  const mvrvDelta   = isFinite(D.mvrv) ? Math.abs(((D.mvrv - D.histMeanMvrv) / D.histMeanMvrv * 100)).toFixed(0) : '—';
+  const mvrvDir     = D.mvrv < D.histMeanMvrv    ? 'below'      : 'above';
+  const zSignal     = D.zscore < -0.5 ? 'BULLISH' : D.zscore < 0 ? 'LEAN BULL' : 'NEUTRAL';
+  const zDir        = D.zscore < 0               ? 'below'      : 'above';
+  const floorSignal = Math.abs(d.price - D.floorPrice) < 5000 ? 'BULLISH' : 'NEUTRAL';
+  const floorDir    = d.price <= D.floorPrice    ? 'at or below' : 'near';
+  const mvrvPct     = Math.round(mvrvPercentile(D.mvrv));
+
+  const rrStr = d.entry > 0 && isFinite(d.rrRatio) ? d.rrRatio.toFixed(2) + ':1' : 'n/a (no entry set)';
+
+  const w = d.signals?.weights || {};
+  const wPct = (v) => v ? (v * 100).toFixed(0) + '%' : '—';
+
+  const lines = [
+    `POSITION: ${d.btc} BTC collateral · ${fmtUSD(d.loan)} USDT drawn · LTV ${d.ltvPct}%`,
+    `Vol (ann): ${(d.vol*100).toFixed(0)}% · P(liq 90d): ${pliqStr} · Kelly-optimal LTV: ${kellyStr}`,
+    `R/R vs entry: ${rrStr}`,
+    ``,
+    `SIGNAL COMPOSITE (weighted):`,
+    `  MVRV       (wt:${wPct(w.mvrv)})  [${mvrv}] ... ${mvrvSignal} — ${mvrvDelta}% ${mvrvDir} hist mean · ${mvrvPct}th pctile`,
+    `  Z-Score    (wt:${wPct(w.zscore)})  [${zsc}] ....... ${zSignal} — ${zDir} realized value mean`,
+    `  Cycle Pos. (wt:${wPct(w.cycle)})  [${isFinite(D.cyclePos)?D.cyclePos.toFixed(0):0}%] ......... NEUTRAL — past midpoint, recovery typical`,
+    `  MA Stack   (wt:${wPct(w.ma)})  [${D.maStack}] ........... ${maDir} — trend ${maDir === 'BULLISH' ? 'confirmed' : 'not confirmed'}`,
+    `  ROC 30d    (wt:${wPct(w.roc)})  [${isFinite(D.roc30)?((D.roc30>=0?'+':'')+D.roc30.toFixed(1)+'%'):'—'}] ....... NEUTRAL — slow, not crashing`,
+    `  Floor Mdl  (auto)  [${fmtUSD(D.floorPrice)}] . ${floorSignal} — price ${floorDir} statistical support`,
+    ``,
+    `COMPOSITE SCORE: <span style="color:#a8d8b0;">${score} / 10 → ${composite}</span>`,
+    ``,
+    `KEY RISK: Margin call at BTC ${fmtUSD(d.mcPrice)} (${pctDrop(d.price, d.mcPrice)}%). Liquidation at ${fmtUSD(d.liqPrice)} (${pctDrop(d.price, d.liqPrice)}%).`,
+    `Interest range: ${fmtUSD(d.interestLo)}/yr (1% APR) – ${fmtUSD(d.interestHi)}/yr (5% APR). Verify current rate on platform.`,
+    `Risk level: <span style="color:${d.ltvPct<=30?'#a8d8b0':d.ltvPct<=50?'#d8c8a8':'#d8a8a8'}">${riskLevel}</span>${d.ltvPct > 50 ? ' — consider reducing LTV to ≤50% for safety margin.' : d.ltvPct > 30 ? ' — keep additional collateral ready if BTC approaches ' + fmtUSD(d.price * 0.75) + '.' : ''}`,
+    ``,
+    `VERDICT: ${d.ltvPct <= 30 ? 'Conservative position. Strong MVRV signal with wide safety buffer. Well-structured.' : d.ltvPct <= 50 ? 'Borrow is reasonable at current signal levels. Keep additional collateral ready to top up if BTC approaches ' + fmtUSD(d.price * 0.75) + '. Deploy loan into stable yield (>5% APR) or DCA into spot BTC.' : 'High LTV increases liquidation risk materially. Signals are positive but the buffer at ' + d.ltvPct + '% LTV is thin. Reduce LTV or maintain 2× collateral buffer in reserve.'}`,
+    ``,
+    `<span style="opacity:0.4;">NOT FINANCIAL ADVICE. Do your own research.</span>`
+  ];
+
+  el('qb-text').innerHTML = lines.join('<br>');
 }
 
 /* ─────────────────────────────────────────────────────
@@ -1067,7 +1410,7 @@ function fmtDate(iso) {
   if (!iso) return '';
   try {
     const d = new Date(iso + 'T00:00:00');
-    return d.toLocaleDateString('en-US', { month: 'short', year: "'yy" }).replace("'", "'");
+    return d.toLocaleDateString('en-US', { month: 'short', year: "'yy" }).replace("'", "\u2019");
   } catch { return iso; }
 }
 function formatDateShort(iso) {
@@ -1083,14 +1426,6 @@ function formatDateShort(iso) {
 ───────────────────────────────────────────────────── */
 const REPO_RAW_BASE = 'https://raw.githubusercontent.com/0xtrvkc/dynamic-btc-analytics-dashboard/main/exports/';
 
-function getTodayStr() {
-  const now = new Date();
-  const y = now.getUTCFullYear();
-  const m = String(now.getUTCMonth() + 1).padStart(2, '0');
-  const d = String(now.getUTCDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
 function getDateStr(daysAgo) {
   const now = new Date();
   now.setUTCDate(now.getUTCDate() - daysAgo);
@@ -1102,20 +1437,28 @@ function getDateStr(daysAgo) {
 
 function setStatus(msg, type) {
   const s = el('upload-status');
+  if (!s) return;
   s.textContent = msg;
   s.className = 'upload-status' + (type ? ' ' + type : '');
 }
 
 async function tryFetch(dateStr) {
   const url = REPO_RAW_BASE + `mvrv_summary_${dateStr}.txt`;
-  // Use a CORS-friendly approach via a proxy or direct fetch
   const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return { text: await res.text(), dateStr, url };
 }
 
+/* Validate that a parsed data object has the required minimum fields */
+function validateParsed(nd) {
+  const required = ['mvrv','zscore','btcPrice','histMeanMvrv','cyclePos','ceilPrice','floorPrice'];
+  const missing  = required.filter(k => !isFinite(nd[k]));
+  if (missing.length > 0) throw new Error(`Missing or invalid fields: ${missing.join(', ')}`);
+  return true;
+}
+
 async function fetchLatestData() {
-  const btn = el('refresh-btn');
+  const btn  = el('refresh-btn');
   const icon = el('refresh-icon');
   btn.disabled = true;
   icon.className = 'spin';
@@ -1123,7 +1466,6 @@ async function fetchLatestData() {
   el('upload-filename').textContent = 'Fetching…';
   setStatus('');
 
-  // Try today, then yesterday, then 2 days ago (in case script hasn't run yet today)
   const attempts = [0, 1, 2, 3].map(n => getDateStr(n));
   let loaded = null;
 
@@ -1131,9 +1473,7 @@ async function fetchLatestData() {
     try {
       loaded = await tryFetch(dateStr);
       break;
-    } catch (e) {
-      // try next date
-    }
+    } catch (e) { /* try next date */ }
   }
 
   btn.disabled = false;
@@ -1143,43 +1483,192 @@ async function fetchLatestData() {
   if (!loaded) {
     el('upload-filename').textContent = 'Could not fetch — using built-in snapshot';
     setStatus('✗ Network error or file not found', 'err');
+    const ageHrs = getDataAgeHours(D.date);
+    setStaleBanner(true, `⚠ STALE DATA — Could not reach GitHub. Using built-in snapshot from ${D.date} (${Math.round(ageHrs)}h ago). All scores and risk figures may be outdated.`);
     return;
   }
 
   try {
-    D = parseTxt(loaded.text);
+    const parsed = parseTxt(loaded.text);
+    validateParsed(parsed); // throws if required fields missing
+    D = parsed;
+    saveSnapshot(D);
     el('upload-filename').textContent = `mvrv_summary_${loaded.dateStr}.txt  ·  auto-loaded from GitHub`;
     setStatus('✓ Live', 'ok');
     el('inp-price').value = D.btcPrice;
+
+    const ageHrs = getDataAgeHours(D.date);
+    if (ageHrs > 48) {
+      setStaleBanner(true, `⚠ Data is from ${D.date} (${Math.round(ageHrs)}h ago) — GitHub export may not have run recently. Treat all figures with caution.`);
+    } else {
+      setStaleBanner(false);
+    }
+
     renderSignals();
     render();
   } catch (e) {
     el('upload-filename').textContent = 'Parse error — using built-in snapshot';
     setStatus('✗ ' + e.message, 'err');
+    setStaleBanner(true, `⚠ PARSE ERROR — ${e.message}. Using built-in snapshot from ${D.date}. Verify GitHub export format.`);
     console.error(e);
   }
 }
 
 /* ─────────────────────────────────────────────────────
-   INPUT LISTENERS
+   TXT PARSER
 ───────────────────────────────────────────────────── */
-['inp-btc','inp-price','inp-ltv'].forEach(id => {
-  el(id).addEventListener('input', () => {
+function parseTxt(text) {
+  const lines = text.split('\n').map(l => l.trim());
+  const nd = {...D}; // clone defaults
+
+  function getVal(label) {
+    const re = new RegExp('^' + label.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\s*:\\s*(.+)', 'i');
+    for (const l of lines) { const m = l.match(re); if (m) return m[1].trim(); }
+    return null;
+  }
+  function parseNum(s) { return s ? parseFloat(s.replace(/[$,%]/g, '').replace(/,/g, '').trim()) : null; }
+
+  const v = (label) => getVal(label);
+
+  // CURRENT STATUS
+  const date = v('Date'); if (date) nd.date = date;
+  const mvrv = v('MVRV'); if (mvrv) { const n=parseNum(mvrv); if(isFinite(n)) nd.mvrv=n; }
+  const zsc  = v('Z-score'); if (zsc) { const n=parseNum(zsc); if(isFinite(n)) nd.zscore=n; }
+  const sig  = v('Signal'); if (sig) nd.signal = sig;
+  const ma20 = v('MA20'); if (ma20) { const n=parseNum(ma20); if(isFinite(n)) nd.ma20=n; }
+  const ma50 = v('MA50'); if (ma50) { const n=parseNum(ma50); if(isFinite(n)) nd.ma50=n; }
+  const ma200= v('MA200'); if (ma200){ const n=parseNum(ma200); if(isFinite(n)) nd.ma200=n; }
+  const mas  = v('MA stack'); if (mas) nd.maStack = mas.split(' ')[0];
+  const r30  = v('ROC 30d'); if (r30) { const n=parseNum(r30); if(isFinite(n)) nd.roc30=n; }
+  const r90  = v('ROC 90d'); if (r90) { const n=parseNum(r90); if(isFinite(n)) nd.roc90=n; }
+  const btcp = v('BTC Price'); if (btcp) { const n=parseNum(btcp); if(isFinite(n)&&n>0) nd.btcPrice=n; }
+  const hmv  = v('Historical mean MVRV'); if (hmv) { const n=parseNum(hmv); if(isFinite(n)) nd.histMeanMvrv=n; }
+  const tp   = v('Total data points'); if (tp) nd.totalPoints = tp.replace(/,/g,'').trim();
+  const dr   = v('Data range'); if (dr) nd.dataRange = dr;
+
+  // CYCLE
+  const cn = v('Current cycle'); if (cn) nd.cycleName = cn;
+  const cp = v('Cycle position'); if (cp) { const n=parseNum(cp); if(isFinite(n)) nd.cyclePos=n; }
+  const cpk = v('Cycle peak so far');
+  if (cpk) {
+    const m = cpk.match(/([\d.]+)\s+on\s+([\d-]+)/);
+    if (m) { nd.cyclePeakMvrv = parseFloat(m[1]); nd.cyclePeakDate = m[2]; }
+  }
+  const cdd = v('Current drawdown from cycle peak'); if (cdd) { const n=parseNum(cdd); if(isFinite(n)) nd.cycleDrawdown=n; }
+  const vcp = v('Current MVRV vs cycle peak'); if (vcp) { const n=parseNum(vcp); if(isFinite(n)) nd.mvrvVsCyclePeak=n; }
+
+  // C4 BTC price at MVRV peak
+  for (let i=0; i<lines.length; i++) {
+    if (lines[i].includes('Cycle 4') && lines[i].includes(':')) {
+      for (let j=i+1; j<Math.min(i+10, lines.length); j++) {
+        const bm = lines[j].match(/BTC price at MVRV peak:\s*\$?([\d,]+)/i);
+        if (bm) { const n=parseNum(bm[1]); if(isFinite(n)) { nd.cyclePeakBtcPrice=n; break; } }
+      }
+    }
+  }
+
+  // PRICE PROJECTIONS
+  const cupL = v('Ceiling consensus midpoint'); if (cupL) { const n=parseNum(cupL); if(isFinite(n)) nd.ceilPrice=n; }
+  const cupR = v('Ceiling consensus range');
+  if (cupR) {
+    const m = cupR.match(/\$([\d,]+)\s*[–-]\s*\$([\d,]+)/);
+    if (m) { nd.ceilLow=parseNum(m[1]); nd.ceilHigh=parseNum(m[2]); }
+  }
+  const flp = v('Floor consensus midpoint'); if (flp) { const n=parseNum(flp); if(isFinite(n)) nd.floorPrice=n; }
+
+  for (const l of lines) {
+    const mu = l.match(/MVRV Upside:\s*\$([\d,]+)/i);
+    if (mu) { const n=parseNum(mu[1]); if(isFinite(n)) nd.mvrvUpside=n; }
+    const md = l.match(/MVRV Downside:\s*\$([\d,]+)/i);
+    if (md) { const n=parseNum(md[1]); if(isFinite(n)) nd.mvrvDownside=n; }
+  }
+
+  // ATH from PRICE PEAK DIVERGENCE section C4
+  for (let i=0; i<lines.length; i++) {
+    if (lines[i] === 'Cycle 4:' || lines[i].startsWith('Cycle 4:')) {
+      for (let j=i+1; j<Math.min(i+15, lines.length); j++) {
+        const bm = lines[j].match(/BTC ATH:\s*\$([\d,]+)\s+on\s+([\d-]+)/i);
+        if (bm) { const n=parseNum(bm[1]); if(isFinite(n)) { nd.c4Ath=n; nd.c4AthDate=bm[2]; } }
+        const ll = lines[j].match(/Lead\/lag:.*?(\d+)d/i);
+        if (ll) nd.c4AthLeadLag = parseInt(ll[1]);
+        const pp = lines[j].match(/Price at MVRV peak:\s*\$([\d,]+)/i);
+        if (pp) { const n=parseNum(pp[1]); if(isFinite(n)) nd.cyclePeakBtcPrice=n; }
+      }
+    }
+  }
+
+  // REGRESSION — C4 bottom
+  for (const l of lines) {
+    const m = l.match(/C4 bottom \(log\/linear\):\s*([\d.]+)\s*\/\s*([\d.]+)/i);
+    if (m) { nd.c4BottomLog = parseFloat(m[1]); nd.c4BottomLin = parseFloat(m[2]); }
+  }
+
+  // NEXT HALVING
+  for (const l of lines) {
+    const m = l.match(/C5 halving:.*?\[upcoming\s*·\s*(\d+)d/i);
+    if (m) nd.nextHalvingDays = parseInt(m[1]);
+    const d2 = l.match(/C5 halving:\s*([\d-]+)/i);
+    if (d2) nd.nextHalving = d2[1];
+  }
+
+  // Worst drawdown
+  let worstDd = -90.7;
+  for (const l of lines) {
+    const m = l.match(/Max drawdown:\s*(-[\d.]+)%/i);
+    if (m) { const v2 = parseFloat(m[1]); if (v2 < worstDd) worstDd = v2; }
+  }
+  nd.worstCycleDrawdown = worstDd;
+
+  return nd;
+}
+
+/* ─────────────────────────────────────────────────────
+   DARK MODE
+───────────────────────────────────────────────────── */
+const toggle = document.getElementById('theme-toggle');
+const label  = document.getElementById('theme-label');
+function setTheme(dark) {
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  label.textContent = dark ? 'Dark' : 'Light';
+  localStorage.setItem('theme', dark ? 'dark' : 'light');
+}
+toggle.addEventListener('click', () => {
+  setTheme(document.documentElement.getAttribute('data-theme') !== 'dark');
+});
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved) { setTheme(saved === 'dark'); return; }
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) setTheme(true);
+})();
+
+/* ─────────────────────────────────────────────────────
+   INPUT LISTENERS — all inputs trigger render
+───────────────────────────────────────────────────── */
+['inp-btc','inp-price','inp-ltv','inp-mc-ltv','inp-liq-ltv','inp-apr','inp-vol','inp-entry'].forEach(id => {
+  const inp = el(id);
+  if (!inp) return;
+  inp.addEventListener('input', () => {
     render();
     const note = el('recalc-note');
-    note.textContent = '✓ Updated';
-    setTimeout(() => { note.textContent = '↺ All figures update live'; }, 1200);
+    if (note) {
+      note.textContent = '✓ Updated';
+      setTimeout(() => { note.textContent = '↺ All figures update live'; }, 1200);
+    }
   });
 });
 
 /* ─────────────────────────────────────────────────────
-   INIT — auto-fetch on load
+   INIT
 ───────────────────────────────────────────────────── */
 window.addEventListener('load', () => {
-  // Render with defaults first so the UI isn't blank
+  loadSnapshots();
+  // Show stale banner immediately for built-in snapshot
+  const ageHrs = getDataAgeHours(D.date);
+  if (ageHrs > 24) {
+    setStaleBanner(true, `⚠ STALE DATA — Using built-in snapshot from ${D.date} (${Math.round(ageHrs)}h ago). Fetching latest…`);
+  }
   renderSignals();
   render();
-  // Then immediately fetch the latest live data
   fetchLatestData();
 });
 </script>

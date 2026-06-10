@@ -147,7 +147,7 @@
   [data-theme="dark"] .toggle-switch { background: var(--text-mid); }
   [data-theme="dark"] .toggle-switch::after { transform: translateX(16px); background: var(--bg); }
 
-  /* UPLOAD BAR */
+  /* DATA BAR */
   .upload-bar {
     background: var(--surface-2);
     border-bottom: 1px solid var(--border);
@@ -165,7 +165,7 @@
     color: var(--text-dim);
     flex-shrink: 0;
   }
-  .upload-btn {
+  .refresh-btn {
     font-family: var(--mono);
     font-size: 11px;
     color: var(--text);
@@ -175,8 +175,14 @@
     cursor: pointer;
     transition: border-color 0.15s, background 0.15s;
     white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
-  .upload-btn:hover { border-color: var(--text-mid); background: var(--surface-2); }
+  .refresh-btn:hover { border-color: var(--text-mid); background: var(--surface-2); }
+  .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .spin { display: inline-block; animation: spin 1s linear infinite; }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   .upload-filename {
     font-family: var(--mono);
     font-size: 11px;
@@ -189,7 +195,7 @@
   }
   .upload-status.ok  { color: var(--signal-good); }
   .upload-status.err { color: var(--signal-bad);  }
-  #file-input-hidden { display: none; }
+
 
   /* INPUTS BAR */
   .inputs-bar {
@@ -346,19 +352,20 @@
   <span class="logo-mark">MVRV</span>
   <span class="logo-divider">·</span>
   <span class="logo-title">BTC Loan Signal Analyzer</span>
-  <span class="header-date" id="header-date">No data loaded</span>
+  <span class="header-date" id="header-date">Fetching…</span>
   <label class="theme-toggle" id="theme-toggle" title="Toggle dark mode">
     <span class="theme-toggle-label" id="theme-label">Light</span>
     <div class="toggle-switch"></div>
   </label>
 </header>
 
-<!-- UPLOAD BAR -->
+<!-- DATA BAR -->
 <div class="upload-bar">
-  <span class="upload-bar-label">MVRV Data</span>
-  <button class="upload-btn" onclick="document.getElementById('file-input-hidden').click()">Load .txt file</button>
-  <input type="file" id="file-input-hidden" accept=".txt" />
-  <span class="upload-filename" id="upload-filename">No file loaded — using built-in snapshot (2026-06-05)</span>
+  <span class="upload-bar-label">Live Data</span>
+  <button class="refresh-btn" id="refresh-btn" onclick="fetchLatestData()" title="Fetch latest data from GitHub">
+    <span id="refresh-icon">↻</span> Refresh
+  </button>
+  <span class="upload-filename" id="upload-filename">Connecting to GitHub…</span>
   <span class="upload-status" id="upload-status"></span>
 </div>
 
@@ -1072,28 +1079,86 @@ function formatDateShort(iso) {
 }
 
 /* ─────────────────────────────────────────────────────
-   FILE UPLOAD
+   AUTO-FETCH FROM GITHUB
 ───────────────────────────────────────────────────── */
-document.getElementById('file-input-hidden').addEventListener('change', async function() {
-  const file = this.files[0];
-  if (!file) return;
-  const text = await file.text();
+const REPO_RAW_BASE = 'https://raw.githubusercontent.com/0xtrvkc/dynamic-btc-analytics-dashboard/main/exports/';
+
+function getTodayStr() {
+  const now = new Date();
+  const y = now.getUTCFullYear();
+  const m = String(now.getUTCMonth() + 1).padStart(2, '0');
+  const d = String(now.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function getDateStr(daysAgo) {
+  const now = new Date();
+  now.setUTCDate(now.getUTCDate() - daysAgo);
+  const y = now.getUTCFullYear();
+  const m = String(now.getUTCMonth() + 1).padStart(2, '0');
+  const d = String(now.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function setStatus(msg, type) {
+  const s = el('upload-status');
+  s.textContent = msg;
+  s.className = 'upload-status' + (type ? ' ' + type : '');
+}
+
+async function tryFetch(dateStr) {
+  const url = REPO_RAW_BASE + `mvrv_summary_${dateStr}.txt`;
+  // Use a CORS-friendly approach via a proxy or direct fetch
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return { text: await res.text(), dateStr, url };
+}
+
+async function fetchLatestData() {
+  const btn = el('refresh-btn');
+  const icon = el('refresh-icon');
+  btn.disabled = true;
+  icon.className = 'spin';
+  icon.textContent = '↻';
+  el('upload-filename').textContent = 'Fetching…';
+  setStatus('');
+
+  // Try today, then yesterday, then 2 days ago (in case script hasn't run yet today)
+  const attempts = [0, 1, 2, 3].map(n => getDateStr(n));
+  let loaded = null;
+
+  for (const dateStr of attempts) {
+    try {
+      loaded = await tryFetch(dateStr);
+      break;
+    } catch (e) {
+      // try next date
+    }
+  }
+
+  btn.disabled = false;
+  icon.className = '';
+  icon.textContent = '↻';
+
+  if (!loaded) {
+    el('upload-filename').textContent = 'Could not fetch — using built-in snapshot';
+    setStatus('✗ Network error or file not found', 'err');
+    return;
+  }
+
   try {
-    D = parseTxt(text);
-    el('upload-filename').textContent = file.name;
-    el('upload-status').textContent = '✓ Loaded';
-    el('upload-status').className = 'upload-status ok';
-    // Update BTC price input to match data if not manually changed
+    D = parseTxt(loaded.text);
+    el('upload-filename').textContent = `mvrv_summary_${loaded.dateStr}.txt  ·  auto-loaded from GitHub`;
+    setStatus('✓ Live', 'ok');
     el('inp-price').value = D.btcPrice;
     renderSignals();
     render();
-  } catch(e) {
-    el('upload-status').textContent = '✗ Parse error: ' + e.message;
-    el('upload-status').className = 'upload-status err';
+  } catch (e) {
+    el('upload-filename').textContent = 'Parse error — using built-in snapshot';
+    setStatus('✗ ' + e.message, 'err');
     console.error(e);
   }
-  this.value = '';
-});
+}
 
 /* ─────────────────────────────────────────────────────
    INPUT LISTENERS
@@ -1108,11 +1173,14 @@ document.getElementById('file-input-hidden').addEventListener('change', async fu
 });
 
 /* ─────────────────────────────────────────────────────
-   INIT
+   INIT — auto-fetch on load
 ───────────────────────────────────────────────────── */
 window.addEventListener('load', () => {
+  // Render with defaults first so the UI isn't blank
   renderSignals();
   render();
+  // Then immediately fetch the latest live data
+  fetchLatestData();
 });
 </script>
 </body>

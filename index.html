@@ -909,6 +909,9 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   <button class="refresh-chip" id="refresh-btn" onclick="fetchLatestData()" title="Fetch latest data">
     <span class="refresh-icon" id="refresh-icon">↻</span> Refresh
   </button>
+  <button class="refresh-chip" id="export-btn" onclick="exportSnapshot()" title="Export full snapshot as .txt for AI / GitHub">
+    <span style="font-size:13px;">↓</span> Export .txt
+  </button>
   <span class="refresh-info" id="upload-filename">Connecting…</span>
   <span class="refresh-info" id="upload-status"></span>
 </div>
@@ -2190,6 +2193,339 @@ function parseTxt(text) {
   }
   nd.worstCycleDrawdown = worstDd;
   return nd;
+}
+
+/* ─────────────────────────────────────────────────────
+   EXPORT TO TXT  ·  github.com/0xtrvkc  ·  all angles
+   ─────────────────────────────────────────────────────
+   Exports a self-contained .txt snapshot you can drop
+   into any AI chat as full context. Covers:
+     1. Market snapshot & on-chain signals
+     2. Composite signal score breakdown
+     3. Loan mechanics (your position)
+     4. Liquidation & margin-call levels
+     5. Cycle context (C4 metadata)
+     6. Scenario analysis (bull / bear)
+     7. Risk metrics (Kelly, P(liq), R/R)
+     8. Pro / con analyst view
+     9. Quant summary narrative
+    10. App metadata & how to interpret
+───────────────────────────────────────────────────── */
+function exportSnapshot() {
+  /* ── gather live computed values ── */
+  const d    = calc();
+  const w    = d.signals?.weights || {};
+  const wPct = (v) => v != null ? (v * 100).toFixed(0) + '%' : '—';
+
+  const mvrvPct = Math.round(mvrvPercentile(D.mvrv));
+  const zPct    = zscorePercentile(D.zscore);
+  const composite = d.score >= 7 ? 'Favorable' : d.score >= 5 ? 'Conditionally Favorable' : 'Elevated Risk';
+  const riskLevel = d.ltvPct <= 30 ? 'LOW' : d.ltvPct <= 50 ? 'MEDIUM' : d.ltvPct <= 65 ? 'HIGH' : 'VERY HIGH';
+  const verdictLabel = d.score >= 7 ? 'Borrow-Ready' : d.score >= 5 ? 'Proceed with Care' : 'Use Caution';
+  const maDir = D.maStack.toLowerCase().includes('bull') ? 'BULLISH' : 'BEARISH';
+  const mvrvDir = D.mvrv < D.histMeanMvrv ? 'below' : 'above';
+  const mvrvPctVsMean = Math.abs(((D.mvrv - D.histMeanMvrv) / D.histMeanMvrv * 100)).toFixed(1);
+  const pliqStr  = isFinite(d.pLiq90) ? (d.pLiq90 * 100).toFixed(2) + '%' : '—';
+  const kellyStr = isFinite(d.kellyLtv) && d.kellyLtv > 0 ? (d.kellyLtv * 100).toFixed(0) + '%' : 'n/a (no edge at current params)';
+  const rrStr    = d.entry > 0 && isFinite(d.rrRatio) ? d.rrRatio.toFixed(2) + ':1' : 'n/a (no entry set)';
+  const athDrop  = d.athDropPct.toFixed(1);
+  const liqDrop  = d.liqDropPct.toFixed(1);
+  const mcDrop   = pctDrop(d.price, d.mcPrice);
+
+  /* snapshot history from localStorage */
+  let histLines = '';
+  try {
+    const snaps = JSON.parse(localStorage.getItem('btc_loan_snapshots_v2') || '[]');
+    if (snaps.length > 0) {
+      histLines = snaps.map(s =>
+        `  ${s.date}  MVRV: ${s.mvrv?.toFixed(3) ?? '—'}  Z: ${s.zscore?.toFixed(3) ?? '—'}  BTC: $${(s.btcPrice||0).toLocaleString()}`
+      ).join('\n');
+    }
+  } catch(e) { histLines = '  (not available)'; }
+
+  const sep  = '═'.repeat(64);
+  const sep2 = '─'.repeat(64);
+  const ts   = new Date().toISOString();
+
+  const lines = [
+    sep,
+    '  BTC LOAN SIGNAL · MVRV ANALYZER — FULL SNAPSHOT',
+    `  Exported : ${ts}`,
+    `  Data date: ${D.date}  |  Source: MVRV Analyzer (${window.location.hostname})`,
+    `  Repo     : https://github.com/0xtrvkc/dynamic-btc-analytics-dashboard`,
+    sep,
+    '',
+
+    /* ── 1. ON-CHAIN MARKET SNAPSHOT ── */
+    '━━  1. MARKET SNAPSHOT & ON-CHAIN SIGNALS  ━━',
+    sep2,
+    `Date              : ${D.date}`,
+    `BTC Price (live)  : $${fmt(d.price)}`,
+    `BTC Price (data)  : $${fmt(D.btcPrice)}`,
+    ``,
+    `MVRV Ratio        : ${D.mvrv.toFixed(4)}`,
+    `  Historical mean : ${D.histMeanMvrv.toFixed(4)}`,
+    `  vs Mean         : ${mvrvPctVsMean}% ${mvrvDir} mean`,
+    `  Percentile      : ~${mvrvPct}th  (only ${mvrvPct}% of days were cheaper)`,
+    `  Interpretation  : ${D.mvrv < 1 ? 'STRONGLY UNDERVALUED — below cost basis' : D.mvrv < D.histMeanMvrv ? 'Undervalued — below historical mean' : D.mvrv < 2.5 ? 'Fairly valued / mid range' : 'Expensive — cycle peak territory'}`,
+    ``,
+    `MVRV Z-Score      : ${D.zscore.toFixed(4)}`,
+    `  Percentile      : ~${zPct}th  (cheaper ${100-zPct}% of history)`,
+    `  Interpretation  : ${D.zscore < -1 ? 'DEEP ACCUMULATION ZONE — historically strong buy' : D.zscore < 0 ? 'Below zero — accumulate' : D.zscore < 1.5 ? 'Neutral territory' : D.zscore < 3 ? 'Elevated — caution' : 'DANGER — cycle top signal'}`,
+    `  Signal (file)   : ${D.signal}`,
+    ``,
+    `MA Stack          : ${D.maStack}  (${maDir})`,
+    `  MA20            : ${D.ma20.toFixed(4)}`,
+    `  MA50            : ${D.ma50.toFixed(4)}`,
+    `  MA200           : ${D.ma200.toFixed(4)}`,
+    `  Trend read      : ${D.maStack.toLowerCase().includes('bull') ? 'Price > MA20 > MA50 > MA200 — bullish structure' : 'MAs not in bullish order — trend unconfirmed'}`,
+    ``,
+    `ROC (Rate of Change)`,
+    `  30-day          : ${D.roc30 >= 0 ? '+' : ''}${D.roc30.toFixed(2)}%`,
+    `  90-day          : ${D.roc90 >= 0 ? '+' : ''}${D.roc90.toFixed(2)}%`,
+    `  Momentum read   : ${D.roc90 > 10 ? 'Strong positive momentum' : D.roc90 > 0 ? 'Flat/positive — bottoming' : D.roc90 > -10 ? 'Slight negative — watch' : 'Negative momentum — caution'}`,
+    ``,
+    `Dataset           : ${D.dataRange}  (${D.totalPoints} data points)`,
+    '',
+
+    /* ── 2. COMPOSITE SIGNAL SCORE ── */
+    '━━  2. COMPOSITE SIGNAL SCORE  ━━',
+    sep2,
+    `Overall Score     : ${d.score.toFixed(2)} / 10  →  ${composite}`,
+    `Verdict           : ${verdictLabel}`,
+    ``,
+    `Signal breakdown (weights are user-configurable):`,
+    `  MVRV    weight=${wPct(w.mvrv)}  raw_score=${d.signals?.mvrvScore?.toFixed(2) ?? '—'}/10`,
+    `    → MVRV ${D.mvrv.toFixed(3)} vs mean ${D.histMeanMvrv.toFixed(3)} — ${D.mvrv < D.histMeanMvrv ? 'BULLISH' : 'NEUTRAL/BEARISH'}`,
+    `  Z-Score weight=${wPct(w.zscore)}  raw_score=${d.signals?.zscoreScore?.toFixed(2) ?? '—'}/10`,
+    `    → Z=${D.zscore.toFixed(3)} — ${D.zscore < -0.5 ? 'BULLISH (deep accumulation)' : D.zscore < 0 ? 'BULLISH (below zero)' : 'NEUTRAL'}`,
+    `  MA Stack weight=${wPct(w.ma)}  raw_score=${d.signals?.maScore?.toFixed(2) ?? '—'}/10`,
+    `    → ${D.maStack} — ${maDir}`,
+    `  ROC 30d  weight=${wPct(w.roc)}  raw_score=${d.signals?.rocScore?.toFixed(2) ?? '—'}/10`,
+    `    → ${D.roc30 >= 0 ? '+' : ''}${D.roc30.toFixed(1)}% 30-day momentum`,
+    `  Cycle    weight=${wPct(w.cycle)}  raw_score=${d.signals?.cycleScore?.toFixed(2) ?? '—'}/10`,
+    `    → ${D.cyclePos.toFixed(1)}% elapsed — ${D.cyclePos < 35 ? 'Early cycle (most bullish)' : D.cyclePos < 65 ? 'Mid-cycle' : 'Late cycle (caution)'}`,
+    ``,
+    `Score color key: <7.0 = BULLISH (green), 5.0-6.9 = CAUTION (amber), <5.0 = AVOID (red)`,
+    '',
+
+    /* ── 3. LOAN MECHANICS ── */
+    '━━  3. LOAN MECHANICS (YOUR POSITION)  ━━',
+    sep2,
+    `Platform          : Binance Flexible Loan (BTC collateral → USDT)`,
+    ``,
+    `BTC Amount        : ${d.btc} BTC`,
+    `BTC Price used    : $${fmt(d.price)}`,
+    `Collateral value  : $${fmt(d.collateral)}`,
+    `LTV               : ${d.ltvPct}%`,
+    `Loan amount       : $${fmt(d.loan)} USDT`,
+    ``,
+    `APR input         : ${(d.apr * 100).toFixed(2)}%`,
+    `Interest cost/yr  : ~$${fmt(d.interest)}  (at ${(d.apr*100).toFixed(1)}% APR)`,
+    `Interest range/yr : $${fmt(d.interestLo)} (1%) – $${fmt(d.interestHi)} (5%)`,
+    `  Note: Verify actual APR on Binance — rates change daily.`,
+    ``,
+    `Annualized vol    : ${(d.vol * 100).toFixed(0)}%  (input — not computed from price)`,
+    '',
+
+    /* ── 4. LIQUIDATION LEVELS ── */
+    '━━  4. LIQUIDATION & MARGIN CALL LEVELS  ━━',
+    sep2,
+    `Margin Call LTV   : ${(d.mcLtv * 100).toFixed(0)}%`,
+    `Margin Call price : $${fmt(d.mcPrice)}  (${mcDrop}% drop from current)`,
+    `  ⚠ At this price Binance will notify you to top up collateral`,
+    ``,
+    `Liquidation LTV   : ${(d.liqLtv * 100).toFixed(0)}%`,
+    `Liquidation price : $${fmt(d.liqPrice)}  (${liqDrop}% drop from current)`,
+    `  💀 At this price your BTC collateral is forcibly sold`,
+    ``,
+    `Buffer to MC      : $${fmt(d.buffer)}  (${d.bufferPct.toFixed(1)}% price drop)`,
+    ``,
+    `Stress test (MC near-miss):`,
+    `  If BTC -2%/day   → MC could be tested in ~${Math.abs((Math.log(d.mcPrice/d.price)/Math.log(0.98))).toFixed(0)} days`,
+    `  Price −20% today : $${fmt(d.price * 0.80)}  → LTV rises to ~${(d.ltv / 0.8 * 100).toFixed(1)}%`,
+    `  MC price (−2%/d) : $${fmt(d.mcP24h)}  in 1d`,
+    `  MC price (−5%/d) : $${fmt(d.mcP48h)}  in 2d`,
+    `  Top-up needed    : ~$${fmt(d.topupNeeded)} USDT to avoid MC at ${(0.70 * 100).toFixed(0)}% LTV`,
+    ``,
+    `vs BTC ATH (${D.c4AthDate}): $${fmt(D.c4Ath)}  →  current is ${athDrop}% below ATH`,
+    '',
+
+    /* ── 5. CYCLE CONTEXT ── */
+    '━━  5. CYCLE CONTEXT (BITCOIN HALVING CYCLES)  ━━',
+    sep2,
+    `Current cycle     : ${D.cycleName}`,
+    `Cycle position    : ${D.cyclePos.toFixed(1)}%  elapsed`,
+    `vs Cycle peak     : ${D.mvrvVsCyclePeak}% of C4 MVRV peak  (${D.mvrvVsCyclePeak < 50 ? 'deep dip' : 'partial recovery'})`,
+    ``,
+    `C4 MVRV peak      : ${D.cyclePeakMvrv.toFixed(4)}  on ${D.cyclePeakDate}`,
+    `C4 price at peak  : $${fmt(D.cyclePeakBtcPrice)}`,
+    `C4 drawdown so far: ${D.cycleDrawdown.toFixed(1)}%  (MVRV from C4 peak)`,
+    ``,
+    `C4 regression bottoms:`,
+    `  Log model floor : MVRV ${D.c4BottomLog}  (conservative)`,
+    `  Linear model    : MVRV ${D.c4BottomLin}  (moderate)`,
+    `  Current MVRV    : ${D.mvrv.toFixed(3)} — ${D.mvrv <= D.c4BottomLin ? '≤ regression floor (strong buy signal)' : 'above regression floor'}`,
+    ``,
+    `C4 BTC ATH        : $${fmt(D.c4Ath)}  on ${D.c4AthDate}`,
+    `  Lead/lag vs MVRV peak: ${D.c4AthLeadLag}d after MVRV peak`,
+    ``,
+    `Next halving      : ${D.nextHalving}  (${D.nextHalvingDays} days away)`,
+    `Worst cycle DD    : ${D.worstCycleDrawdown.toFixed(1)}%  (C1 — extreme tail scenario)`,
+    ``,
+    `Cycle interpretation:`,
+    `  ${D.cyclePos < 35 ? '→ EARLY CYCLE: historically highest risk/reward for borrowing' :
+       D.cyclePos < 65 ? '→ MID-CYCLE: reasonable window; watch MA stack for re-entry confirmation' :
+       '→ LATE CYCLE: reduce exposure; ceiling approaching; de-lever soon'}`,
+    '',
+
+    /* ── 6. PRICE TARGETS & SCENARIOS ── */
+    '━━  6. PRICE TARGETS & SCENARIO ANALYSIS  ━━',
+    sep2,
+    `BULL SCENARIO (ceiling models):`,
+    `  Ceiling midpoint  : $${fmt(D.ceilPrice)}  (MVRV consensus)`,
+    `  Ceiling range     : $${fmt(D.ceilLow)} – $${fmt(D.ceilHigh)}`,
+    `  MVRV upside model : $${fmt(D.mvrvUpside)}`,
+    `  BTC at ceiling    : $${fmt(d.btcAtCeil)}  on ${d.btc} BTC`,
+    `  Gain from current : +$${fmt(d.netGain)} net  (+${d.pctGain.toFixed(0)}% BTC price)`,
+    `  Loan cost (1% APR): ~$${fmt(d.interestLo)}/yr`,
+    `  Loan cost (5% APR): ~$${fmt(d.interestHi)}/yr`,
+    `  ⚠ Note: Ceiling models have wide error bars. Median guess, not guarantee.`,
+    ``,
+    `BEAR SCENARIO (floor models):`,
+    `  Floor consensus   : $${fmt(D.floorPrice)}`,
+    `  MVRV downside     : $${fmt(D.mvrvDownside)}  (theoretical extreme)`,
+    `  MC trigger        : $${fmt(d.mcPrice)}  (${mcDrop}% drop)`,
+    `  Liq trigger       : $${fmt(d.liqPrice)}  (${liqDrop}% drop)`,
+    `  C4 drawdown so far: ${D.cycleDrawdown.toFixed(1)}% — ${Math.abs(D.cycleDrawdown) > 50 ? 'already severe; bounce likely' : 'not at historical extremes yet'}`,
+    `  Worst case (C1 DD): ${D.worstCycleDrawdown.toFixed(1)}%  → BTC ~$${fmt(d.price * (1 + D.worstCycleDrawdown/100))}`,
+    '',
+
+    /* ── 7. RISK METRICS ── */
+    '━━  7. RISK METRICS (QUANT)  ━━',
+    sep2,
+    `P(Liquidation 90d): ${pliqStr}`,
+    `  Model: log-normal GBM, vol=${(d.vol*100).toFixed(0)}%, horizon=90d`,
+    `  Read : ${!isFinite(d.pLiq90) ? 'n/a' : d.pLiq90 < 0.03 ? 'LOW — well-buffered' : d.pLiq90 < 0.10 ? 'MODERATE — monitor' : 'HIGH — consider reducing LTV'}`,
+    ``,
+    `Kelly optimal LTV : ${kellyStr}`,
+    `  Half-Kelly used (conservative). p=win_prob derived from composite score.`,
+    `  Read : ${isFinite(d.kellyLtv) && d.kellyLtv > 0 ? (d.ltvPct/100 <= d.kellyLtv * 1.1 ? 'Current LTV ≈ Kelly optimal ✓' : d.ltvPct/100 <= d.kellyLtv * 1.5 ? 'Slightly above Kelly — acceptable' : 'Above Kelly — overexposed, reduce LTV') : 'No Kelly edge at these signal levels'}`,
+    ``,
+    `Risk/Reward ratio : ${rrStr}`,
+    `  ${d.entry > 0 && isFinite(d.rrRatio) ? `Upside: $${fmt(D.ceilPrice - d.entry)} | Downside to liq: $${fmt(d.entry - d.liqPrice)}` : 'Set avg cost basis in app for R/R calculation'}`,
+    ``,
+    `Risk level        : ${riskLevel}`,
+    `  LTV ${d.ltvPct}%: ${d.ltvPct <= 30 ? 'Conservative — wide buffer, well-structured' : d.ltvPct <= 50 ? 'Moderate — keep USDT ready to top up near $' + fmt(d.price * 0.75) : d.ltvPct <= 65 ? 'Aggressive — thin buffer, reduce or keep 2× reserve' : 'VERY HIGH — immediate risk of MC on normal volatility'}`,
+    ``,
+    `Upside/Downside (for Kelly):`,
+    `  Upside %  : +${((D.ceilPrice - d.price) / d.price * 100).toFixed(1)}%  (to ceiling midpoint)`,
+    `  Downside %: −${((d.price - d.liqPrice) / d.price * 100).toFixed(1)}%  (to liq)`,
+    '',
+
+    /* ── 8. PRO / CON ── */
+    '━━  8. ANALYST VIEW — PRO & CON  ━━',
+    sep2,
+    `CASE FOR BORROWING NOW:`,
+    `  ✓ MVRV Z-score at ${D.zscore.toFixed(3)} — historically a strong accumulation zone`,
+    `  ✓ C4 regression floor ${D.c4BottomLog}–${D.c4BottomLin}; current ${D.mvrv.toFixed(3)} near statistical bottom`,
+    `  ✓ Liquidation requires ${Math.abs(d.liqDropPct).toFixed(0)}% drop to $${fmt(d.liqPrice)} — steep vs historical extremes`,
+    `  ✓ APR ${(d.apr*100).toFixed(1)}% — carry minimal vs potential BTC upside`,
+    `  ✓ No taxable event; BTC exposure maintained throughout`,
+    `  ✓ Floor consensus ($${fmt(D.floorPrice)}) close to today's price — held in multiple models`,
+    `  ✓ MVRV ${mvrvPctVsMean}% below hist mean — only ${mvrvPct}% of days were cheaper`,
+    ``,
+    `RISKS TO MANAGE:`,
+    `  ✕ MA stack is ${D.maStack.toLowerCase()} — trend not yet confirmed; borrowing into downtrend`,
+    `  ✕ C4 peak MVRV (${D.cyclePeakMvrv}) lower than prior cycles — diminishing returns`,
+    `  ✕ Ceiling models have massive error bars — median guess, not guarantee`,
+    `  ✕ BTC-backed → USDT out — have a clear deployment plan before borrowing`,
+    `  ✕ MC notifications NOT guaranteed by platform — set independent price alerts`,
+    `  ✕ MVRV downside model shows $${fmt(D.mvrvDownside)} as theoretical floor — wide range if macro breaks`,
+    `  ✕ P(liq 90d) = ${pliqStr} — ${isFinite(d.pLiq90) && d.pLiq90 > 0.10 ? 'elevated at current vol' : 'manageable at current vol'}`,
+    '',
+
+    /* ── 9. QUANT SUMMARY (machine-readable) ── */
+    '━━  9. QUANT SUMMARY (STRUCTURED)  ━━',
+    sep2,
+    `POSITION    : ${d.btc} BTC · $${fmt(d.loan)} USDT · LTV ${d.ltvPct}%`,
+    `SCORE       : ${d.score.toFixed(2)}/10 → ${composite}`,
+    `VERDICT     : ${verdictLabel}`,
+    `RISK        : ${riskLevel}`,
+    ``,
+    `SIGNALS     : MVRV=${D.mvrv.toFixed(4)} | Z=${D.zscore.toFixed(4)} | MA=${D.maStack} | ROC30d=${D.roc30.toFixed(1)}% | Cycle=${D.cyclePos.toFixed(1)}%`,
+    `PRICE       : spot=$${fmt(d.price)} | MC=$${fmt(d.mcPrice)} (${mcDrop}%) | LIQ=$${fmt(d.liqPrice)} (${liqDrop}%)`,
+    `CEILING     : $${fmt(D.ceilPrice)} (range $${fmt(D.ceilLow)}–$${fmt(D.ceilHigh)})`,
+    `FLOOR       : $${fmt(D.floorPrice)} (MVRV model: $${fmt(D.mvrvDownside)})`,
+    `PROT        : P(liq90d)=${pliqStr} | Kelly=${kellyStr} | R/R=${rrStr}`,
+    `INTEREST    : $${fmt(d.interestLo)}/yr (1%) – $${fmt(d.interestHi)}/yr (5%)`,
+    ``,
+    `ACTION : ${d.ltvPct <= 30 ? 'Conservative. Wide buffer. Well-structured.' :
+               d.ltvPct <= 50 ? `Reasonable at current signals. Keep collateral ready near $${fmt(d.price * 0.75)}.` :
+               `High LTV. Buffer thin. Reduce LTV ≤50% or keep 2× reserve ready.`}`,
+    '',
+
+    /* ── 10. APP META ── */
+    '━━  10. APP METADATA & INTERPRETATION GUIDE  ━━',
+    sep2,
+    `App name    : BTC Loan Signal · MVRV Analyzer`,
+    `Repo        : https://github.com/0xtrvkc/dynamic-btc-analytics-dashboard`,
+    `Export path : exports/mvrv_summary_YYYY-MM-DD.txt  (pushed daily via CI/script)`,
+    ``,
+    `How to use this file with AI:`,
+    `  Paste the full file into your AI chat as context, then ask:`,
+    `  - "Should I take a BTC-backed loan at X% LTV given these signals?"`,
+    `  - "What is the probability of getting margin called in 30 days?"`,
+    `  - "Explain the MVRV Z-score signal and what it means for my position"`,
+    `  - "Compare these signals to the C3 cycle bottom in 2022"`,
+    `  - "What LTV do you recommend based on Kelly criterion?"`,
+    ``,
+    `Metric glossary:`,
+    `  MVRV       : Market Value / Realized Value. <1 = coin is below avg cost basis (very bullish).`,
+    `               1.9 = historical mean (C1–C4). >3.5 = cycle top danger zone.`,
+    `  Z-Score    : MVRV normalized by std dev. <0 = cheap. >7 = historical cycle top.`,
+    `  MA Stack   : Bullish = price > MA20 > MA50 > MA200. Bearish = not in order.`,
+    `  ROC        : Rate of change over period. Positive = momentum building.`,
+    `  Cycle pos  : % elapsed from halving to estimated next halving (~4yr cycle).`,
+    `  Kelly LTV  : Mathematically optimal leverage given win probability and R/R.`,
+    `  P(liq 90d) : Probability of hitting liquidation price within 90 days (log-normal GBM model).`,
+    `  Ceiling    : MVRV-consensus price target for this cycle peak (not guaranteed).`,
+    `  Floor      : MVRV-based support price (regression / consensus model).`,
+    ``,
+    `Snapshot history (last 14 days from localStorage):`,
+    histLines || '  (no history — first load)',
+    '',
+    sep,
+    `  Generated by BTC Loan Signal · ${ts}`,
+    `  ⚠ NOT FINANCIAL ADVICE. DYOR. Past MVRV cycles do not guarantee future outcomes.`,
+    sep,
+  ];
+
+  const content = lines.join('\n');
+  const dateStr = D.date || new Date().toISOString().slice(0, 10);
+  const filename = `BTC_LOAN_ANALYZER_${dateStr}.txt`;
+
+  /* ── trigger download ── */
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+
+  /* ── visual feedback ── */
+  const btn = document.getElementById('export-btn');
+  if (btn) {
+    const orig = btn.textContent;
+    btn.textContent = '✓ Saved · ' + filename;
+    btn.style.borderColor = 'var(--moss)';
+    setTimeout(() => { btn.textContent = orig; btn.style.borderColor = ''; }, 3000);
+  }
+
+  return filename; /* for console use: exportSnapshot() */
 }
 
 /* ─────────────────────────────────────────────────────

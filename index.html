@@ -832,6 +832,34 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   line-height: 1.8;
 }
 
+/* ─── PROFIT CALC: TARGET QUICK BUTTONS ─── */
+.target-quick-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.quick-btn {
+  flex: 1;
+  min-width: 0;
+  background: var(--cream-3);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-xs);
+  padding: 8px 6px;
+  font-family: var(--display);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-mid);
+  text-align: center;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.quick-btn:active {
+  background: var(--moss);
+  color: var(--white);
+  border-color: var(--moss);
+}
+
 /* ─── FOOTER ─── */
 .app-footer {
   border-top: 1.5px solid var(--border);
@@ -1206,8 +1234,106 @@ button { font-family: var(--display); cursor: pointer; border: none; }
       <div class="scenario-row"><span class="scenario-row-key">Margin call triggers at</span><span class="scenario-row-val dn" id="sc-mc-trigger">$38,930 (−37%)</span></div>
       <div class="scenario-row"><span class="scenario-row-key">Full liquidation at</span><span class="scenario-row-val dn" id="sc-liq-trigger">$27,260 (−56%)</span></div>
       <div class="scenario-row"><span class="scenario-row-key">Worst historical drawdown</span><span class="scenario-row-val dn" id="sc-worst-dd">−90.7% (C1)</span></div>
-      <div class="scenario-row"><span class="scenario-row-key">C4 max drawdown so far</span><span class="scenario-row-val dn" id="sc-c4-dd">−57.3%</span></div>
+      <div class="scenario-row"><span class="scenario-row-key" id="sc-c4-dd-label">C4 max drawdown so far</span><span class="scenario-row-val dn" id="sc-c4-dd">−57.3%</span></div>
       <div class="scenario-row"><span class="scenario-row-key">What happens to you</span><span class="scenario-row-val dn" id="sc-worst-outcome">Lose BTC, keep loan</span></div>
+    </div>
+  </div>
+
+  <!-- ══ PROFIT CALCULATOR ══ -->
+  <div class="section-header" onclick="toggleSection('profit-body', this)">
+    <span class="section-header-icon">💹</span>
+    <span class="section-header-title">Profit Calculator · Deploy &amp; Target</span>
+    <span class="section-caret" id="profit-caret">▾</span>
+  </div>
+  <div class="section-body collapsed" id="profit-body">
+    <div class="input-card">
+      <div class="input-card-label">Borrowed Capital Deployment</div>
+      <div class="input-row">
+        <span class="input-row-label">Deploy into BTC</span>
+        <span class="input-row-unit">% of loan</span>
+        <div class="stepper-wrap">
+          <button class="stepper-btn" onclick="step('inp-deploy-pct', -5, 0)">−</button>
+          <input class="stepper-input" type="number" id="inp-deploy-pct" value="100" step="5" min="0" max="100"/>
+          <button class="stepper-btn" onclick="step('inp-deploy-pct', 5, 0)">+</button>
+        </div>
+      </div>
+      <div class="input-row">
+        <span class="input-row-label">Target BTC Price</span>
+        <span class="input-row-unit">USD</span>
+        <div class="stepper-wrap">
+          <button class="stepper-btn" onclick="step('inp-target-price', -1000, 0)">−</button>
+          <input class="stepper-input" type="number" id="inp-target-price" value="62000" step="1000" min="1000" max="10000000"/>
+          <button class="stepper-btn" onclick="step('inp-target-price', 1000, 0)">+</button>
+        </div>
+      </div>
+      <div class="target-quick-row">
+        <button class="quick-btn" onclick="setTarget('current')">Current</button>
+        <button class="quick-btn" onclick="setTarget('ceiling')">Ceiling</button>
+        <button class="quick-btn" onclick="setTarget('floor')">Floor</button>
+        <button class="quick-btn" onclick="setTarget('liq')">Liq.</button>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <span class="stat-icon">🪙</span>
+        <div class="stat-label">New BTC Purchased</div>
+        <div class="stat-value" id="pc-new-btc">—</div>
+        <div class="stat-sub" id="pc-deploy-sub">— deployed @ entry price</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">📦</span>
+        <div class="stat-label">Total BTC Held at Target</div>
+        <div class="stat-value" id="pc-total-btc">—</div>
+        <div class="stat-sub">Collateral + new buy</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">💼</span>
+        <div class="stat-label">Total Assets at Target</div>
+        <div class="stat-value" id="pc-total-value">—</div>
+        <div class="stat-sub" id="pc-total-value-sub">Total BTC × target price</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">🧾</span>
+        <div class="stat-label">Loan + Interest Owed</div>
+        <div class="stat-value" id="pc-debt">—</div>
+        <div class="stat-sub" id="pc-debt-sub">at target date</div>
+      </div>
+      <div class="stat-card full-width" id="pc-net-card">
+        <span class="stat-icon">📈</span>
+        <div class="stat-label">Net Profit vs. Today</div>
+        <div class="stat-value" id="pc-net-profit">—</div>
+        <div class="stat-sub" id="pc-net-profit-sub">Total value − debt − starting collateral value</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">🔁</span>
+        <div class="stat-label">Leveraged Return</div>
+        <div class="stat-value" id="pc-lev-return">—</div>
+        <div class="stat-sub">On original collateral value</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">🪨</span>
+        <div class="stat-label">Unleveraged Return</div>
+        <div class="stat-value" id="pc-unlev-return">—</div>
+        <div class="stat-sub">If you'd just held, no loan</div>
+      </div>
+      <div class="stat-card full-width" id="pc-edge-card">
+        <span class="stat-icon">⚡</span>
+        <div class="stat-label">Leverage Edge</div>
+        <div class="stat-value" id="pc-edge">—</div>
+        <div class="stat-sub" id="pc-edge-sub">Extra $ gained vs. not borrowing</div>
+      </div>
+      <div class="stat-card full-width">
+        <span class="stat-icon">⚖️</span>
+        <div class="stat-label">Breakeven Price (Net P&amp;L = 0)</div>
+        <div class="stat-value" id="pc-breakeven">—</div>
+        <div class="stat-sub" id="pc-breakeven-sub">Below: leverage costs you · Above: leverage adds gains</div>
+      </div>
+    </div>
+
+    <div class="spacer-10"></div>
+    <div class="formula-box" id="pc-formula">
+      New BTC = (Loan × Deploy%) ÷ Entry Price &nbsp;·&nbsp; Total Assets = (Collateral + New) BTC × Target Price + Undeployed Cash &nbsp;·&nbsp; Net P&amp;L = Total Assets − Loan Principal − Original Collateral Value &nbsp;·&nbsp; <span style="opacity:0.6;">Interest accrues separately (see Loan Math above) and is not deducted here.</span>
     </div>
   </div>
 
@@ -1305,12 +1431,12 @@ button { font-family: var(--display); cursor: pointer; border: none; }
     </div>
     <div class="cycle-meta-grid">
       <div class="cycle-meta-card">
-        <div class="stat-label">C4 MVRV Peak</div>
+        <div class="stat-label" id="cm-c4-peak-label">C4 MVRV Peak</div>
         <div style="font-family:var(--display);font-size:18px;font-weight:800;" id="cm-c4-peak">2.733</div>
         <div class="stat-sub" id="cm-c4-peak-date">Nov 2024 · $99,013</div>
       </div>
       <div class="cycle-meta-card">
-        <div class="stat-label">C4 Price ATH</div>
+        <div class="stat-label" id="cm-ath-label">C4 Price ATH</div>
         <div style="font-family:var(--display);font-size:18px;font-weight:800;" id="cm-ath">$124,728</div>
         <div class="stat-sub" id="cm-ath-date">Oct 2025</div>
       </div>
@@ -1449,6 +1575,8 @@ function getLiqLtv() { return readInput('inp-liq-ltv', 55, 99,  0.90) / 100; }
 function getApr()    { return readInput('inp-apr',     0.1, 30, 1.0)  / 100; }
 function getVol()    { return readInput('inp-vol',     10, 200, 65)   / 100; }
 function getEntry()  { return readInput('inp-entry',   0, 10000000, 0); }
+function getDeployPct()  { return readInput('inp-deploy-pct', 0, 100, 100) / 100; }
+function getTargetPrice(){ return readInput('inp-target-price', 1000, 10000000, D.btcPrice); }
 
 /* ─────────────────────────────────────────────────────
    DATA STATE
@@ -1485,6 +1613,7 @@ let D = {
   nextHalving: '2028-03-26',
   nextHalvingDays: 656,
   worstCycleDrawdown: -90.7,
+  worstCycleTag: 'C1',
 };
 
 const SNAPSHOT_KEY = 'btc_loan_snapshots_v2';
@@ -1650,13 +1779,34 @@ function calc() {
   const mcP48h = mcPrice * Math.pow(0.95, 2);
   const topupNeeded = Math.max(0, loan / 0.70 - btc * mcPrice);
 
+  /* ── PROFIT CALCULATOR ── */
+  const deployPct   = getDeployPct();
+  const targetPrice = getTargetPrice();
+  const deployedUsd = loan * deployPct;
+  const undeployedUsd = loan * (1 - deployPct); // cash held, not bought into BTC
+  const newBtc      = price > 0 ? deployedUsd / price : 0;
+  const totalBtc    = btc + newBtc;
+  const btcValueAtTarget = totalBtc * targetPrice;
+  const totalValue  = btcValueAtTarget + undeployedUsd; // BTC value + leftover cash
+  const debtOwed    = loan; // principal owed (annual interest shown separately in Loan Math)
+  const netProfit   = totalValue - debtOwed - collateral;
+  const levReturnPct   = collateral > 0 ? (netProfit / collateral) * 100 : 0;
+  const unlevReturnPct = price > 0 ? ((targetPrice - price) / price) * 100 : 0;
+  const unlevProfit    = collateral * (unlevReturnPct / 100);
+  const leverageEdge   = netProfit - unlevProfit;
+  // Breakeven: price where totalBtc*P + undeployedUsd - debtOwed - collateral == 0
+  const breakevenPrice = totalBtc > 0 ? (debtOwed + collateral - undeployedUsd) / totalBtc : NaN;
+
   return {
     btc, price, ltv, ltvPct, mcLtv, liqLtv, apr,
     collateral, loan, interest, interestLo, interestHi,
     mcPrice, liqPrice, buffer, bufferPct, liqDropPct,
     athDropPct, btcAtCeil, netGain, pctGain,
     pLiq90, score, signals, kellyLtv, rrRatio,
-    mcP24h, mcP48h, topupNeeded, entry, vol
+    mcP24h, mcP48h, topupNeeded, entry, vol,
+    deployPct, targetPrice, deployedUsd, undeployedUsd, newBtc, totalBtc, btcValueAtTarget, totalValue,
+    debtOwed, netProfit, levReturnPct, unlevReturnPct, unlevProfit,
+    leverageEdge, breakevenPrice
   };
 }
 
@@ -1727,6 +1877,7 @@ function renderSignals() {
   el('sig-roc-badge').textContent = D.roc90 > 5 ? 'Accelerating' : D.roc90 > 0 ? 'Flat' : 'Bottoming';
 
   // Cycle
+  const cyc = parseCycleName(D.cycleName);
   el('sig-cycle').textContent = D.cyclePos.toFixed(1) + '%';
   el('sig-cycle-ctx').textContent = D.cycleName;
   el('sig-cycle-badge').className = 'badge pill-badge ' + (D.cyclePos < 65 ? 'badge-good' : 'badge-warn');
@@ -1734,7 +1885,7 @@ function renderSignals() {
 
   // vs Peak
   el('sig-vs-peak').textContent = D.mvrvVsCyclePeak + '%';
-  el('sig-vs-peak-ctx').textContent = `of C4 peak MVRV`;
+  el('sig-vs-peak-ctx').textContent = `of ${cyc.tag} peak MVRV`;
   el('sig-vs-peak-badge').className = 'badge pill-badge ' + (D.mvrvVsCyclePeak < 50 ? 'badge-good' : 'badge-warn');
   el('sig-vs-peak-badge').textContent = D.mvrvVsCyclePeak < 50 ? 'Deep Dip' : 'Partial Recovery';
 
@@ -1744,10 +1895,32 @@ function renderSignals() {
   el('sc-floor-price').textContent = fmtUSD(D.floorPrice);
   el('sc-mvrv-dn').textContent     = fmtUSD(D.mvrvDownside);
   el('sc-ath').textContent         = fmtUSD(D.c4Ath) + ' (' + fmtDate(D.c4AthDate) + ')';
+  const c4ddLabel = el('sc-c4-dd-label');
+  if (c4ddLabel) c4ddLabel.textContent = `${cyc.tag} max drawdown so far`;
   el('sc-c4-dd').textContent       = D.cycleDrawdown.toFixed(1) + '% (already hit)';
-  el('sc-worst-dd').textContent    = (D.worstCycleDrawdown || -90.7).toFixed(1) + '% (C1)';
+  el('sc-worst-dd').textContent    = (D.worstCycleDrawdown || -90.7).toFixed(1) + `% (${D.worstCycleTag || 'C1'})`;
+
+  // Cycle section header & bar labels — derived from D.cycleName (e.g. "C4 (2024-27)")
+  const cycleLabel = el('cycle-section-label');
+  if (cycleLabel) {
+    cycleLabel.textContent = cyc.start && cyc.end
+      ? `Cycle Context (${cyc.start}–${cyc.end})`
+      : `Cycle Context · ${D.cycleName}`;
+  }
+  const startLbl = el('cycle-start-label');
+  if (startLbl) {
+    startLbl.textContent = D.cycleStartDate
+      ? `Cycle Start (${fmtDate(D.cycleStartDate)})`
+      : cyc.start ? `Cycle Start (${cyc.start})` : 'Cycle Start';
+  }
+  const endLbl = el('cycle-end-label');
+  if (endLbl) endLbl.textContent = cyc.end ? `Est. End ${cyc.end}` : 'Est. End —';
 
   // Cycle meta
+  const peakLabel = el('cm-c4-peak-label');
+  if (peakLabel) peakLabel.textContent = `${cyc.tag} MVRV Peak`;
+  const athLabel = el('cm-ath-label');
+  if (athLabel) athLabel.textContent = `${cyc.tag} Price ATH`;
   el('cm-c4-peak').textContent      = D.cyclePeakMvrv.toFixed(3);
   el('cm-c4-peak-date').textContent = formatDateShort(D.cyclePeakDate) + ' · ' + fmtUSD(D.cyclePeakBtcPrice);
   el('cm-ath').textContent          = fmtUSD(D.c4Ath);
@@ -1762,7 +1935,7 @@ function renderSignals() {
   const todayLbl = el('cycle-today-label');
   if (todayLbl) todayLbl.textContent = 'TODAY — ' + pct + '% elapsed';
   const floorNote = el('cycle-floor-note');
-  if (floorNote) floorNote.innerHTML = `In prior cycles: MVRV troughed mid-cycle, then price recovered strongly.<br><small>C4 regression floor: <strong>${D.c4BottomLog}–${D.c4BottomLin}</strong> · Current: ${D.mvrv.toFixed(3)} · Next halving: <strong>${D.nextHalving}</strong> (${D.nextHalvingDays}d)</small>`;
+  if (floorNote) floorNote.innerHTML = `In prior cycles: MVRV troughed mid-cycle, then price recovered strongly.<br><small>${cyc.tag} regression floor: <strong>${D.c4BottomLog}–${D.c4BottomLin}</strong> · Current: ${D.mvrv.toFixed(3)} · Next halving: <strong>${D.nextHalving}</strong> (${D.nextHalvingDays}d)</small>`;
 
   // Signals label
   el('signals-label').textContent = 'On-Chain Signals · ' + D.date;
@@ -1774,11 +1947,11 @@ function renderSignals() {
 
   // Pro/Con
   el('pro-1').textContent = `MVRV Z-score at ${D.zscore.toFixed(3)} — historically a strong accumulation zone.`;
-  el('pro-2').textContent = `C4 MVRV regression floor is ${D.c4BottomLog}–${D.c4BottomLin}. At ${D.mvrv.toFixed(3)}, borrowing near statistical bottom.`;
+  el('pro-2').textContent = `${cyc.tag} MVRV regression floor is ${D.c4BottomLog}–${D.c4BottomLin}. At ${D.mvrv.toFixed(3)}, borrowing near statistical bottom.`;
   el('pro-4').textContent = `Current APR: ${readInput('inp-apr',0.1,30,1.0).toFixed(1)}%. Carry is minimal relative to potential BTC upside.`;
   el('pro-6').textContent = `Floor consensus (${fmtUSD(D.floorPrice)}) is close to today's price — held in multiple models.`;
   el('con-1').textContent = `MA stack is ${D.maStack.toLowerCase()}. Trend not yet confirmed. Borrowing into a technical downtrend.`;
-  el('con-2').textContent = `C4 peak MVRV (${D.cyclePeakMvrv}) was lower than prior cycles. Diminishing returns — ceiling shrinks each cycle.`;
+  el('con-2').textContent = `${cyc.tag} peak MVRV (${D.cyclePeakMvrv}) was lower than prior cycles. Diminishing returns — ceiling shrinks each cycle.`;
   el('con-6').textContent = `MVRV downside model shows ${fmtUSD(D.mvrvDownside)} as theoretical floor — extreme, but wide range.`;
 }
 
@@ -1916,6 +2089,7 @@ function render() {
 
   renderLiqTable(d);
   renderQuant(d);
+  renderProfitCalc(d);
 }
 
 /* ─────────────────────────────────────────────────────
@@ -2011,6 +2185,95 @@ function renderQuant(d) {
 }
 
 /* ─────────────────────────────────────────────────────
+   PROFIT CALCULATOR
+───────────────────────────────────────────────────── */
+function renderProfitCalc(d) {
+  const newBtcEl = el('pc-new-btc');
+  if (!newBtcEl) return; // section not in DOM
+
+  // Sync target price input default to current price on first load only
+  const targetInp = el('inp-target-price');
+  if (targetInp && targetInp.dataset.initialized !== '1') {
+    targetInp.value = Math.round(d.price);
+    targetInp.dataset.initialized = '1';
+  }
+
+  el('pc-new-btc').textContent      = d.newBtc.toFixed(4) + ' BTC';
+  el('pc-deploy-sub').textContent   = fmtUSD(d.deployedUsd) + ` deployed @ $${fmt(d.price)}`;
+
+  el('pc-total-btc').textContent    = d.totalBtc.toFixed(4) + ' BTC';
+  el('pc-total-value').textContent  = fmtUSD(d.totalValue);
+  el('pc-total-value-sub').textContent = d.undeployedUsd > 0.5
+    ? `${d.totalBtc.toFixed(4)} BTC × $${fmt(d.targetPrice)} + ${fmtUSD(d.undeployedUsd)} cash`
+    : `${d.totalBtc.toFixed(4)} BTC × $${fmt(d.targetPrice)}`;
+
+  el('pc-debt').textContent         = fmtUSD(d.debtOwed);
+  el('pc-debt-sub').textContent     = `Principal · +${fmtUSD(d.interestLo)}–${fmtUSD(d.interestHi)}/yr interest`;
+
+  const netEl = el('pc-net-profit');
+  netEl.textContent = (d.netProfit >= 0 ? '+' : '') + fmtUSD(d.netProfit);
+  netEl.className = 'stat-value ' + (d.netProfit > 0 ? 'good' : d.netProfit < 0 ? 'danger' : '');
+  const netCard = el('pc-net-card');
+  netCard.className = 'stat-card full-width ' + (d.netProfit > 0 ? 'highlight-good' : d.netProfit < 0 ? 'highlight-danger' : '');
+
+  const levEl = el('pc-lev-return');
+  levEl.textContent = (d.levReturnPct >= 0 ? '+' : '') + d.levReturnPct.toFixed(1) + '%';
+  levEl.className = 'stat-value ' + (d.levReturnPct > 0 ? 'good' : d.levReturnPct < 0 ? 'danger' : '');
+
+  const unlevEl = el('pc-unlev-return');
+  unlevEl.textContent = (d.unlevReturnPct >= 0 ? '+' : '') + d.unlevReturnPct.toFixed(1) + '%';
+  unlevEl.className = 'stat-value ' + (d.unlevReturnPct > 0 ? 'good' : d.unlevReturnPct < 0 ? 'danger' : '');
+
+  const edgeEl = el('pc-edge');
+  const edgeCard = el('pc-edge-card');
+  edgeEl.textContent = (d.leverageEdge >= 0 ? '+' : '') + fmtUSD(d.leverageEdge);
+  edgeEl.className = 'stat-value ' + (d.leverageEdge > 0 ? 'good' : d.leverageEdge < 0 ? 'danger' : '');
+  if (d.deployPct <= 0) {
+    el('pc-edge-sub').textContent = `Deploy 0% → leverage has no effect (pure carry cost only)`;
+    edgeCard.className = 'stat-card full-width';
+  } else {
+    el('pc-edge-sub').textContent = d.leverageEdge >= 0
+      ? `Borrowing added ${fmtUSD(d.leverageEdge)} vs. just holding ${d.btc} BTC`
+      : `Borrowing cost ${fmtUSD(Math.abs(d.leverageEdge))} vs. just holding ${d.btc} BTC`;
+    edgeCard.className = 'stat-card full-width ' + (d.leverageEdge > 0 ? 'highlight-good' : d.leverageEdge < 0 ? 'highlight-danger' : '');
+  }
+
+  const breakEl = el('pc-breakeven');
+  if (isFinite(d.breakevenPrice)) {
+    breakEl.textContent = fmtUSD(d.breakevenPrice);
+    if (d.targetPrice > d.breakevenPrice + 0.01) {
+      el('pc-breakeven-sub').textContent = `Target is above breakeven — leverage adds ${fmtUSD(Math.abs(d.leverageEdge))}`;
+    } else if (d.targetPrice < d.breakevenPrice - 0.01) {
+      el('pc-breakeven-sub').textContent = `Target is below breakeven — leverage costs ${fmtUSD(Math.abs(d.leverageEdge))}`;
+    } else {
+      el('pc-breakeven-sub').textContent = `Target ≈ breakeven — leverage is roughly neutral here`;
+    }
+  } else {
+    breakEl.textContent = '—';
+    el('pc-breakeven-sub').textContent = 'Set position values above to calculate';
+  }
+}
+
+/* Quick-target buttons */
+function setTarget(which) {
+  const d = calc();
+  let val;
+  switch (which) {
+    case 'current': val = d.price; break;
+    case 'ceiling': val = D.ceilPrice; break;
+    case 'floor':   val = D.floorPrice; break;
+    case 'liq':     val = d.liqPrice; break;
+    default: return;
+  }
+  const inp = el('inp-target-price');
+  if (!inp) return;
+  inp.value = Math.round(val);
+  inp.dataset.initialized = '1';
+  render();
+  showRecalcNote();
+}
+
+/* ─────────────────────────────────────────────────────
    DATE HELPERS
 ───────────────────────────────────────────────────── */
 function fmtDate(iso) {
@@ -2022,6 +2285,22 @@ function formatDateShort(iso) {
   if (!iso) return '';
   try { const d = new Date(iso + 'T00:00:00'); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
   catch { return iso; }
+}
+
+/* Parse a cycle name like "C4 (2024-27)" or "Cycle 5 (2028-2031)" into
+   { tag: 'C4', start: '2024', end: '2027' }. Falls back gracefully if
+   the format doesn't match (so unexpected data never breaks rendering). */
+function parseCycleName(name) {
+  if (!name) return { tag: '', start: '', end: '', full: '' };
+  const tagMatch  = String(name).match(/C(?:ycle)?\s*0*(\d+)/i);
+  const tag       = tagMatch ? 'C' + tagMatch[1] : String(name).split(/[\s(]/)[0] || String(name);
+  const yearMatch = String(name).match(/\((\d{4})\s*[-–—]\s*(\d{2,4})\)/);
+  let start = '', end = '';
+  if (yearMatch) {
+    start = yearMatch[1];
+    end = yearMatch[2].length === 2 ? start.slice(0, 2) + yearMatch[2] : yearMatch[2];
+  }
+  return { tag, start, end, full: String(name) };
 }
 
 /* ─────────────────────────────────────────────────────
@@ -2186,12 +2465,22 @@ function parseTxt(text) {
     const m = l.match(/C5 halving:.*?\[upcoming\s*·\s*(\d+)d/i); if (m) nd.nextHalvingDays = parseInt(m[1]);
     const d2 = l.match(/C5 halving:\s*([\d-]+)/i); if (d2) nd.nextHalving = d2[1];
   }
-  let worstDd = -90.7;
+  let worstDd = Infinity;
+  let worstDdCycleNum = null;
+  let curCycleNum = null;
   for (const l of lines) {
+    const cm = l.match(/^Cycle\s+(\d+):\s*$/);
+    if (cm) { curCycleNum = parseInt(cm[1]); continue; }
     const m = l.match(/Max drawdown:\s*(-[\d.]+)%/i);
-    if (m) { const v2 = parseFloat(m[1]); if (v2 < worstDd) worstDd = v2; }
+    if (m) {
+      const v2 = parseFloat(m[1]);
+      if (v2 < worstDd) { worstDd = v2; worstDdCycleNum = curCycleNum; }
+    }
   }
-  nd.worstCycleDrawdown = worstDd;
+  if (isFinite(worstDd)) {
+    nd.worstCycleDrawdown = worstDd;
+    nd.worstCycleTag = worstDdCycleNum ? ('C' + worstDdCycleNum) : 'C1';
+  }
   return nd;
 }
 
@@ -2204,16 +2493,18 @@ function parseTxt(text) {
      2. Composite signal score breakdown
      3. Loan mechanics (your position)
      4. Liquidation & margin-call levels
-     5. Cycle context (C4 metadata)
+     5. Cycle context (current-cycle metadata)
      6. Scenario analysis (bull / bear)
-     7. Risk metrics (Kelly, P(liq), R/R)
-     8. Pro / con analyst view
-     9. Quant summary narrative
-    10. App metadata & how to interpret
+     7. Profit calculator (leverage deploy scenario)
+     8. Risk metrics (Kelly, P(liq), R/R)
+     9. Pro / con analyst view
+    10. Quant summary narrative
+    11. App metadata & how to interpret
 ───────────────────────────────────────────────────── */
 function exportSnapshot() {
   /* ── gather live computed values ── */
   const d    = calc();
+  const cyc  = parseCycleName(D.cycleName);
   const w    = d.signals?.weights || {};
   const wPct = (v) => v != null ? (v * 100).toFixed(0) + '%' : '—';
 
@@ -2356,22 +2647,22 @@ function exportSnapshot() {
     sep2,
     `Current cycle     : ${D.cycleName}`,
     `Cycle position    : ${D.cyclePos.toFixed(1)}%  elapsed`,
-    `vs Cycle peak     : ${D.mvrvVsCyclePeak}% of C4 MVRV peak  (${D.mvrvVsCyclePeak < 50 ? 'deep dip' : 'partial recovery'})`,
+    `vs Cycle peak     : ${D.mvrvVsCyclePeak}% of ${cyc.tag} MVRV peak  (${D.mvrvVsCyclePeak < 50 ? 'deep dip' : 'partial recovery'})`,
     ``,
-    `C4 MVRV peak      : ${D.cyclePeakMvrv.toFixed(4)}  on ${D.cyclePeakDate}`,
-    `C4 price at peak  : $${fmt(D.cyclePeakBtcPrice)}`,
-    `C4 drawdown so far: ${D.cycleDrawdown.toFixed(1)}%  (MVRV from C4 peak)`,
+    `${cyc.tag} MVRV peak      : ${D.cyclePeakMvrv.toFixed(4)}  on ${D.cyclePeakDate}`,
+    `${cyc.tag} price at peak  : $${fmt(D.cyclePeakBtcPrice)}`,
+    `${cyc.tag} drawdown so far: ${D.cycleDrawdown.toFixed(1)}%  (MVRV from ${cyc.tag} peak)`,
     ``,
-    `C4 regression bottoms:`,
+    `${cyc.tag} regression bottoms:`,
     `  Log model floor : MVRV ${D.c4BottomLog}  (conservative)`,
     `  Linear model    : MVRV ${D.c4BottomLin}  (moderate)`,
     `  Current MVRV    : ${D.mvrv.toFixed(3)} — ${D.mvrv <= D.c4BottomLin ? '≤ regression floor (strong buy signal)' : 'above regression floor'}`,
     ``,
-    `C4 BTC ATH        : $${fmt(D.c4Ath)}  on ${D.c4AthDate}`,
+    `${cyc.tag} BTC ATH        : $${fmt(D.c4Ath)}  on ${D.c4AthDate}`,
     `  Lead/lag vs MVRV peak: ${D.c4AthLeadLag}d after MVRV peak`,
     ``,
     `Next halving      : ${D.nextHalving}  (${D.nextHalvingDays} days away)`,
-    `Worst cycle DD    : ${D.worstCycleDrawdown.toFixed(1)}%  (C1 — extreme tail scenario)`,
+    `Worst cycle DD    : ${D.worstCycleDrawdown.toFixed(1)}%  (${D.worstCycleTag || 'C1'} — extreme tail scenario)`,
     ``,
     `Cycle interpretation:`,
     `  ${D.cyclePos < 35 ? '→ EARLY CYCLE: historically highest risk/reward for borrowing' :
@@ -2397,12 +2688,55 @@ function exportSnapshot() {
     `  MVRV downside     : $${fmt(D.mvrvDownside)}  (theoretical extreme)`,
     `  MC trigger        : $${fmt(d.mcPrice)}  (${mcDrop}% drop)`,
     `  Liq trigger       : $${fmt(d.liqPrice)}  (${liqDrop}% drop)`,
-    `  C4 drawdown so far: ${D.cycleDrawdown.toFixed(1)}% — ${Math.abs(D.cycleDrawdown) > 50 ? 'already severe; bounce likely' : 'not at historical extremes yet'}`,
-    `  Worst case (C1 DD): ${D.worstCycleDrawdown.toFixed(1)}%  → BTC ~$${fmt(d.price * (1 + D.worstCycleDrawdown/100))}`,
+    `  ${cyc.tag} drawdown so far: ${D.cycleDrawdown.toFixed(1)}% — ${Math.abs(D.cycleDrawdown) > 50 ? 'already severe; bounce likely' : 'not at historical extremes yet'}`,
+    `  Worst case (${D.worstCycleTag || 'C1'} DD): ${D.worstCycleDrawdown.toFixed(1)}%  → BTC ~$${fmt(d.price * (1 + D.worstCycleDrawdown/100))}`,
     '',
 
-    /* ── 7. RISK METRICS ── */
-    '━━  7. RISK METRICS (QUANT)  ━━',
+    /* ── 7. PROFIT CALCULATOR ── */
+    '━━  7. PROFIT CALCULATOR (LEVERAGE DEPLOY SCENARIO)  ━━',
+    sep2,
+    `Scenario: borrow against your ${d.btc} BTC, deploy part of the loan back into`,
+    `BTC at today's price, then mark everything to a target price.`,
+    ``,
+    `INPUTS`,
+    `  Deploy into BTC   : ${(d.deployPct * 100).toFixed(0)}%  of loan ($${fmt(d.loan)})`,
+    `  Entry price       : $${fmt(d.price)}  (current BTC price)`,
+    `  Target price      : $${fmt(d.targetPrice)}`,
+    ``,
+    `DEPLOYMENT`,
+    `  Deployed to BTC   : $${fmt(d.deployedUsd)}  →  ${d.newBtc.toFixed(6)} new BTC @ $${fmt(d.price)}`,
+    `  Undeployed cash   : $${fmt(d.undeployedUsd)}  (held, not converted to BTC)`,
+    `  Total BTC held    : ${d.totalBtc.toFixed(6)} BTC  (${d.btc} collateral + ${d.newBtc.toFixed(6)} new)`,
+    ``,
+    `AT TARGET PRICE ($${fmt(d.targetPrice)})`,
+    `  BTC value         : $${fmt(d.btcValueAtTarget)}  (${d.totalBtc.toFixed(6)} BTC × $${fmt(d.targetPrice)})`,
+    `  + Undeployed cash : $${fmt(d.undeployedUsd)}`,
+    `  = Total assets    : $${fmt(d.totalValue)}`,
+    `  − Loan principal  : $${fmt(d.debtOwed)}  (interest not included — see Loan Mechanics for accrual rate)`,
+    `  − Orig. collateral: $${fmt(d.collateral)}  (value of your ${d.btc} BTC at entry, the baseline)`,
+    `  = NET PROFIT      : ${d.netProfit >= 0 ? '+' : ''}$${fmt(d.netProfit)}`,
+    ``,
+    `RETURN COMPARISON`,
+    `  Leveraged return  : ${d.levReturnPct >= 0 ? '+' : ''}${d.levReturnPct.toFixed(1)}%  (net profit ÷ original collateral value)`,
+    `  Unleveraged return: ${d.unlevReturnPct >= 0 ? '+' : ''}${d.unlevReturnPct.toFixed(1)}%  (if you'd simply held ${d.btc} BTC, no loan)`,
+    `  Unleveraged P&L   : ${d.unlevProfit >= 0 ? '+' : ''}$${fmt(d.unlevProfit)}`,
+    `  Leverage edge     : ${d.leverageEdge >= 0 ? '+' : ''}$${fmt(d.leverageEdge)}  (net profit − unleveraged P&L)`,
+    ``,
+    `BREAKEVEN`,
+    `  Breakeven price   : $${fmt(d.breakevenPrice)}  (net profit = $0 at this price)`,
+    `  ${d.deployPct <= 0
+        ? 'Deploy is 0% — the loan is pure carry cost here; leverage has no effect on returns.'
+        : isFinite(d.breakevenPrice) && Math.abs(d.breakevenPrice - d.price) < 0.5
+          ? 'Breakeven ≈ entry price — this is the expected invariant when leverage is used to buy more of the same asset (BTC→BTC): borrowing to rebuy the collateral asset is zero-sum at the entry price, before interest.'
+          : `Target ($${fmt(d.targetPrice)}) is ${d.targetPrice > d.breakevenPrice ? 'above' : 'below'} breakeven ($${fmt(d.breakevenPrice)}) — leverage ${d.targetPrice > d.breakevenPrice ? 'adds to' : 'subtracts from'} your return at this target.`}`,
+    ``,
+    `⚠ Note: This model excludes accrued interest (time-dependent — see Loan Mechanics §3 for`,
+    `  $/yr cost at current APR) and assumes the new BTC is bought at today's price and held`,
+    `  to the target price alongside the original collateral.`,
+    '',
+
+    /* ── 8. RISK METRICS ── */
+    '━━  8. RISK METRICS (QUANT)  ━━',
     sep2,
     `P(Liquidation 90d): ${pliqStr}`,
     `  Model: log-normal GBM, vol=${(d.vol*100).toFixed(0)}%, horizon=90d`,
@@ -2423,12 +2757,12 @@ function exportSnapshot() {
     `  Downside %: −${((d.price - d.liqPrice) / d.price * 100).toFixed(1)}%  (to liq)`,
     '',
 
-    /* ── 8. PRO / CON ── */
-    '━━  8. ANALYST VIEW — PRO & CON  ━━',
+    /* ── 9. PRO / CON ── */
+    '━━  9. ANALYST VIEW — PRO & CON  ━━',
     sep2,
     `CASE FOR BORROWING NOW:`,
     `  ✓ MVRV Z-score at ${D.zscore.toFixed(3)} — historically a strong accumulation zone`,
-    `  ✓ C4 regression floor ${D.c4BottomLog}–${D.c4BottomLin}; current ${D.mvrv.toFixed(3)} near statistical bottom`,
+    `  ✓ ${cyc.tag} regression floor ${D.c4BottomLog}–${D.c4BottomLin}; current ${D.mvrv.toFixed(3)} near statistical bottom`,
     `  ✓ Liquidation requires ${Math.abs(d.liqDropPct).toFixed(0)}% drop to $${fmt(d.liqPrice)} — steep vs historical extremes`,
     `  ✓ APR ${(d.apr*100).toFixed(1)}% — carry minimal vs potential BTC upside`,
     `  ✓ No taxable event; BTC exposure maintained throughout`,
@@ -2437,7 +2771,7 @@ function exportSnapshot() {
     ``,
     `RISKS TO MANAGE:`,
     `  ✕ MA stack is ${D.maStack.toLowerCase()} — trend not yet confirmed; borrowing into downtrend`,
-    `  ✕ C4 peak MVRV (${D.cyclePeakMvrv}) lower than prior cycles — diminishing returns`,
+    `  ✕ ${cyc.tag} peak MVRV (${D.cyclePeakMvrv}) lower than prior cycles — diminishing returns`,
     `  ✕ Ceiling models have massive error bars — median guess, not guarantee`,
     `  ✕ BTC-backed → USDT out — have a clear deployment plan before borrowing`,
     `  ✕ MC notifications NOT guaranteed by platform — set independent price alerts`,
@@ -2445,8 +2779,8 @@ function exportSnapshot() {
     `  ✕ P(liq 90d) = ${pliqStr} — ${isFinite(d.pLiq90) && d.pLiq90 > 0.10 ? 'elevated at current vol' : 'manageable at current vol'}`,
     '',
 
-    /* ── 9. QUANT SUMMARY (machine-readable) ── */
-    '━━  9. QUANT SUMMARY (STRUCTURED)  ━━',
+    /* ── 10. QUANT SUMMARY (machine-readable) ── */
+    '━━  10. QUANT SUMMARY (STRUCTURED)  ━━',
     sep2,
     `POSITION    : ${d.btc} BTC · $${fmt(d.loan)} USDT · LTV ${d.ltvPct}%`,
     `SCORE       : ${d.score.toFixed(2)}/10 → ${composite}`,
@@ -2459,14 +2793,15 @@ function exportSnapshot() {
     `FLOOR       : $${fmt(D.floorPrice)} (MVRV model: $${fmt(D.mvrvDownside)})`,
     `PROT        : P(liq90d)=${pliqStr} | Kelly=${kellyStr} | R/R=${rrStr}`,
     `INTEREST    : $${fmt(d.interestLo)}/yr (1%) – $${fmt(d.interestHi)}/yr (5%)`,
+    `LEVERAGE    : deploy=${(d.deployPct*100).toFixed(0)}% @ target=$${fmt(d.targetPrice)} → net=${d.netProfit>=0?'+':''}$${fmt(d.netProfit)} (${d.levReturnPct>=0?'+':''}${d.levReturnPct.toFixed(1)}%) vs unlev ${d.unlevReturnPct>=0?'+':''}${d.unlevReturnPct.toFixed(1)}% | edge=${d.leverageEdge>=0?'+':''}$${fmt(d.leverageEdge)} | breakeven=$${fmt(d.breakevenPrice)}`,
     ``,
     `ACTION : ${d.ltvPct <= 30 ? 'Conservative. Wide buffer. Well-structured.' :
                d.ltvPct <= 50 ? `Reasonable at current signals. Keep collateral ready near $${fmt(d.price * 0.75)}.` :
                `High LTV. Buffer thin. Reduce LTV ≤50% or keep 2× reserve ready.`}`,
     '',
 
-    /* ── 10. APP META ── */
-    '━━  10. APP METADATA & INTERPRETATION GUIDE  ━━',
+    /* ── 11. APP META ── */
+    '━━  11. APP METADATA & INTERPRETATION GUIDE  ━━',
     sep2,
     `App name    : BTC Loan Signal · MVRV Analyzer`,
     `Repo        : https://github.com/0xtrvkc/dynamic-btc-analytics-dashboard`,
@@ -2479,10 +2814,11 @@ function exportSnapshot() {
     `  - "Explain the MVRV Z-score signal and what it means for my position"`,
     `  - "Compare these signals to the C3 cycle bottom in 2022"`,
     `  - "What LTV do you recommend based on Kelly criterion?"`,
+    `  - "If BTC hits my target price, what's my actual net profit after the loan?"`,
     ``,
     `Metric glossary:`,
     `  MVRV       : Market Value / Realized Value. <1 = coin is below avg cost basis (very bullish).`,
-    `               1.9 = historical mean (C1–C4). >3.5 = cycle top danger zone.`,
+    `               1.9 = historical mean (C1–${cyc.tag}). >3.5 = cycle top danger zone.`,
     `  Z-Score    : MVRV normalized by std dev. <0 = cheap. >7 = historical cycle top.`,
     `  MA Stack   : Bullish = price > MA20 > MA50 > MA200. Bearish = not in order.`,
     `  ROC        : Rate of change over period. Positive = momentum building.`,
@@ -2491,6 +2827,12 @@ function exportSnapshot() {
     `  P(liq 90d) : Probability of hitting liquidation price within 90 days (log-normal GBM model).`,
     `  Ceiling    : MVRV-consensus price target for this cycle peak (not guaranteed).`,
     `  Floor      : MVRV-based support price (regression / consensus model).`,
+    `  Deploy %   : Share of the new loan reinvested into BTC (rest held as cash).`,
+    `  Leverage edge : Net profit minus what you'd have made just holding, with no loan.`,
+    `                  Zero by construction at the breakeven price; sign flips above/below it.`,
+    `  Breakeven  : Target price where leveraged net profit = $0. For same-asset (BTC→BTC)`,
+    `               deploys this equals the entry price, before interest — a structural`,
+    `               property of the model, not a forecast.`,
     ``,
     `Snapshot history (last 14 days from localStorage):`,
     histLines || '  (no history — first load)',
@@ -2550,7 +2892,7 @@ themeToggle.addEventListener('click', () => {
 /* ─────────────────────────────────────────────────────
    INPUT LISTENERS
 ───────────────────────────────────────────────────── */
-['inp-btc','inp-price','inp-ltv','inp-mc-ltv','inp-liq-ltv','inp-apr','inp-vol','inp-entry'].forEach(id => {
+['inp-btc','inp-price','inp-ltv','inp-mc-ltv','inp-liq-ltv','inp-apr','inp-vol','inp-entry','inp-deploy-pct','inp-target-price'].forEach(id => {
   const inp = el(id);
   if (!inp) return;
   inp.addEventListener('input', () => { render(); showRecalcNote(); });

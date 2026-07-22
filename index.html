@@ -1149,7 +1149,7 @@ button:focus-visible {
       </div>
       <div class="input-row">
         <span class="input-row-label">BTC Price</span>
-        <span class="input-row-unit">USD</span>
+        <span class="input-row-unit">USD/BTC</span>
         <div class="stepper-wrap">
           <button class="stepper-btn" onclick="step('inp-price', -500, 0)">−</button>
           <input class="stepper-input" type="number" id="inp-price" value="62000" step="100" min="1000" max="10000000"/>
@@ -1165,6 +1165,32 @@ button:focus-visible {
           <button class="stepper-btn" onclick="step('inp-ltv', 1, 0)">+</button>
         </div>
       </div>
+    </div>
+
+    <div class="input-card">
+      <div class="input-card-label">Cost Basis <span style="text-transform:none; letter-spacing:normal; opacity:0.65;">(optional)</span></div>
+      <div class="stat-sub" style="margin: -6px 0 12px; padding: 0 2px; line-height:1.4;">What you originally paid per BTC. Used only for the Risk/Reward and upside-vs-downside figures below — it does <strong>not</strong> affect your LTV, margin call, or liquidation price (those always use the live BTC Price above).</div>
+      <div class="input-row">
+        <span class="input-row-label">My Entry Price</span>
+        <span class="input-row-unit">USD/BTC</span>
+        <div class="stepper-wrap">
+          <button class="stepper-btn" onclick="step('inp-entry', -500, 0)">−</button>
+          <input class="stepper-input" type="number" id="inp-entry" value="0" step="100" min="0" max="10000000"/>
+          <button class="stepper-btn" onclick="step('inp-entry', 500, 0)">+</button>
+        </div>
+      </div>
+      <div class="input-row">
+        <span class="input-row-label">Entry Date</span>
+        <span class="input-row-unit"></span>
+        <div class="stepper-wrap">
+          <input class="stepper-input" type="date" id="inp-entry-date" style="width:120px;" min="2012-01-01"/>
+        </div>
+      </div>
+      <div class="target-quick-row">
+        <button class="quick-btn" onclick="lookupEntryPrice()">📅 Look up BTC price for that date</button>
+      </div>
+      <div class="stat-sub" style="padding: 6px 2px 0; opacity:0.65;">Optional shortcut — only needed if you don't already know your exact entry price.</div>
+      <div class="stat-sub" id="entry-lookup-status" style="padding: 4px 2px 0;"></div>
     </div>
 
     <div class="input-card">
@@ -1205,15 +1231,6 @@ button:focus-visible {
           <button class="stepper-btn" onclick="step('inp-vol', 1, 0)">+</button>
         </div>
       </div>
-      <!--<div class="input-row">
-        <span class="input-row-label">My Entry (cost basis)</span>
-        <span class="input-row-unit">USD</span>
-        <div class="stepper-wrap">
-          <button class="stepper-btn" onclick="step('inp-entry', -500, 0)">−</button>
-          <input class="stepper-input" type="number" id="inp-entry" value="0" step="100" min="0" max="10000000"/>
-          <button class="stepper-btn" onclick="step('inp-entry', 500, 0)">+</button>
-        </div>
-      </div>-->
     </div>
     <div class="recalc-toast" id="recalc-note">↺ All figures update live</div>
   </div>
@@ -1313,12 +1330,12 @@ button:focus-visible {
         <div class="stat-value" id="lm-kelly">—</div>
         <div class="stat-sub">Edge + vol + ruin</div>
       </div>
-      <!-- <div class="stat-card full-width">
+      <div class="stat-card full-width">
         <span class="stat-icon">⚡</span>
         <div class="stat-label">Risk / Reward vs Unleveraged</div>
         <div class="stat-value" id="lm-rr">—</div>
         <div class="stat-sub" id="lm-rr-sub">Set your entry cost basis above</div>
-      </div> -->
+      </div>
     </div>
     <div class="spacer-10"></div>
     <div class="formula-box" id="lm-formula">
@@ -1413,7 +1430,7 @@ button:focus-visible {
       </div>
       <div class="input-row">
         <span class="input-row-label">Target BTC Price</span>
-        <span class="input-row-unit">USD</span>
+        <span class="input-row-unit">USD/BTC</span>
         <div class="stepper-wrap">
           <button class="stepper-btn" onclick="step('inp-target-price', -1000, 0)">−</button>
           <input class="stepper-input" type="number" id="inp-target-price" value="62000" step="1000" min="1000" max="10000000"/>
@@ -1433,7 +1450,7 @@ button:focus-visible {
         <span class="stat-icon">🪙</span>
         <div class="stat-label">New BTC Purchased</div>
         <div class="stat-value" id="pc-new-btc">—</div>
-        <div class="stat-sub" id="pc-deploy-sub">— deployed @ entry price</div>
+        <div class="stat-sub" id="pc-deploy-sub">— deployed at current price</div>
       </div>
       <div class="stat-card">
         <span class="stat-icon">📦</span>
@@ -1487,7 +1504,7 @@ button:focus-visible {
 
     <div class="spacer-10"></div>
     <div class="formula-box" id="pc-formula">
-      New BTC = (Loan × Deploy%) ÷ Entry Price &nbsp;·&nbsp; Total Assets = (Collateral + New) BTC × Target Price + Undeployed Cash &nbsp;·&nbsp; Net P&amp;L = Total Assets − Loan Principal − Original Collateral Value &nbsp;·&nbsp; <span style="opacity:0.6;">Interest accrues separately (see Loan Math above) and is not deducted here.</span>
+      New BTC = (Loan × Deploy%) ÷ Current BTC Price &nbsp;·&nbsp; Total Assets = (Collateral + New) BTC × Target Price + Undeployed Cash &nbsp;·&nbsp; Net P&amp;L = Total Assets − Loan Principal − Original Collateral Value &nbsp;·&nbsp; <span style="opacity:0.6;">Interest accrues separately (see Loan Math above) and is not deducted here.</span>
     </div>
   </div>
 
@@ -2486,16 +2503,73 @@ async function tryFetch(dateStr) {
   return { text: await res.text(), dateStr, url };
 }
 
-async function fetchDailyPrice() {
+let __dailyPriceSeries = null; // cached {date: price} object from btc_daily_price.json
+
+async function getDailyPriceSeries() {
+  if (__dailyPriceSeries) return __dailyPriceSeries;
   const res = await fetch(DAILY_PRICE_URL, { cache: 'no-store' });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const obj = await res.json();
-  const dates = Object.keys(obj).sort(); // ISO date strings sort chronologically
+  const dates = Object.keys(obj);
   if (!dates.length) throw new Error('Empty price series');
+  __dailyPriceSeries = obj;
+  return obj;
+}
+
+async function fetchDailyPrice() {
+  const obj = await getDailyPriceSeries();
+  const dates = Object.keys(obj).sort(); // ISO date strings sort chronologically
   const latestDate = dates[dates.length - 1];
   const latestPrice = Number(obj[latestDate]);
   if (!isFinite(latestPrice) || latestPrice <= 0) throw new Error('Invalid latest price');
   return { date: latestDate, price: latestPrice };
+}
+
+/* Find the price for a given date; if that exact date is missing (e.g. a
+   gap in the series), walk backward up to 7 days to find the nearest
+   earlier trading day. Returns { date, price, exact } or null. */
+function nearestPriceForDate(series, dateStr) {
+  if (series[dateStr] != null && isFinite(Number(series[dateStr]))) {
+    return { date: dateStr, price: Number(series[dateStr]), exact: true };
+  }
+  const d = new Date(dateStr + 'T00:00:00');
+  for (let i = 1; i <= 7; i++) {
+    const probe = new Date(d);
+    probe.setUTCDate(probe.getUTCDate() - i);
+    const probeStr = probe.toISOString().slice(0, 10);
+    if (series[probeStr] != null && isFinite(Number(series[probeStr]))) {
+      return { date: probeStr, price: Number(series[probeStr]), exact: false };
+    }
+  }
+  return null;
+}
+
+async function lookupEntryPrice() {
+  const dateInp = el('inp-entry-date');
+  const statusEl = el('entry-lookup-status');
+  const dateStr = dateInp ? dateInp.value : '';
+  if (!dateStr) {
+    if (statusEl) { statusEl.textContent = 'Optional — pick a date above to auto-fill from that day\'s price. Already know your price? Just type it in above, no date needed.'; statusEl.style.color = 'var(--buttercup)'; }
+    return;
+  }
+  if (statusEl) { statusEl.textContent = 'Looking up…'; statusEl.style.color = ''; }
+  try {
+    const series = await getDailyPriceSeries();
+    const found = nearestPriceForDate(series, dateStr);
+    if (!found) throw new Error('No price data near that date');
+    el('inp-entry').value = Math.round(found.price);
+    if (statusEl) {
+      statusEl.textContent = found.exact
+        ? `✓ Set to $${fmt(found.price)} (${found.date})`
+        : `✓ ${dateStr} not in data — used ${found.date}: $${fmt(found.price)}`;
+      statusEl.style.color = 'var(--moss)';
+    }
+    render();
+    showRecalcNote();
+  } catch (e) {
+    if (statusEl) { statusEl.textContent = '✗ ' + e.message; statusEl.style.color = 'var(--terracotta)'; }
+    console.error('Entry price lookup failed', e);
+  }
 }
 
 function validateParsed(nd) {
@@ -2882,7 +2956,7 @@ function exportSnapshot() {
     ``,
     `INPUTS`,
     `  Deploy into BTC   : ${(d.deployPct * 100).toFixed(0)}%  of loan ($${fmt(d.loan)})`,
-    `  Entry price       : $${fmt(d.price)}  (current BTC price)`,
+    `  Deployment price  : $${fmt(d.price)}  (current BTC price)`,
     `  Target price      : $${fmt(d.targetPrice)}`,
     ``,
     `DEPLOYMENT`,
@@ -2895,7 +2969,7 @@ function exportSnapshot() {
     `  + Undeployed cash : $${fmt(d.undeployedUsd)}`,
     `  = Total assets    : $${fmt(d.totalValue)}`,
     `  − Loan principal  : $${fmt(d.debtOwed)}  (interest not included — see Loan Mechanics for accrual rate)`,
-    `  − Orig. collateral: $${fmt(d.collateral)}  (value of your ${d.btc} BTC at entry, the baseline)`,
+    `  − Orig. collateral: $${fmt(d.collateral)}  (current value of your ${d.btc} BTC, the baseline)`,
     `  = NET PROFIT      : ${d.netProfit >= 0 ? '+' : ''}$${fmt(d.netProfit)}`,
     ``,
     `RETURN COMPARISON`,
@@ -2909,7 +2983,7 @@ function exportSnapshot() {
     `  ${d.deployPct <= 0
         ? 'Deploy is 0% — the loan is pure carry cost here; leverage has no effect on returns.'
         : isFinite(d.breakevenPrice) && Math.abs(d.breakevenPrice - d.price) < 0.5
-          ? 'Breakeven ≈ entry price — this is the expected invariant when leverage is used to buy more of the same asset (BTC→BTC): borrowing to rebuy the collateral asset is zero-sum at the entry price, before interest.'
+          ? 'Breakeven ≈ current price — this is the expected invariant when leverage is used to buy more of the same asset (BTC→BTC): borrowing to rebuy the collateral asset is zero-sum at today\'s price, before interest.'
           : `Target ($${fmt(d.targetPrice)}) is ${d.targetPrice > d.breakevenPrice ? 'above' : 'below'} breakeven ($${fmt(d.breakevenPrice)}) — leverage ${d.targetPrice > d.breakevenPrice ? 'adds to' : 'subtracts from'} your return at this target.`}`,
     ``,
     `⚠ Note: This model excludes accrued interest (time-dependent — see Loan Mechanics §3 for`,
@@ -3013,8 +3087,8 @@ function exportSnapshot() {
     `  Leverage edge : Net profit minus what you'd have made just holding, with no loan.`,
     `                  Zero by construction at the breakeven price; sign flips above/below it.`,
     `  Breakeven  : Target price where leveraged net profit = $0. For same-asset (BTC→BTC)`,
-    `               deploys this equals the entry price, before interest — a structural`,
-    `               property of the model, not a forecast.`,
+    `               deploys this equals the deployment (current) price, before interest — a`,
+    `               structural property of the model, not a forecast.`,
     ``,
     `Snapshot history (last 14 days from localStorage):`,
     histLines || '  (no history — first load)',
@@ -3089,6 +3163,8 @@ window.addEventListener('load', () => {
   if (ageHrs > 24) {
     setStaleBanner(true, `⚠ STALE DATA — Using built-in snapshot from ${D.date} (${Math.round(ageHrs)}h ago). Fetching latest…`);
   }
+  const entryDateInp = el('inp-entry-date');
+  if (entryDateInp) entryDateInp.max = getDateStr(0);
   renderSignals();
   render();
   fetchLatestData();

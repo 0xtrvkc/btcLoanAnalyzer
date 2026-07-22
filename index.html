@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
@@ -26,26 +26,36 @@
 <style>
 /* ─── COZY DESIGN TOKENS ─── */
 :root {
-  --cream:        #FFFDD0;
-  --cream-2:      #FFF8E7;
-  --cream-3:      #F5EDD5;
-  --cream-border: #E8DFC8;
-  --taupe:        #B38B6D;
-  --charcoal:     #36454F;
-  --charcoal-mid: #5A7080;
-  --charcoal-dim: #8AA0AB;
-  --moss:         #8A9A5B;
-  --moss-light:   #C5D19A;
-  --moss-bg:      #EEF3E0;
-  --buttercup:    #FAE6A7;
-  --buttercup-2:  #FFF3C8;
-  --dusty-rose:   #E1A9C3;
-  --rose-bg:      #FAECF3;
-  --terracotta:   #E2725B;
-  --terra-bg:     #FAEBE8;
-  --mustard:      #D4A017;
-  --mustard-bg:   #FFF5D6;
+  /* base surfaces — light mode: near-white, Binance-style flat panels */
+  --cream:        #F4F5F6;
+  --cream-2:      #FFFFFF;
+  --cream-3:      #F7F8F9;
+  --cream-border: #E7E9EC;
+  --taupe:        #838895;
+  --charcoal:     #14161A;
+  --charcoal-mid: #6D7280;
+  --charcoal-dim: #9AA0AC;
+
+  /* semantic signal colors (kept as-is for JS compatibility, retuned) */
+  --moss:         #0ECB81;
+  --moss-light:   #4FDB9E;
+  --moss-bg:      #E4F9F0;
+  --buttercup:    #FF8A00;
+  --buttercup-2:  #FFF0DF;
+  --dusty-rose:   #FF6B6B;
+  --rose-bg:      #FFECEC;
+  --terracotta:   #F6465D;
+  --terra-bg:     #FDECEF;
+  --mustard:      #F0B90B;
+  --mustard-bg:   #FFF7DE;
   --white:        #FFFFFF;
+
+  /* brand orange — Binance-inspired, shifted to orange */
+  --orange:       #FF7A1A;
+  --orange-2:     #FF9D4D;
+  --orange-dark:  #E35F00;
+  --orange-bg:    #FFF1E3;
+  --orange-ink:   #7A3A00;
 
   --bg:           var(--cream);
   --surface:      var(--cream-2);
@@ -62,11 +72,11 @@
   --signal-bad:     var(--terracotta);
   --signal-bad-bg:  var(--terra-bg);
 
-  --radius:  16px;
-  --radius-s: 10px;
-  --radius-xs: 6px;
-  --shadow: 0 2px 12px rgba(54,69,79,0.07), 0 1px 4px rgba(54,69,79,0.05);
-  --shadow-card: 0 4px 20px rgba(54,69,79,0.09);
+  --radius:  12px;
+  --radius-s: 8px;
+  --radius-xs: 5px;
+  --shadow: 0 1px 2px rgba(20,22,26,0.05), 0 1px 1px rgba(20,22,26,0.04);
+  --shadow-card: 0 6px 20px rgba(20,22,26,0.08);
 
   --mono: 'DM Mono', monospace;
   --sans: 'Nunito Sans', sans-serif;
@@ -74,26 +84,35 @@
 }
 
 [data-theme="dark"] {
-  --cream:        #1E1C14;
-  --cream-2:      #25231A;
-  --cream-3:      #2E2B20;
-  --cream-border: #3D3A2D;
-  --taupe:        #9A7B5E;
-  --charcoal:     #E8DFC8;
-  --charcoal-mid: #BFB49A;
-  --charcoal-dim: #7A7060;
-  --moss:         #A8BC72;
-  --moss-light:   #6A7A44;
-  --moss-bg:      #1C2212;
-  --buttercup:    #6B5A1A;
-  --buttercup-2:  #3A3010;
-  --dusty-rose:   #8A4A6A;
-  --rose-bg:      #2A1520;
-  --terracotta:   #C05A45;
-  --terra-bg:     #2A1510;
-  --mustard:      #C49A2A;
-  --mustard-bg:   #2A2210;
-  --white:        #1E1C14;
+  /* Binance-style trading-terminal dark surfaces */
+  --cream:        #0B0E11;
+  --cream-2:      #181A20;
+  --cream-3:      #1E2329;
+  --cream-border: #2B3139;
+  --taupe:        #76808F;
+  --charcoal:     #EAECEF;
+  --charcoal-mid: #B7BDC6;
+  --charcoal-dim: #76808F;
+
+  --moss:         #0ECB81;
+  --moss-light:   #3EBD93;
+  --moss-bg:      rgba(14,203,129,0.14);
+  --buttercup:    #FF8A00;
+  --buttercup-2:  rgba(255,138,0,0.16);
+  --dusty-rose:   #FF6B6B;
+  --rose-bg:      rgba(255,107,107,0.14);
+  --terracotta:   #F6465D;
+  --terra-bg:     rgba(246,70,93,0.14);
+  --mustard:      #F0B90B;
+  --mustard-bg:   rgba(240,185,11,0.14);
+  --white:        #0B0E11;
+
+  --orange:       #FF8A3D;
+  --orange-2:     #FFB067;
+  --orange-dark:  #FF6A00;
+  --orange-bg:    rgba(255,138,61,0.14);
+  --orange-ink:   #FFD9B0;
+
   --bg:           var(--cream);
   --surface:      var(--cream-2);
   --surface-2:    var(--cream-3);
@@ -107,6 +126,8 @@
   --signal-warn-bg: var(--mustard-bg);
   --signal-bad:     var(--terracotta);
   --signal-bad-bg:  var(--terra-bg);
+  --shadow: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-card: 0 10px 28px rgba(0,0,0,0.5);
 }
 
 /* ─── RESET & BASE ─── */
@@ -142,8 +163,23 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   font-family: var(--display);
   font-weight: 800;
   font-size: 15px;
-  color: var(--moss);
+  color: var(--orange);
   letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.app-logo-mark {
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+  color: #fff;
+  font-weight: 800;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 .app-logo span { color: var(--charcoal); font-weight: 600; }
 .live-dot {
@@ -185,7 +221,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   transition: transform 0.25s, background 0.25s;
   box-shadow: 0 1px 4px rgba(0,0,0,0.15);
 }
-[data-theme="dark"] .theme-toggle-btn { background: var(--moss); }
+[data-theme="dark"] .theme-toggle-btn { background: var(--orange); }
 [data-theme="dark"] .theme-toggle-btn::after { transform: translateX(16px); }
 .theme-emoji { font-size: 11px; }
 
@@ -229,7 +265,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   cursor: pointer;
   transition: border-color 0.2s, background 0.2s;
 }
-.refresh-chip:hover { border-color: var(--moss); background: var(--moss-bg); }
+.refresh-chip:hover { border-color: var(--orange); background: var(--orange-bg); }
 .refresh-chip:disabled { opacity: 0.5; cursor: not-allowed; }
 .refresh-icon { display: inline-block; font-size: 14px; }
 .spin { animation: spin 1s linear infinite; display: inline-block; }
@@ -292,8 +328,8 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
-  height: 4px;
-  background: var(--moss);
+  height: 3px;
+  background: linear-gradient(90deg, var(--orange), var(--orange-2));
   border-radius: var(--radius) var(--radius) 0 0;
 }
 .hero-eyebrow {
@@ -486,7 +522,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 }
 .weight-row input[type=range] {
   flex: 1;
-  accent-color: var(--moss);
+  accent-color: var(--orange);
   height: 4px;
   cursor: pointer;
 }
@@ -637,7 +673,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   font-family: var(--display);
   font-size: 11px;
   font-weight: 700;
-  color: var(--moss);
+  color: var(--orange);
 }
 .cycle-track {
   height: 10px;
@@ -648,17 +684,21 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 }
 .cycle-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--moss-light), var(--moss));
+  background: linear-gradient(90deg, var(--orange-2), var(--orange));
   border-radius: 5px;
   transition: width 1s ease;
   position: relative;
 }
 .cycle-fill::after {
-  content: '🌿';
+  content: '';
   position: absolute;
-  right: -8px;
-  top: -8px;
-  font-size: 18px;
+  right: -5px;
+  top: -3px;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--orange);
+  border: 2px solid var(--cream-2);
+  box-shadow: 0 0 0 2px var(--orange);
 }
 .cycle-note {
   font-size: 11px;
@@ -872,9 +912,9 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   -webkit-tap-highlight-color: transparent;
 }
 .quick-btn:active {
-  background: var(--moss);
-  color: var(--white);
-  border-color: var(--moss);
+  background: var(--orange);
+  color: #fff;
+  border-color: var(--orange);
 }
 
 /* ─── FOOTER ─── */
@@ -898,7 +938,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   bottom: 24px;
   right: 18px;
   z-index: 200;
-  background: var(--moss);
+  background: linear-gradient(135deg, var(--orange), var(--orange-dark));
   color: white;
   border: none;
   border-radius: 50%;
@@ -908,12 +948,12 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 18px rgba(138,154,91,0.45);
+  box-shadow: 0 4px 18px rgba(255,122,26,0.45);
   cursor: pointer;
   transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
   -webkit-tap-highlight-color: transparent;
 }
-.fab:active { transform: scale(0.93); box-shadow: 0 2px 8px rgba(138,154,91,0.3); }
+.fab:active { transform: scale(0.93); box-shadow: 0 2px 8px rgba(255,122,26,0.3); }
 .fab.spinning { background: var(--taupe); }
 
 /* ─── MISC HELPERS ─── */
@@ -929,13 +969,110 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 }
 .hero-card { animation: fade-in-up 0.4s ease both; }
 
+/* ─── FOCUS STATES (accessibility + brand) ─── */
+.stepper-input:focus,
+.weight-row input[type=range]:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 1px;
+}
+.stepper-wrap:focus-within { border-color: var(--orange); }
+
+/* ─── CARD HOVER (desktop pointer affordance) ─── */
+@media (hover: hover) and (pointer: fine) {
+  .stat-card, .signal-pill, .liq-item, .scenario-card, .procon-card, .cycle-meta-card {
+    transition: border-color 0.15s ease, transform 0.15s ease;
+  }
+  .stat-card:hover, .signal-pill:hover, .liq-item:hover, .scenario-card:hover,
+  .procon-card:hover, .cycle-meta-card:hover {
+    border-color: var(--orange);
+  }
+  .section-header:hover .section-header-title { color: var(--text); }
+}
+
+/* ═══════════════════════════════════════════════════
+   RESPONSIVE — DESKTOP / TABLET
+   Recompose density and grid rather than just widening.
+═══════════════════════════════════════════════════ */
+
+/* Tablet: a bit more breathing room */
+@media (min-width: 640px) {
+  html { font-size: 15.5px; }
+  .page { max-width: 640px; padding: 0 20px; }
+  .app-header, .refresh-bar, .stale-banner { padding-left: 20px; padding-right: 20px; }
+}
+
+/* Desktop: wide dashboard-style layout */
+@media (min-width: 1024px) {
+  html { font-size: 16px; }
+
+  .app-header, .refresh-bar, .stale-banner {
+    padding-left: max(32px, calc((100% - 900px) / 2));
+    padding-right: max(32px, calc((100% - 900px) / 2));
+  }
+
+  .page {
+    max-width: 900px;
+    padding: 0 32px 40px;
+  }
+
+  .hero-body { gap: 24px; }
+  .gauge-svg { width: 112px; height: 112px; }
+  .hero-verdict-title { font-size: 21px; }
+  .hero-verdict-sub { font-size: 13px; }
+
+  /* two-card groups sit side by side */
+  #inputs-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    align-items: start;
+  }
+  #inputs-body .recalc-toast { grid-column: 1 / -1; }
+
+  #scenarios-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  #scenarios-body .scenario-card { margin-bottom: 0; }
+
+  #procon-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  #procon-body .procon-card { margin-bottom: 0; }
+
+  /* denser data grids on wide screens */
+  .stat-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .stat-card.full-width { grid-column: 1 / -1; }
+  .cycle-meta-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .cycle-meta-card.full { grid-column: 1 / -1; }
+  .stress-grid2 { grid-template-columns: repeat(4, 1fr); }
+  .signal-scroll { overflow-x: visible; flex-wrap: wrap; }
+  .signal-pill { min-width: 130px; flex: 1 1 130px; }
+
+  .app-logo { font-size: 16px; }
+  .fab { width: 56px; height: 56px; font-size: 24px; bottom: 32px; right: 32px; }
+}
+
+@media (min-width: 1280px) {
+  .page { max-width: 1000px; }
+  .app-header, .refresh-bar, .stale-banner {
+    padding-left: max(32px, calc((100% - 1000px) / 2));
+    padding-right: max(32px, calc((100% - 1000px) / 2));
+  }
+  .stat-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
 </style>
 </head>
 <body>
 
 <!-- ═══ STICKY HEADER ═══ -->
 <header class="app-header">
-  <span class="app-logo">🌿 <span>BTC Loan</span> Signal</span>
+  <span class="app-logo"><span class="app-logo-mark">₿</span><span>BTC Loan</span>&nbsp;Signal</span>
   <span class="live-dot" id="live-dot" title="Data status"></span>
   <span class="header-date-text" id="header-date">Loading…</span>
   <button class="theme-toggle-btn" id="theme-toggle" title="Toggle theme">
@@ -983,7 +1120,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
         </svg>
       </div>
       <div class="hero-text">
-        <span class="hero-verdict-emoji" id="verdict-emoji">🌱</span>
+        <span class="hero-verdict-emoji" id="verdict-emoji">🟢</span>
         <div class="hero-verdict-title" id="verdict-title">
           Conditionally <span class="verdict-color" id="verdict-span">Borrow-Ready</span>
         </div>
@@ -1122,7 +1259,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 
   <!-- ══ LOAN MATH ══ -->
   <div class="section-header" onclick="toggleSection('loanmath-body', this)">
-    <span class="section-header-icon">🏡</span>
+    <span class="section-header-icon">🧮</span>
     <span class="section-header-title">Loan Math · <span id="sl-btc">0.337</span> BTC @ $<span id="sl-price">62,000</span></span>
     <span class="section-caret open" id="loanmath-caret">▾</span>
   </div>
@@ -1232,7 +1369,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   </div>
   <div class="section-body collapsed" id="scenarios-body">
     <div class="scenario-card">
-      <span class="scenario-tag best">🌱 BEST CASE</span>
+      <span class="scenario-tag best">📈 BEST CASE</span>
       <div class="scenario-title">Upside Case — Cycle Resumes</div>
       <div class="scenario-row"><span class="scenario-row-key">Ceiling target</span><span class="scenario-row-val up" id="sc-ceil-price">$120,584</span></div>
       <div class="scenario-row"><span class="scenario-row-key">Your BTC value at target</span><span class="scenario-row-val up" id="sc-btc-up">$40,637</span></div>
@@ -1244,7 +1381,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
       <div class="scenario-row"><span class="scenario-row-key">ATH this cycle</span><span class="scenario-row-val" id="sc-ath">$124,728 (Oct '25)</span></div>
     </div>
     <div class="scenario-card">
-      <span class="scenario-tag worst">🍂 WORST CASE</span>
+      <span class="scenario-tag worst">📉 WORST CASE</span>
       <div class="scenario-title">Downside Case — Floor Breaks</div>
       <div class="scenario-row"><span class="scenario-row-key">Floor consensus model</span><span class="scenario-row-val dn" id="sc-floor-price">$61,076</span></div>
       <div class="scenario-row"><span class="scenario-row-key">MVRV downside model</span><span class="scenario-row-val dn" id="sc-mvrv-dn">$10,700</span></div>
@@ -1356,7 +1493,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 
   <!-- ══ MVRV SIGNALS ══ -->
   <div class="section-header" onclick="toggleSection('signals-body', this)">
-    <span class="section-header-icon">🌾</span>
+    <span class="section-header-icon">📡</span>
     <span class="section-header-title" id="signals-label">On-Chain Signals</span>
     <span class="section-caret open" id="signals-caret">▾</span>
   </div>
@@ -1430,7 +1567,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 
   <!-- ══ CYCLE CONTEXT ══ -->
   <div class="section-header" onclick="toggleSection('cycle-body', this)">
-    <span class="section-header-icon">🌲</span>
+    <span class="section-header-icon">⏳</span>
     <span class="section-header-title" id="cycle-section-label">Cycle 4 Context (2024–2027)</span>
     <span class="section-caret" id="cycle-caret">▾</span>
   </div>
@@ -1477,7 +1614,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 
   <!-- ══ PRO / CON ══ -->
   <div class="section-header" onclick="toggleSection('procon-body', this)">
-    <span class="section-header-icon">🌻</span>
+    <span class="section-header-icon">⚖️</span>
     <span class="section-header-title">Analyst View · Pro &amp; Con</span>
     <span class="section-caret" id="procon-caret">▾</span>
   </div>
@@ -1521,7 +1658,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 <footer class="app-footer">
   <div class="footer-text" id="footer-data">MVRV Data: loading…</div>
   <div class="footer-text" id="footer-params">Binance Flexible Loan · MC: 85% · Liq: 90%</div>
-  <div class="footer-text" style="color:var(--terracotta);margin-top:4px;">Not financial advice 🌿</div>
+  <div class="footer-text" style="color:var(--terracotta);margin-top:4px;">Not financial advice · DYOR</div>
 </footer>
 
 <!-- ═══ FAB REFRESH ═══ -->
@@ -2072,15 +2209,15 @@ function render() {
   const score = d.score;
   updateGauge(score);
 
-  let emoji = '🌿', verdictLabel = 'Borrow-Ready';
+  let emoji = '🟢', verdictLabel = 'Borrow-Ready';
   let heroColor = 'var(--moss)';
   let heroBorderColor = 'var(--moss)';
   if (score >= 7) {
-    emoji = '🌱'; verdictLabel = 'Borrow-Ready'; heroColor = 'var(--moss)'; heroBorderColor = 'var(--moss)';
+    emoji = '🟢'; verdictLabel = 'Borrow-Ready'; heroColor = 'var(--moss)'; heroBorderColor = 'var(--moss)';
   } else if (score >= 5) {
-    emoji = '🍂'; verdictLabel = 'Proceed with Care'; heroColor = 'var(--mustard)'; heroBorderColor = 'var(--mustard)';
+    emoji = '🟡'; verdictLabel = 'Proceed with Care'; heroColor = 'var(--mustard)'; heroBorderColor = 'var(--mustard)';
   } else {
-    emoji = '⚠️'; verdictLabel = 'Use Caution'; heroColor = 'var(--terracotta)'; heroBorderColor = 'var(--terracotta)';
+    emoji = '🔴'; verdictLabel = 'Use Caution'; heroColor = 'var(--terracotta)'; heroBorderColor = 'var(--terracotta)';
   }
   const emojiEl = el('verdict-emoji');
   if (emojiEl) emojiEl.textContent = emoji;
@@ -2324,6 +2461,7 @@ function parseCycleName(name) {
    FETCH FROM GITHUB
 ───────────────────────────────────────────────────── */
 const REPO_RAW_BASE = 'https://raw.githubusercontent.com/0xtrvkc/dynamic-btc-analytics-dashboard/main/exports/';
+const DAILY_PRICE_URL = 'https://raw.githubusercontent.com/0xtrvkc/dynamic-btc-analytics-dashboard/main/btc_daily_price.json';
 
 function getDateStr(daysAgo) {
   const now = new Date();
@@ -2346,6 +2484,18 @@ async function tryFetch(dateStr) {
   const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return { text: await res.text(), dateStr, url };
+}
+
+async function fetchDailyPrice() {
+  const res = await fetch(DAILY_PRICE_URL, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const obj = await res.json();
+  const dates = Object.keys(obj).sort(); // ISO date strings sort chronologically
+  if (!dates.length) throw new Error('Empty price series');
+  const latestDate = dates[dates.length - 1];
+  const latestPrice = Number(obj[latestDate]);
+  if (!isFinite(latestPrice) || latestPrice <= 0) throw new Error('Invalid latest price');
+  return { date: latestDate, price: latestPrice };
 }
 
 function validateParsed(nd) {
@@ -2379,21 +2529,36 @@ async function fetchLatestData() {
   if (fab) fab.classList.remove('spinning');
   if (fabIcon) { fabIcon.className = ''; fabIcon.textContent = '↻'; }
 
+  let priceNote = '';
+  try {
+    const dp = await fetchDailyPrice();
+    D.btcPrice = dp.price;
+    D.btcPriceDate = dp.date;
+    el('inp-price').value = D.btcPrice;
+    priceNote = ` · price ${dp.date} $${fmt(dp.price)}`;
+  } catch (e) {
+    console.error('Daily price fetch failed', e);
+  }
+
   if (!loaded) {
-    el('upload-filename').textContent = 'Network error — using built-in snapshot';
-    setStatus('✗ Could not reach GitHub', 'err');
+    el('upload-filename').textContent = (priceNote ? 'Price updated from btc_daily_price.json' : 'Network error') + ' — using built-in MVRV snapshot';
+    setStatus(priceNote ? `✓ Live price only${priceNote}` : '✗ Could not reach GitHub', priceNote ? 'ok' : 'err');
     const ageHrs = getDataAgeHours(D.date);
-    setStaleBanner(true, `⚠ STALE — Using built-in snapshot (${D.date}, ${Math.round(ageHrs)}h ago). Figures may be outdated.`);
+    setStaleBanner(true, `⚠ STALE — Using built-in MVRV snapshot (${D.date}, ${Math.round(ageHrs)}h ago). Figures may be outdated.`);
+    render();
     return;
   }
 
   try {
     const parsed = parseTxt(loaded.text);
     validateParsed(parsed);
+    const btcPrice = D.btcPrice, btcPriceDate = D.btcPriceDate; // preserve JSON-sourced price
     D = parsed;
+    D.btcPrice = btcPrice;
+    D.btcPriceDate = btcPriceDate;
     saveSnapshot(D);
-    el('upload-filename').textContent = `mvrv_summary_${loaded.dateStr}.txt · GitHub`;
-    setStatus('✓ Live data', 'ok');
+    el('upload-filename').textContent = `mvrv_summary_${loaded.dateStr}.txt · GitHub${priceNote}`;
+    setStatus('✓ Live data' + priceNote, 'ok');
     el('inp-price').value = D.btcPrice;
 
     const ageHrs = getDataAgeHours(D.date);

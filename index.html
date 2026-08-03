@@ -738,6 +738,68 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 .liq-bar-col { width: 60px; flex-shrink: 0; }
 .liq-mini-bar { height: 5px; background: var(--cream-3); border-radius: 3px; overflow: hidden; }
 .liq-mini-fill { height: 100%; border-radius: 3px; }
+.price-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  background: var(--surface);
+}
+.price-table {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-size: 11.5px;
+}
+.price-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface-2);
+  color: var(--text-dim);
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-align: right;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.price-table thead th:first-child { text-align: left; }
+.price-table tbody td {
+  text-align: right;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  color: var(--text);
+}
+.price-table tbody td:first-child { text-align: left; }
+.price-table tbody tr:last-child td { border-bottom: none; }
+.price-table tbody tr.pt-current { background: var(--orange-bg); }
+.price-table tbody tr.pt-danger td.pt-status { color: var(--terracotta); font-weight: 700; }
+.price-table tbody tr.pt-warn   td.pt-status { color: var(--mustard); font-weight: 700; }
+.price-table tbody tr.pt-good   td.pt-status { color: var(--moss); font-weight: 700; }
+.price-table .pt-label {
+  font-family: var(--sans);
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  display: block;
+  margin-top: 1px;
+}
+.price-table .pt-pos { color: var(--moss); }
+.price-table .pt-neg { color: var(--terracotta); }
+.price-table-note {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin-top: 8px;
+  padding: 0 2px;
+}
 .liq-drop-text {
   font-family: var(--mono);
   font-size: 10px;
@@ -1348,9 +1410,9 @@ button:focus-visible {
   <div class="section-header" onclick="toggleSection('stress-body', this)">
     <span class="section-header-icon">🔥</span>
     <span class="section-header-title">Margin Call Stress Test</span>
-    <span class="section-caret" id="stress-caret">▾</span>
+    <span class="section-caret open" id="stress-caret">▾</span>
   </div>
-  <div class="section-body collapsed" id="stress-body">
+  <div class="section-body" id="stress-body">
     <div class="stress-card" id="stress-box">
       <div class="stress-title">⚠️ What if BTC keeps falling after MC?</div>
       <div class="stress-grid2">
@@ -1382,9 +1444,9 @@ button:focus-visible {
   <div class="section-header" onclick="toggleSection('scenarios-body', this)">
     <span class="section-header-icon">🔮</span>
     <span class="section-header-title">Outcome Scenarios</span>
-    <span class="section-caret" id="scenarios-caret">▾</span>
+    <span class="section-caret open" id="scenarios-caret">▾</span>
   </div>
-  <div class="section-body collapsed" id="scenarios-body">
+  <div class="section-body" id="scenarios-body">
     <div class="scenario-card">
       <span class="scenario-tag best">📈 BEST CASE</span>
       <div class="scenario-title">Upside Case — Cycle Resumes</div>
@@ -1414,9 +1476,9 @@ button:focus-visible {
   <div class="section-header" onclick="toggleSection('profit-body', this)">
     <span class="section-header-icon">💹</span>
     <span class="section-header-title">Profit Calculator · Deploy &amp; Target</span>
-    <span class="section-caret" id="profit-caret">▾</span>
+    <span class="section-caret open" id="profit-caret">▾</span>
   </div>
-  <div class="section-body collapsed" id="profit-body">
+  <div class="section-body" id="profit-body">
     <div class="input-card">
       <div class="input-card-label">Borrowed Capital Deployment</div>
       <div class="input-row">
@@ -1586,9 +1648,9 @@ button:focus-visible {
   <div class="section-header" onclick="toggleSection('cycle-body', this)">
     <span class="section-header-icon">⏳</span>
     <span class="section-header-title" id="cycle-section-label">Cycle 4 Context (2024–2027)</span>
-    <span class="section-caret" id="cycle-caret">▾</span>
+    <span class="section-caret open" id="cycle-caret">▾</span>
   </div>
-  <div class="section-body collapsed" id="cycle-body">
+  <div class="section-body" id="cycle-body">
     <div class="cycle-card">
       <div class="cycle-bar-labels">
         <span id="cycle-start-label">Cycle Start (Apr 2024)</span>
@@ -1623,19 +1685,49 @@ button:focus-visible {
   <div class="section-header" onclick="toggleSection('liq-body', this)">
     <span class="section-header-icon">📍</span>
     <span class="section-header-title">Liquidation Levels · Your Position</span>
-    <span class="section-caret" id="liq-caret">▾</span>
+    <span class="section-caret open" id="liq-caret">▾</span>
   </div>
-  <div class="section-body collapsed" id="liq-body">
+  <div class="section-body" id="liq-body">
     <div class="liq-list" id="liq-table"></div>
+  </div>
+
+  <!-- ══ PRICE SCENARIO TABLE ══ -->
+  <div class="section-header" onclick="toggleSection('price-table-body', this)">
+    <span class="section-header-icon">📊</span>
+    <span class="section-header-title">Everything at BTC Price · Scenario Table</span>
+    <span class="section-caret open" id="price-table-caret">▾</span>
+  </div>
+  <div class="section-body" id="price-table-body">
+    <div class="price-table-wrap">
+      <table class="price-table" id="price-scenario-table">
+        <thead>
+          <tr>
+            <th>BTC Price</th>
+            <th>Δ Now</th>
+            <th>LTV</th>
+            <th>Status</th>
+            <th>Equity</th>
+            <th>Net P/L</th>
+            <th>Return</th>
+          </tr>
+        </thead>
+        <tbody id="price-scenario-tbody"></tbody>
+      </table>
+    </div>
+    <div class="price-table-note">
+      Rows update live with your inputs above. <strong>Equity</strong> = BTC value − loan principal.
+      <strong>Net P/L</strong> / <strong>Return</strong> use your Profit Calculator deploy % and target settings
+      (loan interest not deducted). Anchor rows mark Liquidation, Margin Call, MVRV Floor, Ceiling Target and Cycle ATH.
+    </div>
   </div>
 
   <!-- ══ PRO / CON ══ -->
   <div class="section-header" onclick="toggleSection('procon-body', this)">
     <span class="section-header-icon">⚖️</span>
     <span class="section-header-title">Analyst View · Pro &amp; Con</span>
-    <span class="section-caret" id="procon-caret">▾</span>
+    <span class="section-caret open" id="procon-caret">▾</span>
   </div>
-  <div class="section-body collapsed" id="procon-body">
+  <div class="section-body" id="procon-body">
     <div class="procon-card">
       <div class="procon-title pro">✓ Case for borrowing now</div>
       <div class="procon-item"><span class="procon-icon">↗️</span><span id="pro-1">MVRV Z-score — historically a strong accumulation zone.</span></div>
@@ -1660,9 +1752,9 @@ button:focus-visible {
   <div class="section-header" onclick="toggleSection('quant-body', this)">
     <span class="section-header-icon">📋</span>
     <span class="section-header-title">Quant Summary</span>
-    <span class="section-caret" id="quant-caret">▾</span>
+    <span class="section-caret open" id="quant-caret">▾</span>
   </div>
-  <div class="section-body collapsed" id="quant-body">
+  <div class="section-body" id="quant-body">
     <div class="quant-card" id="quant-box">
       <div class="quant-header">Senior Analyst · Position Assessment</div>
       <div class="quant-text" id="qb-text"></div>
@@ -2261,6 +2353,7 @@ function render() {
   renderLiqTable(d);
   renderQuant(d);
   renderProfitCalc(d);
+  renderPriceScenarios(d);
 }
 
 /* ─────────────────────────────────────────────────────
@@ -2310,6 +2403,73 @@ function renderLiqTable(d) {
       <div class="liq-drop-text" style="color:${colorMap[r.cls]}">${r.drop === 0 ? '0%' : r.drop.toFixed(1) + '%'}</div>
     </div>`);
   el('liq-table').innerHTML = parts.join('');
+}
+
+/* ─────────────────────────────────────────────────────
+   PRICE SCENARIO TABLE — everything at hypothetical BTC prices
+───────────────────────────────────────────────────── */
+function renderPriceScenarios(d) {
+  const tbody = el('price-scenario-tbody');
+  if (!tbody || !d) return;
+
+  // % steps relative to current price, plus named anchor prices
+  const pctSteps = [-70, -50, -30, -10, 10, 30, 50, 100, 200];
+  let rows = pctSteps.map(p => ({
+    price: d.price * (1 + p / 100),
+    label: (p > 0 ? '+' : '') + p + '%',
+    type: 'step'
+  }));
+  rows.push({ price: d.price, label: 'Current', type: 'current' });
+  if (isFinite(d.mcPrice))     rows.push({ price: d.mcPrice,     label: 'Margin Call',  type: 'anchor-mc' });
+  if (isFinite(d.liqPrice))    rows.push({ price: d.liqPrice,    label: 'Liquidation',  type: 'anchor-liq' });
+  if (isFinite(D.floorPrice))  rows.push({ price: D.floorPrice,  label: 'MVRV Floor',   type: 'anchor' });
+  if (isFinite(D.ceilPrice))   rows.push({ price: D.ceilPrice,   label: 'Ceiling Target', type: 'anchor' });
+  if (isFinite(D.c4Ath))       rows.push({ price: D.c4Ath,       label: 'Cycle ATH',    type: 'anchor' });
+
+  // dedupe near-identical prices (within 0.5%) and sort ascending
+  rows = rows.filter(r => isFinite(r.price) && r.price > 0)
+             .sort((a, b) => a.price - b.price);
+  const deduped = [];
+  rows.forEach(r => {
+    const prev = deduped[deduped.length - 1];
+    if (prev && Math.abs(r.price - prev.price) / r.price < 0.005 && r.type !== 'current' && prev.type !== 'current') {
+      prev.label += ' / ' + r.label; // merge labels for near-identical anchor prices
+    } else {
+      deduped.push({ ...r });
+    }
+  });
+
+  const parts = deduped.map(r => {
+    const price = r.price;
+    const ltvPct = d.btc > 0 ? (d.loan / (d.btc * price)) * 100 : NaN;
+    const equity = d.btc * price - d.loan;
+    const netProfit = d.totalBtc * price + d.undeployedUsd - d.debtOwed - d.collateral;
+    const retPct = d.collateral > 0 ? (netProfit / d.collateral) * 100 : NaN;
+    const deltaPct = ((price - d.price) / d.price) * 100;
+
+    let status = 'Safe', rowCls = 'pt-good';
+    if (price <= d.liqPrice)      { status = 'Liquidated'; rowCls = 'pt-danger'; }
+    else if (price <= d.mcPrice)  { status = 'Margin Call'; rowCls = 'pt-warn'; }
+
+    let extraCls = rowCls;
+    if (r.type === 'current') extraCls += ' pt-current';
+
+    const deltaCls = deltaPct > 0 ? 'pt-pos' : deltaPct < 0 ? 'pt-neg' : '';
+    const netCls   = netProfit > 0 ? 'pt-pos' : netProfit < 0 ? 'pt-neg' : '';
+
+    return `
+    <tr class="${extraCls}">
+      <td>${fmtUSD(price)}<span class="pt-label">${r.label}</span></td>
+      <td class="${deltaCls}">${deltaPct >= 0 ? '+' : ''}${deltaPct.toFixed(0)}%</td>
+      <td>${isFinite(ltvPct) ? ltvPct.toFixed(0) + '%' : '—'}</td>
+      <td class="pt-status">${status}</td>
+      <td>${fmtUSD(equity)}</td>
+      <td class="${netCls}">${netProfit >= 0 ? '+' : ''}${fmtUSD(netProfit)}</td>
+      <td class="${netCls}">${isFinite(retPct) ? (retPct >= 0 ? '+' : '') + retPct.toFixed(0) + '%' : '—'}</td>
+    </tr>`;
+  });
+
+  tbody.innerHTML = parts.join('');
 }
 
 /* ─────────────────────────────────────────────────────

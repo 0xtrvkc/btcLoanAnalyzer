@@ -747,7 +747,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 }
 .price-table {
   width: 100%;
-  min-width: 560px;
+  min-width: 700px;
   border-collapse: collapse;
   font-family: var(--mono);
   font-size: 11.5px;
@@ -799,6 +799,37 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   line-height: 1.5;
   margin-top: 8px;
   padding: 0 2px;
+}
+.pt-breakeven {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  background: var(--surface-2);
+  font-size: 12px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.pt-breakeven .pt-be-label {
+  color: var(--text-dim);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: 10px;
+}
+.pt-breakeven .pt-be-value {
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+.pt-breakeven .pt-be-sub {
+  font-size: 10.5px;
+  color: var(--text-dim);
+  width: 100%;
 }
 .liq-drop-text {
   font-family: var(--mono);
@@ -1709,15 +1740,21 @@ button:focus-visible {
             <th>Equity</th>
             <th>Net P/L</th>
             <th>Return</th>
+            <th>P/L vs Cost Basis</th>
           </tr>
         </thead>
         <tbody id="price-scenario-tbody"></tbody>
       </table>
     </div>
+    <div class="pt-breakeven" id="pt-breakeven" style="display:none;"></div>
     <div class="price-table-note">
       Rows update live with your inputs above. <strong>Equity</strong> = BTC value − loan principal.
-      <strong>Net P/L</strong> / <strong>Return</strong> use your Profit Calculator deploy % and target settings
-      (loan interest not deducted). Anchor rows mark Liquidation, Margin Call, MVRV Floor, Ceiling Target and Cycle ATH.
+      <strong>Net P/L</strong> / <strong>Return</strong> use your Profit Calculator deploy % and target settings, valued
+      against your collateral's current price (loan interest not deducted).
+      <strong>P/L vs Cost Basis</strong> instead measures against what you actually paid
+      (your Cost Basis entry above) — set it to see this column. Because leverage blends in BTC bought at today's
+      price, this column's breakeven is usually different from your raw entry price — see the blended breakeven above.
+      Anchor rows mark Liquidation, Margin Call, MVRV Floor, Ceiling Target and Cycle ATH.
     </div>
   </div>
 
@@ -2439,6 +2476,32 @@ function renderPriceScenarios(d) {
     }
   });
 
+  const costBasisValue = d.entry > 0 ? d.btc * d.entry : NaN;
+
+  // Blended breakeven vs cost basis: price where P/L vs Cost Basis crosses zero.
+  // Differs from raw entry price because leverage blends in BTC bought at the loan's target price.
+  const breakevenCB = (isFinite(costBasisValue) && d.totalBtc > 0)
+    ? (d.debtOwed + costBasisValue - d.undeployedUsd) / d.totalBtc
+    : NaN;
+
+  const beEl = el('pt-breakeven');
+  if (beEl) {
+    if (isFinite(breakevenCB)) {
+      const vsEntryPct = d.entry > 0 ? ((breakevenCB - d.entry) / d.entry) * 100 : NaN;
+      const vsEntryStr = isFinite(vsEntryPct)
+        ? `${vsEntryPct >= 0 ? '+' : ''}${vsEntryPct.toFixed(0)}% vs your $${fmt(d.entry)} entry`
+        : '';
+      beEl.style.display = '';
+      beEl.innerHTML = `
+        <span class="pt-be-label">Blended Breakeven (vs Cost Basis)</span>
+        <span class="pt-be-value">${fmtUSD(breakevenCB)}</span>
+        <span class="pt-be-sub">Above this price the "P/L vs Cost Basis" column turns positive
+          ${vsEntryStr ? '· ' + vsEntryStr : ''} — lower than your raw entry because leverage blends in BTC bought near today's price.</span>`;
+    } else {
+      beEl.style.display = 'none';
+    }
+  }
+
   const parts = deduped.map(r => {
     const price = r.price;
     const ltvPct = d.btc > 0 ? (d.loan / (d.btc * price)) * 100 : NaN;
@@ -2446,6 +2509,10 @@ function renderPriceScenarios(d) {
     const netProfit = d.totalBtc * price + d.undeployedUsd - d.debtOwed - d.collateral;
     const retPct = d.collateral > 0 ? (netProfit / d.collateral) * 100 : NaN;
     const deltaPct = ((price - d.price) / d.price) * 100;
+
+    // P/L measured against actual cost basis (what you paid), not live-price collateral
+    const plCB  = isFinite(costBasisValue) ? (d.totalBtc * price + d.undeployedUsd - d.debtOwed - costBasisValue) : NaN;
+    const retCB = isFinite(costBasisValue) && costBasisValue > 0 ? (plCB / costBasisValue) * 100 : NaN;
 
     let status = 'Safe', rowCls = 'pt-good';
     if (price <= d.liqPrice)      { status = 'Liquidated'; rowCls = 'pt-danger'; }
@@ -2456,6 +2523,11 @@ function renderPriceScenarios(d) {
 
     const deltaCls = deltaPct > 0 ? 'pt-pos' : deltaPct < 0 ? 'pt-neg' : '';
     const netCls   = netProfit > 0 ? 'pt-pos' : netProfit < 0 ? 'pt-neg' : '';
+    const cbCls    = isFinite(plCB) ? (plCB > 0 ? 'pt-pos' : plCB < 0 ? 'pt-neg' : '') : '';
+
+    const cbCell = isFinite(plCB)
+      ? `${plCB >= 0 ? '+' : ''}${fmtUSD(plCB)}<span class="pt-label">${retCB >= 0 ? '+' : ''}${retCB.toFixed(0)}%</span>`
+      : `—<span class="pt-label">set cost basis</span>`;
 
     return `
     <tr class="${extraCls}">
@@ -2466,6 +2538,7 @@ function renderPriceScenarios(d) {
       <td>${fmtUSD(equity)}</td>
       <td class="${netCls}">${netProfit >= 0 ? '+' : ''}${fmtUSD(netProfit)}</td>
       <td class="${netCls}">${isFinite(retPct) ? (retPct >= 0 ? '+' : '') + retPct.toFixed(0) + '%' : '—'}</td>
+      <td class="${cbCls}">${cbCell}</td>
     </tr>`;
   });
 

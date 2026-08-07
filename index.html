@@ -831,6 +831,51 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   color: var(--text-dim);
   width: 100%;
 }
+
+/* ─── PRICE SCENARIO CHART ─── */
+.pt-chart-wrap {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  background: var(--surface);
+  padding: 14px 14px 10px;
+}
+.pt-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 10px;
+  font-size: 10.5px;
+  color: var(--text-mid);
+}
+.pt-chart-legend-item { display: flex; align-items: center; gap: 5px; }
+.pt-chart-legend-swatch { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+.pt-chart-legend-swatch.line { width: 12px; height: 2px; border-radius: 0; }
+.pt-chart-canvas-wrap { position: relative; width: 100%; height: 260px; }
+
+/* ─── DEPLOY ALLOCATION BAR ─── */
+.deploy-alloc-track {
+  display: flex;
+  height: 16px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--cream-3);
+  border: 1px solid var(--border);
+}
+.deploy-alloc-seg { height: 100%; transition: width 0.4s ease; }
+.deploy-alloc-seg.deployed   { background: var(--orange); }
+.deploy-alloc-seg.undeployed { background: var(--taupe); }
+.deploy-alloc-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--text-mid);
+}
+.deploy-alloc-label { display: flex; align-items: center; gap: 6px; }
+.deploy-alloc-swatch { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+.deploy-alloc-swatch.deployed   { background: var(--orange); }
+.deploy-alloc-swatch.undeployed { background: var(--taupe); }
+.deploy-alloc-label .val { font-family: var(--mono); font-weight: 700; color: var(--text); }
 .liq-drop-text {
   font-family: var(--mono);
   font-size: 10px;
@@ -1601,6 +1646,42 @@ button:focus-visible {
     </div>
   </div>
 
+  <!-- ══ DEPLOY ALLOCATION & BREAKEVEN CHART ══ -->
+  <div class="section-header" onclick="toggleSection('deploy-chart-body', this)">
+    <span class="section-header-icon">🎯</span>
+    <span class="section-header-title">Deployed vs Undeployed · Breakeven Price</span>
+    <span class="section-caret open" id="deploy-chart-caret">▾</span>
+  </div>
+  <div class="section-body" id="deploy-chart-body">
+    <div class="pt-chart-wrap">
+      <div class="deploy-alloc-track">
+        <div class="deploy-alloc-seg deployed" id="alloc-deployed-seg" style="width:100%;"></div>
+        <div class="deploy-alloc-seg undeployed" id="alloc-undeployed-seg" style="width:0%;"></div>
+      </div>
+      <div class="deploy-alloc-labels">
+        <span class="deploy-alloc-label"><span class="deploy-alloc-swatch deployed"></span>Deployed <span class="val" id="alloc-deployed-val">—</span></span>
+        <span class="deploy-alloc-label"><span class="deploy-alloc-swatch undeployed"></span>Undeployed <span class="val" id="alloc-undeployed-val">—</span></span>
+      </div>
+    </div>
+    <div class="spacer-10"></div>
+    <div class="pt-chart-wrap">
+      <div class="pt-chart-legend">
+        <span class="pt-chart-legend-item"><span class="pt-chart-legend-swatch line" style="background:var(--orange);"></span>Net P/L at exit price</span>
+        <span class="pt-chart-legend-item"><span class="pt-chart-legend-swatch" style="background:var(--moss);"></span>Above breakeven</span>
+        <span class="pt-chart-legend-item"><span class="pt-chart-legend-swatch" style="background:var(--terracotta);"></span>Below breakeven</span>
+      </div>
+      <div class="pt-chart-canvas-wrap">
+        <canvas id="breakeven-chart" role="img" aria-label="Line chart of net profit and loss versus BTC exit price for the leveraged deploy scenario, shaded red below breakeven and green above it, with markers at the breakeven price and your target price"></canvas>
+      </div>
+    </div>
+    <div class="price-table-note">
+      The bar shows how your loan splits between BTC bought back in (Deployed) and cash held on the side (Undeployed),
+      driven by the Deploy % slider above. The chart sweeps the same Net P&amp;L formula across a range of exit prices —
+      the solid vertical line marks your <strong>Breakeven Price</strong>, the dashed line marks your current
+      <strong>Target Price</strong>. Left of breakeven the deploy strategy loses money versus today; right of it, it gains.
+    </div>
+  </div>
+
   <!-- ══ MVRV SIGNALS ══ -->
   <div class="section-header" onclick="toggleSection('signals-body', this)">
     <span class="section-header-icon">📡</span>
@@ -1758,6 +1839,30 @@ button:focus-visible {
     </div>
   </div>
 
+  <!-- ══ PRICE SCENARIO CHART ══ -->
+  <div class="section-header" onclick="toggleSection('price-chart-body', this)">
+    <span class="section-header-icon">📈</span>
+    <span class="section-header-title">Equity &amp; Net P/L vs BTC Price</span>
+    <span class="section-caret open" id="price-chart-caret">▾</span>
+  </div>
+  <div class="section-body" id="price-chart-body">
+    <div class="pt-chart-wrap">
+      <div class="pt-chart-legend">
+        <span class="pt-chart-legend-item"><span class="pt-chart-legend-swatch line" style="background:var(--orange);"></span>Net P/L vs today's collateral</span>
+        <span class="pt-chart-legend-item" id="pt-chart-legend-cb" style="display:none;"><span class="pt-chart-legend-swatch line" style="background:var(--taupe);"></span>P/L vs cost basis</span>
+        <span class="pt-chart-legend-item"><span class="pt-chart-legend-swatch" style="background:var(--mustard);"></span>Margin call zone</span>
+        <span class="pt-chart-legend-item"><span class="pt-chart-legend-swatch" style="background:var(--terracotta);"></span>Liquidation zone</span>
+      </div>
+      <div class="pt-chart-canvas-wrap">
+        <canvas id="price-scenario-chart" role="img" aria-label="Line chart of net profit and loss versus hypothetical BTC price, shaded to show margin call and liquidation zones, with a marker at today's price"></canvas>
+      </div>
+    </div>
+    <div class="price-table-note">
+      Same math as the table above, swept continuously instead of in fixed steps — drag any input to see the curve
+      and the margin call / liquidation zones move with your position. The dashed vertical line marks today's price.
+    </div>
+  </div>
+
   <!-- ══ PRO / CON ══ -->
   <div class="section-header" onclick="toggleSection('procon-body', this)">
     <span class="section-header-icon">⚖️</span>
@@ -1812,6 +1917,7 @@ button:focus-visible {
   <span id="fab-icon">↻</span>
 </button>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
 /* ─────────────────────────────────────────────────────
    HELPERS
@@ -2391,6 +2497,9 @@ function render() {
   renderQuant(d);
   renderProfitCalc(d);
   renderPriceScenarios(d);
+  renderPriceChart(d);
+  renderDeployAllocation(d);
+  renderBreakevenChart(d);
 }
 
 /* ─────────────────────────────────────────────────────
@@ -2543,6 +2652,322 @@ function renderPriceScenarios(d) {
   });
 
   tbody.innerHTML = parts.join('');
+}
+
+/* ─────────────────────────────────────────────────────
+   PRICE SCENARIO CHART — continuous version of the table,
+   redraws on every input + theme change via renderPriceChart(d)
+───────────────────────────────────────────────────── */
+let priceChart = null;
+
+const ptZonesPlugin = {
+  id: 'pt-zones',
+  beforeDatasetsDraw(chart) {
+    const live = chart.$live;
+    if (!live) return;
+    const { ctx, chartArea, scales } = chart;
+    if (!chartArea) return;
+    ctx.save();
+    const xLo  = scales.x.getPixelForValue(scales.x.min);
+    const xLiq = isFinite(live.liqPrice) ? scales.x.getPixelForValue(live.liqPrice) : null;
+    const xMc  = isFinite(live.mcPrice)  ? scales.x.getPixelForValue(live.mcPrice)  : null;
+    if (xLiq !== null) {
+      ctx.fillStyle = live.terracottaFill;
+      const a = Math.max(chartArea.left, xLo), b = Math.min(xLiq, chartArea.right);
+      if (b > a) ctx.fillRect(a, chartArea.top, b - a, chartArea.bottom - chartArea.top);
+    }
+    if (xLiq !== null && xMc !== null) {
+      ctx.fillStyle = live.mustardFill;
+      const a = Math.max(chartArea.left, xLiq), b = Math.min(xMc, chartArea.right);
+      if (b > a) ctx.fillRect(a, chartArea.top, b - a, chartArea.bottom - chartArea.top);
+    }
+    const xCur = isFinite(live.price) ? scales.x.getPixelForValue(live.price) : null;
+    if (xCur !== null) {
+      ctx.strokeStyle = live.textDim;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      ctx.moveTo(xCur, chartArea.top);
+      ctx.lineTo(xCur, chartArea.bottom);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    ctx.restore();
+  }
+};
+
+function renderPriceChart(d) {
+  const canvas = el('price-scenario-chart');
+  if (!canvas || !d || typeof Chart === 'undefined') return;
+
+  const costBasisValue = d.entry > 0 ? d.btc * d.entry : NaN;
+  const hasCB = isFinite(costBasisValue);
+  const legendCb = el('pt-chart-legend-cb');
+  if (legendCb) legendCb.style.display = hasCB ? 'flex' : 'none';
+
+  // sweep range: pad around liquidation/margin-call on the low end,
+  // ceiling target / cycle ATH on the high end, so anchors stay visible
+  const lowAnchors  = [d.liqPrice, d.mcPrice, d.price * 0.3].filter(v => isFinite(v) && v > 0);
+  const highAnchors = [D.ceilPrice, D.c4Ath, d.price * 2.2].filter(v => isFinite(v) && v > 0);
+  const lo = Math.max(1, Math.min(...lowAnchors) * 0.85);
+  const hi = Math.max(...highAnchors, d.price * 1.5) * 1.1;
+
+  const STEPS = 100;
+  const netPoints = [], cbPoints = [];
+  for (let i = 0; i <= STEPS; i++) {
+    const price = lo + (hi - lo) * (i / STEPS);
+    netPoints.push({ x: price, y: d.totalBtc * price + d.undeployedUsd - d.debtOwed - d.collateral });
+    if (hasCB) cbPoints.push({ x: price, y: d.totalBtc * price + d.undeployedUsd - d.debtOwed - costBasisValue });
+  }
+
+  const root = getComputedStyle(document.documentElement);
+  const cVar = (name, fallback) => (root.getPropertyValue(name).trim() || fallback);
+  const orange     = cVar('--orange', '#FF7A1A');
+  const taupe      = cVar('--taupe', '#838895');
+  const mustard    = cVar('--mustard', '#F0B90B');
+  const terracotta = cVar('--terracotta', '#F6465D');
+  const textDim    = cVar('--text-dim', '#9AA0AC');
+  const border     = cVar('--cream-border', '#E7E9EC');
+  const surface2   = cVar('--cream-2', '#FFFFFF');
+  const text       = cVar('--charcoal', '#14161A');
+  const alphaHex   = c => (c.length === 7 ? c + '26' : c); // ~15% opacity zone fill
+
+  const datasets = [{
+    label: "Net P/L vs today's collateral",
+    data: netPoints,
+    borderColor: orange,
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    pointRadius: 0,
+    tension: 0.15
+  }];
+  if (hasCB) {
+    datasets.push({
+      label: 'P/L vs cost basis',
+      data: cbPoints,
+      borderColor: taupe,
+      backgroundColor: 'transparent',
+      borderWidth: 2,
+      borderDash: [5, 3],
+      pointRadius: 0,
+      tension: 0.15
+    });
+  }
+
+  const liveState = {
+    price: d.price, mcPrice: d.mcPrice, liqPrice: d.liqPrice,
+    terracottaFill: alphaHex(terracotta), mustardFill: alphaHex(mustard), textDim
+  };
+
+  if (!priceChart) {
+    priceChart = new Chart(canvas, {
+      type: 'line',
+      data: { datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: surface2, titleColor: text, bodyColor: text,
+            borderColor: border, borderWidth: 1,
+            callbacks: {
+              title: items => fmtUSD(items[0].parsed.x),
+              label: item => item.dataset.label + ': ' + (item.parsed.y >= 0 ? '+' : '') + fmtUSD(item.parsed.y)
+            }
+          }
+        },
+        scales: {
+          x: {
+            type: 'linear', min: lo, max: hi,
+            ticks: { color: textDim, font: { size: 10 }, callback: v => '$' + Math.round(v / 1000) + 'k' },
+            grid: { display: false }
+          },
+          y: {
+            ticks: { color: textDim, font: { size: 10 }, callback: v => (v < 0 ? '-$' : '$') + Math.round(Math.abs(v) / 1000) + 'k' },
+            grid: { color: border }
+          }
+        }
+      },
+      plugins: [ptZonesPlugin]
+    });
+    priceChart.$live = liveState;
+  } else {
+    priceChart.data.datasets = datasets;
+    priceChart.options.scales.x.min = lo;
+    priceChart.options.scales.x.max = hi;
+    priceChart.options.scales.x.ticks.color = textDim;
+    priceChart.options.scales.y.ticks.color = textDim;
+    priceChart.options.scales.y.grid.color = border;
+    priceChart.options.plugins.tooltip.backgroundColor = surface2;
+    priceChart.options.plugins.tooltip.titleColor = text;
+    priceChart.options.plugins.tooltip.bodyColor = text;
+    priceChart.options.plugins.tooltip.borderColor = border;
+    priceChart.$live = liveState;
+    priceChart.update('none');
+  }
+}
+
+/* ─────────────────────────────────────────────────────
+   DEPLOY ALLOCATION BAR — deployed (new BTC buy) vs
+   undeployed (cash held), driven by the Deploy % input
+───────────────────────────────────────────────────── */
+function renderDeployAllocation(d) {
+  const depSeg = el('alloc-deployed-seg');
+  const undepSeg = el('alloc-undeployed-seg');
+  if (!depSeg || !undepSeg || !d) return;
+
+  const loan = d.loan > 0 ? d.loan : 0;
+  const depPct = loan > 0 ? (d.deployedUsd / loan) * 100 : (d.deployPct * 100);
+  const undepPct = 100 - depPct;
+
+  depSeg.style.width = depPct.toFixed(1) + '%';
+  undepSeg.style.width = undepPct.toFixed(1) + '%';
+
+  const depValEl = el('alloc-deployed-val');
+  const undepValEl = el('alloc-undeployed-val');
+  if (depValEl) depValEl.textContent = `${fmtUSD(d.deployedUsd)} (${depPct.toFixed(0)}%) → ${d.newBtc.toFixed(4)} BTC`;
+  if (undepValEl) undepValEl.textContent = `${fmtUSD(d.undeployedUsd)} (${undepPct.toFixed(0)}%) cash`;
+}
+
+/* ─────────────────────────────────────────────────────
+   BREAKEVEN CHART — Net P/L of the leverage-deploy
+   scenario swept across exit price, split at breakeven
+───────────────────────────────────────────────────── */
+let breakevenChart = null;
+
+const beZonesPlugin = {
+  id: 'be-zones',
+  beforeDatasetsDraw(chart) {
+    const live = chart.$live;
+    if (!live) return;
+    const { ctx, chartArea, scales } = chart;
+    if (!chartArea) return;
+    ctx.save();
+    const xLo = scales.x.getPixelForValue(scales.x.min);
+    const xHi = scales.x.getPixelForValue(scales.x.max);
+    const xBe = isFinite(live.breakevenPrice) ? scales.x.getPixelForValue(live.breakevenPrice) : null;
+    if (xBe !== null) {
+      ctx.fillStyle = live.redFill;
+      const a = Math.max(chartArea.left, xLo), b = Math.min(xBe, chartArea.right);
+      if (b > a) ctx.fillRect(a, chartArea.top, b - a, chartArea.bottom - chartArea.top);
+      ctx.fillStyle = live.greenFill;
+      const c = Math.max(chartArea.left, xBe), dd = Math.min(xHi, chartArea.right);
+      if (dd > c) ctx.fillRect(c, chartArea.top, dd - c, chartArea.bottom - chartArea.top);
+
+      ctx.strokeStyle = live.textDim;
+      ctx.setLineDash([]);
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(xBe, chartArea.top);
+      ctx.lineTo(xBe, chartArea.bottom);
+      ctx.stroke();
+    }
+    const xTarget = isFinite(live.targetPrice) ? scales.x.getPixelForValue(live.targetPrice) : null;
+    if (xTarget !== null) {
+      ctx.strokeStyle = live.orange;
+      ctx.setLineDash([5, 3]);
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(xTarget, chartArea.top);
+      ctx.lineTo(xTarget, chartArea.bottom);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    ctx.restore();
+  }
+};
+
+function renderBreakevenChart(d) {
+  const canvas = el('breakeven-chart');
+  if (!canvas || !d || typeof Chart === 'undefined') return;
+  if (!isFinite(d.breakevenPrice) || d.totalBtc <= 0) return;
+
+  const anchors = [d.breakevenPrice, d.targetPrice, d.price].filter(v => isFinite(v) && v > 0);
+  const lo = Math.max(1, Math.min(...anchors) * 0.6);
+  const hi = Math.max(...anchors) * 1.4;
+
+  const STEPS = 100;
+  const points = [];
+  for (let i = 0; i <= STEPS; i++) {
+    const price = lo + (hi - lo) * (i / STEPS);
+    points.push({ x: price, y: d.totalBtc * price + d.undeployedUsd - d.debtOwed - d.collateral });
+  }
+
+  const root = getComputedStyle(document.documentElement);
+  const cVar = (name, fallback) => (root.getPropertyValue(name).trim() || fallback);
+  const orange     = cVar('--orange', '#FF7A1A');
+  const moss       = cVar('--moss', '#0ECB81');
+  const terracotta = cVar('--terracotta', '#F6465D');
+  const textDim    = cVar('--text-dim', '#9AA0AC');
+  const border     = cVar('--cream-border', '#E7E9EC');
+  const surface2   = cVar('--cream-2', '#FFFFFF');
+  const text       = cVar('--charcoal', '#14161A');
+  const alphaHex   = c => (c.length === 7 ? c + '1F' : c); // ~12% opacity zone fill
+
+  const dataset = {
+    label: 'Net P/L at exit price',
+    data: points,
+    borderColor: orange,
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    pointRadius: 0,
+    tension: 0.15
+  };
+
+  const liveState = {
+    breakevenPrice: d.breakevenPrice, targetPrice: d.targetPrice,
+    redFill: alphaHex(terracotta), greenFill: alphaHex(moss), textDim, orange
+  };
+
+  if (!breakevenChart) {
+    breakevenChart = new Chart(canvas, {
+      type: 'line',
+      data: { datasets: [dataset] },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: surface2, titleColor: text, bodyColor: text,
+            borderColor: border, borderWidth: 1,
+            callbacks: {
+              title: items => fmtUSD(items[0].parsed.x),
+              label: item => item.dataset.label + ': ' + (item.parsed.y >= 0 ? '+' : '') + fmtUSD(item.parsed.y)
+            }
+          }
+        },
+        scales: {
+          x: {
+            type: 'linear', min: lo, max: hi,
+            ticks: { color: textDim, font: { size: 10 }, callback: v => '$' + Math.round(v / 1000) + 'k' },
+            grid: { display: false }
+          },
+          y: {
+            ticks: { color: textDim, font: { size: 10 }, callback: v => (v < 0 ? '-$' : '$') + Math.round(Math.abs(v) / 1000) + 'k' },
+            grid: { color: border }
+          }
+        }
+      },
+      plugins: [beZonesPlugin]
+    });
+    breakevenChart.$live = liveState;
+  } else {
+    breakevenChart.data.datasets = [dataset];
+    breakevenChart.options.scales.x.min = lo;
+    breakevenChart.options.scales.x.max = hi;
+    breakevenChart.options.scales.x.ticks.color = textDim;
+    breakevenChart.options.scales.y.ticks.color = textDim;
+    breakevenChart.options.scales.y.grid.color = border;
+    breakevenChart.options.plugins.tooltip.backgroundColor = surface2;
+    breakevenChart.options.plugins.tooltip.titleColor = text;
+    breakevenChart.options.plugins.tooltip.bodyColor = text;
+    breakevenChart.options.plugins.tooltip.borderColor = border;
+    breakevenChart.$live = liveState;
+    breakevenChart.update('none');
+  }
 }
 
 /* ─────────────────────────────────────────────────────
@@ -3371,6 +3796,7 @@ function setTheme(dark) {
 }
 themeToggle.addEventListener('click', () => {
   setTheme(document.documentElement.getAttribute('data-theme') !== 'dark');
+  if (typeof render === 'function') render(); // refresh chart colors for new theme
 });
 (function() {
   const saved = localStorage.getItem('theme');

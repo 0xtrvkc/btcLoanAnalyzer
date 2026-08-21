@@ -857,6 +857,48 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   height: 210px; text-align: center; padding: 0 20px;
   color: var(--text-dim); font-size: 12px;
 }
+.pt-chart-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px 14px;
+  flex-wrap: wrap;
+  margin-bottom: 2px;
+}
+.pt-chart-header-row > div:first-child { flex: 1 1 220px; min-width: 0; }
+.pt-basis-toggle {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  flex-shrink: 0;
+}
+.pt-basis-toggle-btn {
+  font-family: var(--sans);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  padding: 7px 11px;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-mid);
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.pt-basis-toggle-btn.active {
+  background: var(--orange);
+  color: #fff;
+}
+.pt-basis-toggle-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.pt-basis-toggle-btn:not(.active):not(:disabled):hover {
+  background: var(--surface);
+  color: var(--text);
+}
 
 /* ─── DEPLOY ALLOCATION BAR ─── */
 .deploy-alloc-track {
@@ -1869,7 +1911,7 @@ button:focus-visible {
     </div>
   </div>
 
-  <!-- ══ LTV & NET P/L LADDER CHART ══ -->
+  <!-- ══ LTV & NET P/L LADDER CHART (merged w/ P/L vs Cost Basis toggle) ══ -->
   <div class="section-header" onclick="toggleSection('ladder-chart-body', this)">
     <span class="section-header-icon">🪜</span>
     <span class="section-header-title">LTV &amp; Net P/L · Price Ladder</span>
@@ -1877,34 +1919,30 @@ button:focus-visible {
   </div>
   <div class="section-body" id="ladder-chart-body">
     <div class="pt-chart-wrap">
-      <h3 style="margin:0 0 2px;font-family:var(--display);font-size:13px;font-weight:800;color:var(--text);">Loan-to-Value &amp; Net P/L across the BTC price ladder</h3>
-      <div class="price-table-note" style="margin:0 0 10px;">Bars = Net P/L ($, left axis) at each ladder checkpoint · Line = LTV (%, right axis) · red/amber points mark liquidation and margin-call rows.</div>
-      <div class="pt-chart-legend">
-        <span class="pt-chart-legend-item"><span class="pt-chart-legend-swatch" style="background:var(--moss);"></span>Net P/L (profit)</span>
+      <div class="pt-chart-header-row">
+        <div>
+          <h3 style="margin:0 0 2px;font-family:var(--display);font-size:13px;font-weight:800;color:var(--text);" id="ladder-chart-title">Loan-to-Value &amp; Net P/L across the BTC price ladder</h3>
+          <div class="price-table-note" id="ladder-chart-note" style="margin:0;">Bars = Net P/L ($, left axis) at each ladder checkpoint · Line = LTV (%, right axis) · red/amber points mark liquidation and margin-call rows.</div>
+        </div>
+        <div class="pt-basis-toggle" id="ladder-basis-toggle" role="group" aria-label="Choose P/L basis for the bars">
+          <button type="button" class="pt-basis-toggle-btn" data-basis="cb" id="ladder-basis-btn-cb">P/L vs Cost Basis</button>
+          <button type="button" class="pt-basis-toggle-btn" data-basis="collateral" id="ladder-basis-btn-collateral">P/L vs Today's Price</button>
+        </div>
+      </div>
+      <div class="pt-chart-legend" style="margin-top:10px;">
+        <span class="pt-chart-legend-item"><span class="pt-chart-legend-swatch" style="background:var(--moss);"></span><span id="ladder-legend-profit">Net P/L (profit)</span></span>
         <span class="pt-chart-legend-item"><span class="pt-chart-legend-swatch" style="background:var(--terracotta);"></span>Net P/L (loss) / Liquidated</span>
         <span class="pt-chart-legend-item"><span class="pt-chart-legend-swatch" style="background:var(--mustard);"></span>Margin call row</span>
         <span class="pt-chart-legend-item"><span class="pt-chart-legend-swatch line" style="background:var(--orange);"></span>LTV %</span>
       </div>
       <div class="pt-chart-canvas-wrap">
-        <canvas id="ladder-chart" role="img" aria-label="Combo bar and line chart of net profit and loss and loan-to-value ratio across a ladder of hypothetical BTC prices"></canvas>
+        <canvas id="ladder-chart" role="img" aria-label="Combo bar and line chart of profit and loss and loan-to-value ratio across a ladder of hypothetical BTC prices, toggleable between cost-basis and collateral-value P/L"></canvas>
       </div>
-    </div>
-  </div>
-
-  <!-- ══ P/L VS COST BASIS CHART ══ -->
-  <div class="section-header" onclick="toggleSection('cb-chart-body', this)">
-    <span class="section-header-icon">📉</span>
-    <span class="section-header-title">P/L vs. Cost Basis</span>
-    <span class="section-caret open" id="cb-chart-caret">▾</span>
-  </div>
-  <div class="section-body" id="cb-chart-body">
-    <div class="pt-chart-wrap">
-      <h3 style="margin:0 0 2px;font-family:var(--display);font-size:13px;font-weight:800;color:var(--text);">P/L vs. cost basis</h3>
-      <div class="price-table-note" id="cb-chart-cap" style="margin:0 0 10px;">Diverging area — dollar gain/loss against your cost basis at each price checkpoint.</div>
-      <div id="cb-chart-canvas-holder">
-        <div class="pt-chart-canvas-wrap short">
-          <canvas id="cost-basis-chart" role="img" aria-label="Diverging area chart of dollar profit and loss versus cost basis across a ladder of hypothetical BTC prices"></canvas>
-        </div>
+      <div class="pt-breakeven" id="ladder-breakeven" style="display:none;"></div>
+      <div class="price-table-note" id="ladder-chart-footnote" style="margin-top:10px;">
+        Toggle between <strong>P/L vs Cost Basis</strong> (measured against what you actually paid — the Cost Basis input above, default view) and <strong>P/L vs Today's Price</strong>
+        (measured against your collateral's current market value, loan interest not deducted). Hover any bar for the full breakdown: distance from today's price, LTV, status,
+        both P/L bases side-by-side, equity, cost-basis value, and how far that checkpoint sits from margin call and liquidation.
       </div>
     </div>
   </div>
@@ -2547,7 +2585,6 @@ function render() {
   renderDeployAllocation(d);
   renderBreakevenChart(d);
   renderLadderChart(d);
-  renderCostBasisChart(d);
 }
 
 /* ─────────────────────────────────────────────────────
@@ -3040,12 +3077,27 @@ function renderBreakevenChart(d) {
 }
 
 /* ─────────────────────────────────────────────────────
-   LADDER CHART — LTV (%) & Net P/L ($) across the same
-   discrete price ladder as the scenario table. Built
-   entirely from buildLadderRows(d), so it tracks every
-   input live with no hard-coded prices or numbers.
+   LADDER CHART — LTV (%) & P/L ($) across the same
+   discrete price ladder as the scenario table, merged
+   with the former "P/L vs Cost Basis" chart via a basis
+   toggle. Bars show either:
+     • P/L vs Cost Basis     — what you actually paid
+       (default view when a Cost Basis is set)
+     • P/L vs Today's Price — your collateral's current
+       market value, loan interest not deducted
+   The LTV line and status coloring (liq/margin-call) are
+   basis-independent and always shown. Built entirely from
+   buildLadderRows(d), so it tracks every input live with
+   no hard-coded prices or numbers.
 ───────────────────────────────────────────────────── */
 let ladderChart = null;
+let ladderBasis = 'cb'; // 'cb' = vs Cost Basis (default) · 'collateral' = vs Today's Price
+
+function setLadderBasis(basis) {
+  if (basis !== 'cb' && basis !== 'collateral') return;
+  ladderBasis = basis;
+  render();
+}
 
 function renderLadderChart(d) {
   const canvas = el('ladder-chart');
@@ -3053,6 +3105,33 @@ function renderLadderChart(d) {
 
   const rows = buildLadderRows(d);
   if (!rows.length) return;
+
+  const hasCB = !!rows[0].hasCB;
+  const basis = (ladderBasis === 'cb' && hasCB) ? 'cb' : 'collateral';
+
+  /* ── toggle button state (grey out Cost Basis until it's set) ── */
+  const btnCb  = el('ladder-basis-btn-cb');
+  const btnCol = el('ladder-basis-btn-collateral');
+  if (btnCb) {
+    btnCb.classList.toggle('active', basis === 'cb');
+    btnCb.disabled = !hasCB;
+    btnCb.title = hasCB ? '' : 'Set your average Cost Basis in the inputs above to enable this view';
+  }
+  if (btnCol) btnCol.classList.toggle('active', basis === 'collateral');
+
+  /* ── title / caption / legend text swap with the active basis ── */
+  const basisLabel = basis === 'cb' ? 'Cost Basis' : "Today's Price";
+  const basisNoun  = basis === 'cb' ? 'P/L vs Cost Basis' : "Net P/L vs Today's Price";
+  const titleEl = el('ladder-chart-title');
+  if (titleEl) titleEl.innerHTML = `Loan-to-Value &amp; ${basisNoun} across the BTC price ladder`;
+  const noteEl = el('ladder-chart-note');
+  if (noteEl) {
+    noteEl.textContent = basis === 'cb'
+      ? `Bars = $ gain/loss against your ~${fmtUSD(rows[0].costBasisValue)} cost basis (left axis) · Line = LTV (%, right axis) · red/amber points mark liquidation and margin-call rows.`
+      : `Bars = Net P/L ($, left axis) vs your collateral's current price, loan interest not deducted · Line = LTV (%, right axis) · red/amber points mark liquidation and margin-call rows.`;
+  }
+  const legendProfitEl = el('ladder-legend-profit');
+  if (legendProfitEl) legendProfitEl.textContent = `${basisLabel} (profit)`;
 
   const root = getComputedStyle(document.documentElement);
   const cVar = (name, fallback) => (root.getPropertyValue(name).trim() || fallback);
@@ -3068,24 +3147,25 @@ function renderLadderChart(d) {
   const alphaHex   = (c, a) => (c.length === 7 ? c + a : c);
 
   const labels = rows.map(r => '$' + (r.price >= 1000 ? (r.price / 1000).toFixed(r.price % 1000 === 0 ? 0 : 1) + 'K' : Math.round(r.price)));
-  const plColors = rows.map(r => {
+
+  // the bar series follows the active basis; everything else (LTV, status, colors) stays the same
+  const pl = rows.map(r => (basis === 'cb' ? r.plCB : r.netProfit));
+  const plColors = rows.map((r, i) => {
     if (r.status === 'Liquidated') return terracotta;
     if (r.status === 'Margin Call') return mustard;
-    return r.netProfit >= 0 ? moss : alphaHex(terracotta, 'B3');
+    const v = pl[i];
+    return (isFinite(v) ? v : 0) >= 0 ? moss : alphaHex(terracotta, 'B3');
   });
   const pointColors = rows.map(r => r.isCurrent ? cyan : (r.status === 'Liquidated' ? terracotta : r.status === 'Margin Call' ? mustard : orange));
   const pointRadii = rows.map(r => r.isCurrent ? 5 : 2.5);
 
-  const barData = { label: 'Net P/L ($)', data: rows.map(r => r.netProfit) };
-  const ltvData = { label: 'LTV (%)', data: rows.map(r => isFinite(r.ltvPct) ? r.ltvPct : null) };
-
   const datasets = [
     {
-      type: 'bar', label: barData.label, data: barData.data,
+      type: 'bar', label: basisNoun, data: pl,
       backgroundColor: plColors, borderRadius: 3, order: 2, yAxisID: 'y'
     },
     {
-      type: 'line', label: ltvData.label, data: ltvData.data,
+      type: 'line', label: 'LTV (%)', data: rows.map(r => isFinite(r.ltvPct) ? r.ltvPct : null),
       borderColor: orange, backgroundColor: alphaHex(orange, '14'),
       borderWidth: 2, pointRadius: pointRadii, pointHoverRadius: 6,
       pointBackgroundColor: pointColors, pointBorderColor: pointColors,
@@ -3100,12 +3180,59 @@ function renderLadderChart(d) {
       legend: { display: false },
       tooltip: {
         backgroundColor: surface2, titleColor: text, bodyColor: text,
-        borderColor: border, borderWidth: 1, padding: 10,
+        borderColor: border, borderWidth: 1, padding: 12,
+        titleFont: { size: 12, weight: '700' },
+        bodyFont: { size: 11 },
+        boxPadding: 4,
         callbacks: {
-          title: items => rows[items[0].dataIndex].label + ' · ' + fmtUSD(rows[items[0].dataIndex].price),
-          label: ctx => ctx.dataset.label.includes('P/L')
-            ? ' Net P/L: ' + (ctx.parsed.y >= 0 ? '+' : '') + fmtUSD(ctx.parsed.y)
-            : ' LTV: ' + (isFinite(ctx.parsed.y) ? ctx.parsed.y.toFixed(0) + '%' : '—')
+          /* checkpoint label + exact price, flagged if it's today's price */
+          title: items => {
+            const r = rows[items[0].dataIndex];
+            return `${r.label}  ·  ${fmtUSD(r.price)}` + (r.isCurrent ? '  (current)' : '');
+          },
+          /* delta from today's price, LTV, and liq/MC status up top */
+          beforeBody: items => {
+            const r = rows[items[0].dataIndex];
+            return [
+              `Δ vs current price: ${r.deltaPct >= 0 ? '+' : ''}${r.deltaPct.toFixed(1)}%`,
+              `LTV: ${isFinite(r.ltvPct) ? r.ltvPct.toFixed(1) + '%' : '—'}   ·   Status: ${r.status}`,
+              ''
+            ];
+          },
+          /* primary P/L line, basis-aware, with % return */
+          label: ctx => {
+            const r = rows[ctx.dataIndex];
+            if (ctx.dataset.type === 'bar') {
+              const val = pl[ctx.dataIndex];
+              const primaryRet = basis === 'cb' ? r.retCB : r.retPct;
+              return ` ${basisNoun}: ${val >= 0 ? '+' : ''}${fmtUSD(val)}` +
+                     `${isFinite(primaryRet) ? '  (' + (primaryRet >= 0 ? '+' : '') + primaryRet.toFixed(1) + '%)' : ''}`;
+            }
+            return ` LTV: ${isFinite(ctx.parsed.y) ? ctx.parsed.y.toFixed(1) + '%' : '—'}`;
+          },
+          /* the OTHER basis for side-by-side comparison, plus equity + distance to MC/liq */
+          afterBody: items => {
+            const r = rows[items[0].dataIndex];
+            const lines = [''];
+            if (basis === 'cb') {
+              lines.push(` vs Today's Price: ${r.netProfit >= 0 ? '+' : ''}${fmtUSD(r.netProfit)}` +
+                `${isFinite(r.retPct) ? ' (' + (r.retPct >= 0 ? '+' : '') + r.retPct.toFixed(1) + '%)' : ''}`);
+            } else if (r.hasCB) {
+              lines.push(` vs Cost Basis: ${r.plCB >= 0 ? '+' : ''}${fmtUSD(r.plCB)}` +
+                `${isFinite(r.retCB) ? ' (' + (r.retCB >= 0 ? '+' : '') + r.retCB.toFixed(1) + '%)' : ''}`);
+            } else {
+              lines.push(` vs Cost Basis: — set your cost basis above`);
+            }
+            lines.push(` Equity (BTC value − loan): ${fmtUSD(r.equity)}`);
+            if (r.hasCB) lines.push(` Cost basis value: ${fmtUSD(r.costBasisValue)}`);
+            if (isFinite(d.mcPrice) && r.price > d.mcPrice) {
+              lines.push(` To margin call: ${(((r.price - d.mcPrice) / r.price) * 100).toFixed(1)}% lower (${fmtUSD(d.mcPrice)})`);
+            }
+            if (isFinite(d.liqPrice) && r.price > d.liqPrice) {
+              lines.push(` To liquidation: ${(((r.price - d.liqPrice) / r.price) * 100).toFixed(1)}% lower (${fmtUSD(d.liqPrice)})`);
+            }
+            return lines;
+          }
         }
       }
     },
@@ -3114,7 +3241,7 @@ function renderLadderChart(d) {
       y: {
         position: 'left', grid: { color: border },
         ticks: { color: textDim, font: { size: 10 }, callback: v => (v < 0 ? '-$' : '$') + Math.round(Math.abs(v) / 1000) + 'k' },
-        title: { display: true, text: 'NET P/L', color: textDim, font: { size: 10 } }
+        title: { display: true, text: basisLabel.toUpperCase() + ' P/L', color: textDim, font: { size: 10 } }
       },
       y1: {
         position: 'right', min: 0, grid: { display: false },
@@ -3132,109 +3259,31 @@ function renderLadderChart(d) {
     ladderChart.options = options;
     ladderChart.update('none');
   }
-}
 
-/* ─────────────────────────────────────────────────────
-   COST BASIS CHART — diverging area of $ P/L against the
-   user's Cost Basis input, swept across the same ladder.
-   Fully dynamic: recomputed from buildLadderRows(d) every
-   render, and hidden with a hint until Cost Basis is set.
-───────────────────────────────────────────────────── */
-let costBasisChart = null;
-
-function renderCostBasisChart(d) {
-  const holder = el('cb-chart-canvas-holder');
-  const capEl = el('cb-chart-cap');
-  if (!holder || !d) return;
-
-  const rows = buildLadderRows(d);
-  const hasCB = rows.length && rows[0].hasCB;
-
-  if (!hasCB) {
-    if (capEl) capEl.textContent = 'Set your Cost Basis input above to see this chart.';
-    holder.innerHTML = `<div class="pt-chart-cb-empty">Enter your average Cost Basis in the inputs above to plot dollar gain/loss against what you actually paid, swept across the price ladder.</div>`;
-    if (costBasisChart) { costBasisChart.destroy(); costBasisChart = null; }
-    return;
-  }
-
-  if (capEl) capEl.textContent = `Diverging area — dollar gain/loss against your ~${fmtUSD(rows[0].costBasisValue)} cost basis at each price checkpoint.`;
-
-  // (re)build the canvas if it was replaced by the empty-state message above
-  if (!el('cost-basis-chart')) {
-    holder.innerHTML = `<div class="pt-chart-canvas-wrap short"><canvas id="cost-basis-chart" role="img" aria-label="Diverging area chart of dollar profit and loss versus cost basis across a ladder of hypothetical BTC prices"></canvas></div>`;
-    costBasisChart = null;
-  }
-  const canvas = el('cost-basis-chart');
-  if (!canvas || typeof Chart === 'undefined') return;
-
-  const root = getComputedStyle(document.documentElement);
-  const cVar = (name, fallback) => (root.getPropertyValue(name).trim() || fallback);
-  const moss       = cVar('--moss', '#0ECB81');
-  const terracotta = cVar('--terracotta', '#F6465D');
-  const cyan       = cVar('--taupe', '#41C8FF');
-  const textDim    = cVar('--text-dim', '#9AA0AC');
-  const border     = cVar('--cream-border', '#E7E9EC');
-  const surface2   = cVar('--cream-2', '#FFFFFF');
-  const text       = cVar('--charcoal', '#14161A');
-
-  const labels = rows.map(r => '$' + (r.price >= 1000 ? (r.price / 1000).toFixed(r.price % 1000 === 0 ? 0 : 1) + 'K' : Math.round(r.price)));
-  const pointColors = rows.map(r => r.isCurrent ? cyan : (r.plCB >= 0 ? moss : terracotta));
-
-  const dataset = {
-    label: 'P/L vs Cost Basis ($)',
-    data: rows.map(r => r.plCB),
-    segment: { borderColor: ctx => (ctx.p0.parsed.y < 0 || ctx.p1.parsed.y < 0) ? terracotta : moss },
-    backgroundColor: (ctx) => {
-      const { chart } = ctx;
-      const { ctx: c, chartArea } = chart;
-      if (!chartArea) return 'rgba(14,203,129,0.12)';
-      const g = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-      g.addColorStop(0, moss + '59');
-      g.addColorStop(0.5, moss + '0D');
-      g.addColorStop(0.5, terracotta + '0D');
-      g.addColorStop(1, terracotta + '59');
-      return g;
-    },
-    fill: { target: { value: 0 } },
-    borderWidth: 2.5,
-    pointRadius: rows.map(r => r.isCurrent ? 5 : 2.5),
-    pointHoverRadius: 6,
-    pointBackgroundColor: pointColors,
-    pointBorderColor: 'transparent',
-    tension: 0.3
-  };
-
-  const options = {
-    responsive: true, maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        backgroundColor: surface2, titleColor: text, bodyColor: text,
-        borderColor: border, borderWidth: 1, padding: 10,
-        callbacks: {
-          title: items => rows[items[0].dataIndex].label + ' · ' + fmtUSD(rows[items[0].dataIndex].price),
-          label: ctx => ' P/L vs cost basis: ' + (ctx.parsed.y >= 0 ? '+' : '') + fmtUSD(ctx.parsed.y)
-        }
-      }
-    },
-    scales: {
-      x: { grid: { display: false }, ticks: { color: textDim, font: { size: 9.5 }, maxRotation: 45, minRotation: 45 } },
-      y: {
-        grid: { color: border },
-        ticks: { color: textDim, font: { size: 10 }, callback: v => (v < 0 ? '-$' : '$') + Math.round(Math.abs(v) / 1000) + 'k' }
-      }
+  /* ── breakeven summary strip, basis-aware ── */
+  const beEl = el('ladder-breakeven');
+  if (beEl) {
+    if (basis === 'cb' && hasCB && d.totalBtc > 0) {
+      const costBasisValue = rows[0].costBasisValue;
+      const breakevenCB = (d.debtOwed + costBasisValue - d.undeployedUsd) / d.totalBtc;
+      const vsEntryPct = d.entry > 0 ? ((breakevenCB - d.entry) / d.entry) * 100 : NaN;
+      beEl.style.display = '';
+      beEl.innerHTML = `
+        <span class="pt-be-label">Breakeven vs Cost Basis</span>
+        <span class="pt-be-value">${fmtUSD(breakevenCB)}</span>
+        <span class="pt-be-sub">Above this price the bars turn green${isFinite(vsEntryPct) ? ' · ' + (vsEntryPct >= 0 ? '+' : '') + vsEntryPct.toFixed(0) + '% vs your ' + fmtUSD(d.entry) + ' entry' : ''} — lower than your raw entry because leverage blends in BTC bought near today's price.</span>`;
+    } else if (basis === 'collateral' && isFinite(d.breakevenPrice)) {
+      beEl.style.display = '';
+      beEl.innerHTML = `
+        <span class="pt-be-label">Breakeven vs Today's Price</span>
+        <span class="pt-be-value">${fmtUSD(d.breakevenPrice)}</span>
+        <span class="pt-be-sub">Structural breakeven of the leveraged position — net profit vs current collateral value is $0 at this price, before interest.</span>`;
+    } else {
+      beEl.style.display = 'none';
     }
-  };
-
-  if (!costBasisChart) {
-    costBasisChart = new Chart(canvas, { type: 'line', data: { labels, datasets: [dataset] }, options });
-  } else {
-    costBasisChart.data.labels = labels;
-    costBasisChart.data.datasets = [dataset];
-    costBasisChart.options = options;
-    costBasisChart.update('none');
   }
 }
+
 
 /* ─────────────────────────────────────────────────────
    QUANT SUMMARY
@@ -4077,6 +4126,19 @@ themeToggle.addEventListener('click', () => {
   const inp = el(id);
   if (!inp) return;
   inp.addEventListener('input', () => { render(); showRecalcNote(); });
+});
+
+/* ─────────────────────────────────────────────────────
+   LADDER CHART BASIS TOGGLE — "P/L vs Cost Basis" (default)
+   vs "P/L vs Today's Price", merged into the ladder chart
+───────────────────────────────────────────────────── */
+['ladder-basis-btn-cb', 'ladder-basis-btn-collateral'].forEach(id => {
+  const btn = el(id);
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    if (btn.disabled) return;
+    setLadderBasis(btn.dataset.basis);
+  });
 });
 
 /* ─────────────────────────────────────────────────────

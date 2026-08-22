@@ -1869,7 +1869,7 @@ button:focus-visible {
             <th>Equity</th>
             <th>Net P/L</th>
             <th>Return</th>
-            <th>P/L vs Cost Basis <span style="opacity:0.55;font-weight:600;">(principal)</span></th>
+            <th>P/L on Amount Borrowed</th>
             <th>P/L vs Cost Basis <span style="opacity:0.55;font-weight:600;">(whole balance)</span></th>
           </tr>
         </thead>
@@ -1881,13 +1881,15 @@ button:focus-visible {
       Rows update live with your inputs above. <strong>Equity</strong> = BTC value − loan principal.
       <strong>Net P/L</strong> / <strong>Return</strong> use your Profit Calculator deploy % and target settings, valued
       against your collateral's current price (loan interest not deducted).
-      <strong>P/L vs Cost Basis (principal)</strong> measures against what you actually paid for your original
-      collateral BTC only (BTC amount × Cost Basis) — the margin-bought BTC's "cost" is already captured through the
-      loan you owe, so this is the more accurate real-world P/L. <strong>P/L vs Cost Basis (whole balance)</strong>
-      instead pretends your <em>entire</em> current BTC stack — original collateral plus whatever the loan bought —
-      was acquired at your entry price. It's the simpler, more optimistic number people often eyeball, but it
-      overstates gains (or understates losses) versus what you actually put in. Set your Cost Basis above to see
-      either column. Anchor rows mark Liquidation, Margin Call, MVRV Floor, Ceiling Target and Cycle ATH.
+      <strong>P/L on Amount Borrowed</strong> isolates just the leveraged bet — the BTC bought with your
+      loan (plus any loan cash still sitting undeployed) minus the loan itself. It excludes your original
+      collateral entirely, so it needs no Cost Basis entry — just an active loan — and its breakeven is
+      always today's price, since that's what the borrowed money bought at. <strong>P/L vs Cost Basis
+      (whole balance)</strong> instead pretends your <em>entire</em> current BTC stack — original collateral
+      plus whatever the loan bought — was acquired at your entry price; set your Cost Basis above to see it.
+      It's the simpler, more optimistic number people often eyeball, but it overstates gains (or understates
+      losses) versus what you actually put in. Anchor rows mark Liquidation, Margin Call, MVRV Floor, Ceiling
+      Target and Cycle ATH.
     </div>
   </div>
 
@@ -1901,7 +1903,7 @@ button:focus-visible {
     <div class="pt-chart-wrap">
       <div class="pt-chart-legend">
         <span class="pt-chart-legend-item"><span class="pt-chart-legend-swatch line" style="background:var(--orange);"></span>Net P/L vs today's collateral</span>
-        <span class="pt-chart-legend-item" id="pt-chart-legend-cb" style="display:none;"><span class="pt-chart-legend-swatch line" style="background:var(--taupe);"></span>P/L vs cost basis (principal)</span>
+        <span class="pt-chart-legend-item" id="pt-chart-legend-cb" style="display:none;"><span class="pt-chart-legend-swatch line" style="background:var(--taupe);"></span>P/L on amount borrowed</span>
         <span class="pt-chart-legend-item" id="pt-chart-legend-cbw" style="display:none;"><span class="pt-chart-legend-swatch line" style="background:#B983FF;"></span>P/L vs cost basis (whole balance)</span>
         <span class="pt-chart-legend-item"><span class="pt-chart-legend-swatch" style="background:var(--mustard);"></span>Margin call zone</span>
         <span class="pt-chart-legend-item"><span class="pt-chart-legend-swatch" style="background:var(--terracotta);"></span>Liquidation zone</span>
@@ -1930,7 +1932,7 @@ button:focus-visible {
           <div class="price-table-note" id="ladder-chart-note" style="margin:0;">Bars = Net P/L ($, left axis) at each ladder checkpoint · Line = LTV (%, right axis) · red/amber points mark liquidation and margin-call rows.</div>
         </div>
         <div class="pt-basis-toggle" id="ladder-basis-toggle" role="group" aria-label="Choose P/L basis for the bars">
-          <button type="button" class="pt-basis-toggle-btn" data-basis="cb" id="ladder-basis-btn-cb">Cost Basis (Principal)</button>
+          <button type="button" class="pt-basis-toggle-btn" data-basis="cb" id="ladder-basis-btn-cb">P/L on Amount Borrowed</button>
           <button type="button" class="pt-basis-toggle-btn" data-basis="cbw" id="ladder-basis-btn-cbw">Cost Basis (Whole Balance)</button>
           <button type="button" class="pt-basis-toggle-btn" data-basis="collateral" id="ladder-basis-btn-collateral">P/L vs Today's Price</button>
         </div>
@@ -2677,8 +2679,11 @@ function buildLadderRows(d) {
     }
   });
 
-  const costBasisValue = d.entry > 0 ? d.btc * d.entry : NaN;
-  const hasCB = isFinite(costBasisValue);
+  // "Amount Borrowed" variant: isolates just the leveraged bet — the BTC bought
+  // with borrowed money (+ any undeployed loan cash) vs. the loan itself.
+  // Your original collateral is excluded entirely, so no Cost Basis entry is
+  // needed; it only needs an active loan.
+  const hasBorrowed = d.loan > 0;
 
   // "Whole balance" variant: pretends your entire current BTC stack (original
   // collateral + whatever the loan bought) was acquired at your entry price,
@@ -2694,11 +2699,12 @@ function buildLadderRows(d) {
     const retPct = d.collateral > 0 ? (netProfit / d.collateral) * 100 : NaN;
     const deltaPct = ((price - d.price) / d.price) * 100;
 
-    // P/L measured against actual cost basis (what you paid), not live-price collateral
-    const plCB  = hasCB ? (d.totalBtc * price + d.undeployedUsd - d.debtOwed - costBasisValue) : NaN;
-    const retCB = hasCB && costBasisValue > 0 ? (plCB / costBasisValue) * 100 : NaN;
+    // P/L on just the borrowed capital: value of the BTC it bought (at this
+    // price) plus any loan cash still sitting undeployed, minus the loan owed.
+    const plBorrowed  = hasBorrowed ? (d.newBtc * price + d.undeployedUsd - d.debtOwed) : NaN;
+    const retBorrowed = hasBorrowed && d.loan > 0 ? (plBorrowed / d.loan) * 100 : NaN;
 
-    // Same idea, but costed against the whole balance instead of just principal
+    // Same idea, but costed against the whole balance instead of just the loan
     const plCBWhole  = hasCBW ? (d.totalBtc * price + d.undeployedUsd - d.debtOwed - costBasisValueWhole) : NaN;
     const retCBWhole = hasCBW && costBasisValueWhole > 0 ? (plCBWhole / costBasisValueWhole) * 100 : NaN;
 
@@ -2708,7 +2714,7 @@ function buildLadderRows(d) {
 
     return {
       ...r, price, ltvPct, equity, netProfit, retPct, deltaPct,
-      plCB, retCB, hasCB, costBasisValue,
+      plBorrowed, retBorrowed, hasBorrowed,
       plCBWhole, retCBWhole, hasCBW, costBasisValueWhole,
       status, rowCls,
       isCurrent: r.type === 'current'
@@ -2724,28 +2730,29 @@ function renderPriceScenarios(d) {
   if (!tbody || !d) return;
 
   const ladderRows = buildLadderRows(d);
-  const costBasisValue = d.entry > 0 ? d.btc * d.entry : NaN;
+  const costBasisValueWhole = d.entry > 0 ? d.totalBtc * d.entry : NaN;
 
-  // Blended breakeven vs cost basis: price where P/L vs Cost Basis crosses zero.
-  // Differs from raw entry price because leverage blends in BTC bought at the loan's target price.
-  const breakevenCB = (isFinite(costBasisValue) && d.totalBtc > 0)
-    ? (d.debtOwed + costBasisValue - d.undeployedUsd) / d.totalBtc
+  // Whole-balance breakeven: price where "P/L vs Cost Basis (whole balance)" crosses zero.
+  const breakevenCBW = (isFinite(costBasisValueWhole) && d.totalBtc > 0)
+    ? (d.debtOwed + costBasisValueWhole - d.undeployedUsd) / d.totalBtc
     : NaN;
 
   const beEl = el('pt-breakeven');
   if (beEl) {
-    if (isFinite(breakevenCB)) {
-      const vsEntryPct = d.entry > 0 ? ((breakevenCB - d.entry) / d.entry) * 100 : NaN;
+    if (isFinite(breakevenCBW)) {
+      const vsEntryPct = d.entry > 0 ? ((breakevenCBW - d.entry) / d.entry) * 100 : NaN;
       const vsEntryStr = isFinite(vsEntryPct)
         ? `${vsEntryPct >= 0 ? '+' : ''}${vsEntryPct.toFixed(0)}% vs your $${fmt(d.entry)} entry`
         : '';
+      const borrowedStr = d.loan > 0
+        ? ` "P/L on Amount Borrowed" has its own breakeven — always today's price ($${fmt(d.price)}) — since that's what the borrowed money bought at.`
+        : '';
       beEl.style.display = '';
       beEl.innerHTML = `
-        <span class="pt-be-label">Blended Breakeven (vs Cost Basis, Principal)</span>
-        <span class="pt-be-value">${fmtUSD(breakevenCB)}</span>
-        <span class="pt-be-sub">Above this price the "P/L vs Cost Basis (principal)" column turns positive
-          ${vsEntryStr ? '· ' + vsEntryStr : ''} — lower than your raw entry because leverage blends in BTC bought near today's price.
-          The "whole balance" column instead breaks even much closer to your raw entry, since it pretends the margin-bought BTC cost the same as your original.</span>`;
+        <span class="pt-be-label">Breakeven (vs Cost Basis, Whole Balance)</span>
+        <span class="pt-be-value">${fmtUSD(breakevenCBW)}</span>
+        <span class="pt-be-sub">Above this price the "P/L vs Cost Basis (whole balance)" column turns positive
+          ${vsEntryStr ? '· ' + vsEntryStr : ''}.${borrowedStr}</span>`;
     } else {
       beEl.style.display = 'none';
     }
@@ -2757,13 +2764,13 @@ function renderPriceScenarios(d) {
 
     const deltaCls = r.deltaPct > 0 ? 'pt-pos' : r.deltaPct < 0 ? 'pt-neg' : '';
     const netCls   = r.netProfit > 0 ? 'pt-pos' : r.netProfit < 0 ? 'pt-neg' : '';
-    const cbCls    = r.hasCB ? (r.plCB > 0 ? 'pt-pos' : r.plCB < 0 ? 'pt-neg' : '') : '';
+    const borCls   = r.hasBorrowed ? (r.plBorrowed > 0 ? 'pt-pos' : r.plBorrowed < 0 ? 'pt-neg' : '') : '';
 
     const cbwCls = r.hasCBW ? (r.plCBWhole > 0 ? 'pt-pos' : r.plCBWhole < 0 ? 'pt-neg' : '') : '';
 
-    const cbCell = r.hasCB
-      ? `${r.plCB >= 0 ? '+' : ''}${fmtUSD(r.plCB)}<span class="pt-label">${r.retCB >= 0 ? '+' : ''}${r.retCB.toFixed(0)}%</span>`
-      : `—<span class="pt-label">set cost basis</span>`;
+    const borCell = r.hasBorrowed
+      ? `${r.plBorrowed >= 0 ? '+' : ''}${fmtUSD(r.plBorrowed)}<span class="pt-label">${isFinite(r.retBorrowed) ? (r.retBorrowed >= 0 ? '+' : '') + r.retBorrowed.toFixed(0) + '%' : '—'}</span>`
+      : `—<span class="pt-label">no loan set</span>`;
     const cbwCell = r.hasCBW
       ? `${r.plCBWhole >= 0 ? '+' : ''}${fmtUSD(r.plCBWhole)}<span class="pt-label">${r.retCBWhole >= 0 ? '+' : ''}${r.retCBWhole.toFixed(0)}%</span>`
       : `—<span class="pt-label">set cost basis</span>`;
@@ -2777,7 +2784,7 @@ function renderPriceScenarios(d) {
       <td>${fmtUSD(r.equity)}</td>
       <td class="${netCls}">${r.netProfit >= 0 ? '+' : ''}${fmtUSD(r.netProfit)}</td>
       <td class="${netCls}">${isFinite(r.retPct) ? (r.retPct >= 0 ? '+' : '') + r.retPct.toFixed(0) + '%' : '—'}</td>
-      <td class="${cbCls}">${cbCell}</td>
+      <td class="${borCls}">${borCell}</td>
       <td class="${cbwCls}">${cbwCell}</td>
     </tr>`;
   });
@@ -2830,12 +2837,11 @@ function renderPriceChart(d) {
   const canvas = el('price-scenario-chart');
   if (!canvas || !d || typeof Chart === 'undefined') return;
 
-  const costBasisValue = d.entry > 0 ? d.btc * d.entry : NaN;
-  const hasCB = isFinite(costBasisValue);
+  const hasBorrowed = d.loan > 0;
   const costBasisValueWhole = d.entry > 0 ? d.totalBtc * d.entry : NaN;
   const hasCBW = isFinite(costBasisValueWhole);
   const legendCb = el('pt-chart-legend-cb');
-  if (legendCb) legendCb.style.display = hasCB ? 'flex' : 'none';
+  if (legendCb) legendCb.style.display = hasBorrowed ? 'flex' : 'none';
   const legendCbw = el('pt-chart-legend-cbw');
   if (legendCbw) legendCbw.style.display = hasCBW ? 'flex' : 'none';
 
@@ -2847,11 +2853,11 @@ function renderPriceChart(d) {
   const hi = Math.max(...highAnchors, d.price * 1.5) * 1.1;
 
   const STEPS = 100;
-  const netPoints = [], cbPoints = [], cbwPoints = [];
+  const netPoints = [], borPoints = [], cbwPoints = [];
   for (let i = 0; i <= STEPS; i++) {
     const price = lo + (hi - lo) * (i / STEPS);
     netPoints.push({ x: price, y: d.totalBtc * price + d.undeployedUsd - d.debtOwed - d.collateral });
-    if (hasCB) cbPoints.push({ x: price, y: d.totalBtc * price + d.undeployedUsd - d.debtOwed - costBasisValue });
+    if (hasBorrowed) borPoints.push({ x: price, y: d.newBtc * price + d.undeployedUsd - d.debtOwed });
     if (hasCBW) cbwPoints.push({ x: price, y: d.totalBtc * price + d.undeployedUsd - d.debtOwed - costBasisValueWhole });
   }
 
@@ -2876,10 +2882,10 @@ function renderPriceChart(d) {
     pointRadius: 0,
     tension: 0.15
   }];
-  if (hasCB) {
+  if (hasBorrowed) {
     datasets.push({
-      label: 'P/L vs cost basis (principal)',
-      data: cbPoints,
+      label: 'P/L on amount borrowed',
+      data: borPoints,
       borderColor: taupe,
       backgroundColor: 'transparent',
       borderWidth: 2,
@@ -3148,20 +3154,20 @@ function renderLadderChart(d) {
   const rows = buildLadderRows(d);
   if (!rows.length) return;
 
-  const hasCB  = !!rows[0].hasCB;
+  const hasBorrowedBasis  = !!rows[0].hasBorrowed;
   const hasCBW = !!rows[0].hasCBW;
-  const basis = (ladderBasis === 'cb' && hasCB) ? 'cb'
+  const basis = (ladderBasis === 'cb' && hasBorrowedBasis) ? 'cb'
               : (ladderBasis === 'cbw' && hasCBW) ? 'cbw'
               : 'collateral';
 
-  /* ── toggle button state (grey out Cost Basis options until it's set) ── */
+  /* ── toggle button state (grey out options until they're usable) ── */
   const btnCb  = el('ladder-basis-btn-cb');
   const btnCbw = el('ladder-basis-btn-cbw');
   const btnCol = el('ladder-basis-btn-collateral');
   if (btnCb) {
     btnCb.classList.toggle('active', basis === 'cb');
-    btnCb.disabled = !hasCB;
-    btnCb.title = hasCB ? '' : 'Set your average Cost Basis in the inputs above to enable this view';
+    btnCb.disabled = !hasBorrowedBasis;
+    btnCb.title = hasBorrowedBasis ? '' : 'Set a loan amount above to enable this view';
   }
   if (btnCbw) {
     btnCbw.classList.toggle('active', basis === 'cbw');
@@ -3171,14 +3177,14 @@ function renderLadderChart(d) {
   if (btnCol) btnCol.classList.toggle('active', basis === 'collateral');
 
   /* ── title / caption / legend text swap with the active basis ── */
-  const basisLabel = basis === 'cb' ? 'Cost Basis (Principal)' : basis === 'cbw' ? 'Cost Basis (Whole Balance)' : "Today's Price";
-  const basisNoun  = basis === 'cb' ? 'P/L vs Cost Basis (Principal)' : basis === 'cbw' ? 'P/L vs Cost Basis (Whole Balance)' : "Net P/L vs Today's Price";
+  const basisLabel = basis === 'cb' ? 'Amount Borrowed' : basis === 'cbw' ? 'Cost Basis (Whole Balance)' : "Today's Price";
+  const basisNoun  = basis === 'cb' ? 'P/L on Amount Borrowed' : basis === 'cbw' ? 'P/L vs Cost Basis (Whole Balance)' : "Net P/L vs Today's Price";
   const titleEl = el('ladder-chart-title');
   if (titleEl) titleEl.innerHTML = `Loan-to-Value &amp; ${basisNoun} across the BTC price ladder`;
   const noteEl = el('ladder-chart-note');
   if (noteEl) {
     noteEl.textContent = basis === 'cb'
-      ? `Bars = $ gain/loss against the ~${fmtUSD(rows[0].costBasisValue)} you actually paid for your original collateral (left axis) · Line = LTV (%, right axis) · red/amber points mark liquidation and margin-call rows.`
+      ? `Bars = $ gain/loss on just the ~${fmtUSD(d.loan)} you borrowed — the BTC it bought plus any undeployed loan cash, minus the loan itself; your original collateral is excluded (left axis) · Line = LTV (%, right axis) · red/amber points mark liquidation and margin-call rows.`
       : basis === 'cbw'
       ? `Bars = $ gain/loss if your whole ~${fmtUSD(rows[0].costBasisValueWhole)} current BTC balance (collateral + margin-bought) had been bought at your entry price (left axis) · Line = LTV (%, right axis) · red/amber points mark liquidation and margin-call rows.`
       : `Bars = Net P/L ($, left axis) vs your collateral's current price, loan interest not deducted · Line = LTV (%, right axis) · red/amber points mark liquidation and margin-call rows.`;
@@ -3202,7 +3208,7 @@ function renderLadderChart(d) {
   const labels = rows.map(r => '$' + (r.price >= 1000 ? (r.price / 1000).toFixed(r.price % 1000 === 0 ? 0 : 1) + 'K' : Math.round(r.price)));
 
   // the bar series follows the active basis; everything else (LTV, status, colors) stays the same
-  const pl = rows.map(r => (basis === 'cb' ? r.plCB : basis === 'cbw' ? r.plCBWhole : r.netProfit));
+  const pl = rows.map(r => (basis === 'cb' ? r.plBorrowed : basis === 'cbw' ? r.plCBWhole : r.netProfit));
   const plColors = rows.map((r, i) => {
     if (r.status === 'Liquidated') return terracotta;
     if (r.status === 'Margin Call') return mustard;
@@ -3257,7 +3263,7 @@ function renderLadderChart(d) {
             const r = rows[ctx.dataIndex];
             if (ctx.dataset.type === 'bar') {
               const val = pl[ctx.dataIndex];
-              const primaryRet = basis === 'cb' ? r.retCB : basis === 'cbw' ? r.retCBWhole : r.retPct;
+              const primaryRet = basis === 'cb' ? r.retBorrowed : basis === 'cbw' ? r.retCBWhole : r.retPct;
               return ` ${basisNoun}: ${val >= 0 ? '+' : ''}${fmtUSD(val)}` +
                      `${isFinite(primaryRet) ? '  (' + (primaryRet >= 0 ? '+' : '') + primaryRet.toFixed(1) + '%)' : ''}`;
             }
@@ -3272,10 +3278,10 @@ function renderLadderChart(d) {
                 `${isFinite(r.retPct) ? ' (' + (r.retPct >= 0 ? '+' : '') + r.retPct.toFixed(1) + '%)' : ''}`);
             }
             if (basis !== 'cb') {
-              lines.push(r.hasCB
-                ? ` vs Cost Basis (Principal): ${r.plCB >= 0 ? '+' : ''}${fmtUSD(r.plCB)}` +
-                  `${isFinite(r.retCB) ? ' (' + (r.retCB >= 0 ? '+' : '') + r.retCB.toFixed(1) + '%)' : ''}`
-                : ` vs Cost Basis (Principal): — set your cost basis above`);
+              lines.push(r.hasBorrowed
+                ? ` P/L on Amount Borrowed: ${r.plBorrowed >= 0 ? '+' : ''}${fmtUSD(r.plBorrowed)}` +
+                  `${isFinite(r.retBorrowed) ? ' (' + (r.retBorrowed >= 0 ? '+' : '') + r.retBorrowed.toFixed(1) + '%)' : ''}`
+                : ` P/L on Amount Borrowed: — no loan set`);
             }
             if (basis !== 'cbw') {
               lines.push(r.hasCBW
@@ -3284,7 +3290,6 @@ function renderLadderChart(d) {
                 : ` vs Cost Basis (Whole Balance): — set your cost basis above`);
             }
             lines.push(` Equity (BTC value − loan): ${fmtUSD(r.equity)}`);
-            if (r.hasCB) lines.push(` Cost basis value (principal): ${fmtUSD(r.costBasisValue)}`);
             if (r.hasCBW) lines.push(` Cost basis value (whole balance): ${fmtUSD(r.costBasisValueWhole)}`);
             if (isFinite(d.mcPrice) && r.price > d.mcPrice) {
               lines.push(` To margin call: ${(((r.price - d.mcPrice) / r.price) * 100).toFixed(1)}% lower (${fmtUSD(d.mcPrice)})`);
@@ -3324,15 +3329,12 @@ function renderLadderChart(d) {
   /* ── breakeven summary strip, basis-aware ── */
   const beEl = el('ladder-breakeven');
   if (beEl) {
-    if (basis === 'cb' && hasCB && d.totalBtc > 0) {
-      const costBasisValue = rows[0].costBasisValue;
-      const breakevenCB = (d.debtOwed + costBasisValue - d.undeployedUsd) / d.totalBtc;
-      const vsEntryPct = d.entry > 0 ? ((breakevenCB - d.entry) / d.entry) * 100 : NaN;
+    if (basis === 'cb' && hasBorrowedBasis && d.newBtc > 0) {
       beEl.style.display = '';
       beEl.innerHTML = `
-        <span class="pt-be-label">Breakeven vs Cost Basis (Principal)</span>
-        <span class="pt-be-value">${fmtUSD(breakevenCB)}</span>
-        <span class="pt-be-sub">Above this price the bars turn green${isFinite(vsEntryPct) ? ' · ' + (vsEntryPct >= 0 ? '+' : '') + vsEntryPct.toFixed(0) + '% vs your ' + fmtUSD(d.entry) + ' entry' : ''} — lower than your raw entry because leverage blends in BTC bought near today's price.</span>`;
+        <span class="pt-be-label">Breakeven on Amount Borrowed</span>
+        <span class="pt-be-value">${fmtUSD(d.price)}</span>
+        <span class="pt-be-sub">Above this price the bars turn green — it's always today's price, since that's what the borrowed money bought the new BTC at. Your original collateral isn't part of this bar at all.</span>`;
     } else if (basis === 'cbw' && hasCBW && d.totalBtc > 0) {
       const costBasisValueWhole = rows[0].costBasisValueWhole;
       const breakevenCBW = (d.debtOwed + costBasisValueWhole - d.undeployedUsd) / d.totalBtc;
@@ -3341,7 +3343,7 @@ function renderLadderChart(d) {
       beEl.innerHTML = `
         <span class="pt-be-label">Breakeven vs Cost Basis (Whole Balance)</span>
         <span class="pt-be-value">${fmtUSD(breakevenCBW)}</span>
-        <span class="pt-be-sub">Above this price the bars turn green${isFinite(vsEntryPctW) ? ' · ' + (vsEntryPctW >= 0 ? '+' : '') + vsEntryPctW.toFixed(0) + '% vs your ' + fmtUSD(d.entry) + ' entry' : ''} — this treats every BTC you hold, including the margin-bought portion, as if it cost your entry price, which understates your real (principal-only) breakeven above.</span>`;
+        <span class="pt-be-sub">Above this price the bars turn green${isFinite(vsEntryPctW) ? ' · ' + (vsEntryPctW >= 0 ? '+' : '') + vsEntryPctW.toFixed(0) + '% vs your ' + fmtUSD(d.entry) + ' entry' : ''} — this treats every BTC you hold, including the margin-bought portion, as if it cost your entry price, so it's more optimistic than looking at the borrowed portion alone.</span>`;
     } else if (basis === 'collateral' && isFinite(d.breakevenPrice)) {
       beEl.style.display = '';
       beEl.innerHTML = `

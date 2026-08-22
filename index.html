@@ -1615,6 +1615,23 @@ button:focus-visible {
         </div>
       </div>
       <div class="input-row">
+        <span class="input-row-label">Deployed BTC at price</span>
+        <span class="input-row-unit">USD/BTC · optional</span>
+        <div class="stepper-wrap">
+          <button class="stepper-btn" onclick="stepDeployPrice(-1000)">−</button>
+          <input class="stepper-input" type="number" id="inp-deploy-price" placeholder="same as current" step="1000" min="1" max="10000000"/>
+          <button class="stepper-btn" onclick="stepDeployPrice(1000)">+</button>
+        </div>
+      </div>
+      <div class="target-quick-row">
+        <button class="quick-btn" onclick="syncDeployPriceToCurrent()">Use Current Price</button>
+      </div>
+      <div class="stat-sub" style="padding: 0 2px 8px; opacity:0.65;">
+        Leave blank if you're deploying (or would deploy) the loan today — the "P/L on Amount Borrowed" figures
+        then use today's price as the cost of the margin-bought BTC. Set this only if you actually drew the loan
+        and bought BTC at a different, already-known price.
+      </div>
+      <div class="input-row">
         <span class="input-row-label">Target BTC Price</span>
         <span class="input-row-unit">USD/BTC</span>
         <div class="stepper-wrap">
@@ -1884,7 +1901,8 @@ button:focus-visible {
       <strong>P/L on Amount Borrowed</strong> isolates just the leveraged bet — the BTC bought with your
       loan (plus any loan cash still sitting undeployed) minus the loan itself. It excludes your original
       collateral entirely, so it needs no Cost Basis entry — just an active loan — and its breakeven is
-      always today's price, since that's what the borrowed money bought at. <strong>P/L vs Cost Basis
+      always the price you deployed the loan at (today's price by default, or set "Deployed BTC at price"
+      in the Profit Calculator above if you drew the loan at a different, known price). <strong>P/L vs Cost Basis
       (whole balance)</strong> instead pretends your <em>entire</em> current BTC stack — original collateral
       plus whatever the loan bought — was acquired at your entry price; set your Cost Basis above to see it.
       It's the simpler, more optimistic number people often eyeball, but it overstates gains (or understates
@@ -2033,6 +2051,20 @@ function step(id, delta, dec) {
   showRecalcNote();
 }
 
+function stepDeployPrice(delta) {
+  const inp = el('inp-deploy-price');
+  if (!inp) return;
+  const base = inp.value.trim() === '' ? calc().price : parseFloat(inp.value);
+  let v = (isFinite(base) ? base : calc().price) + delta;
+  v = Math.round(v);
+  const min = parseFloat(inp.min), max = parseFloat(inp.max);
+  if (isFinite(min) && v < min) v = min;
+  if (isFinite(max) && v > max) v = max;
+  inp.value = v;
+  render();
+  showRecalcNote();
+}
+
 /* Validated numeric input */
 function readInput(id, min, max, fallback) {
   const inp = el(id);
@@ -2074,6 +2106,16 @@ function getApr()    { return readInput('inp-apr',     0.1, 30, 1.0)  / 100; }
 function getVol()    { return readInput('inp-vol',     10, 200, 65)   / 100; }
 function getEntry()  { return readInput('inp-entry',   0, 10000000, 0); }
 function getDeployPct()  { return readInput('inp-deploy-pct', 0, 100, 100) / 100; }
+function getDeployPrice(fallback) {
+  const inp = el('inp-deploy-price');
+  if (!inp) return fallback;
+  const raw = inp.value.trim();
+  if (raw === '') { inp.classList.remove('input-error', 'input-ok'); return fallback; }
+  const v = parseFloat(raw);
+  if (isNaN(v) || v <= 0) { inp.classList.add('input-error'); inp.classList.remove('input-ok'); return fallback; }
+  inp.classList.remove('input-error'); inp.classList.add('input-ok');
+  return v;
+}
 function getTargetPrice(){ return readInput('inp-target-price', 1000, 10000000, D.btcPrice); }
 
 /* ─────────────────────────────────────────────────────
@@ -2282,7 +2324,8 @@ function calc() {
   const targetPrice = getTargetPrice();
   const deployedUsd = loan * deployPct;
   const undeployedUsd = loan * (1 - deployPct); // cash held, not bought into BTC
-  const newBtc      = price > 0 ? deployedUsd / price : 0;
+  const deployPrice = getDeployPrice(price); // price the loan was actually deployed at; defaults to today's price
+  const newBtc      = deployPrice > 0 ? deployedUsd / deployPrice : 0;
   const totalBtc    = btc + newBtc;
   const btcValueAtTarget = totalBtc * targetPrice;
   const totalValue  = btcValueAtTarget + undeployedUsd; // BTC value + leftover cash
@@ -2302,7 +2345,7 @@ function calc() {
     athDropPct, btcAtCeil, netGain, pctGain,
     pLiq90, score, signals, kellyLtv, rrRatio,
     mcP24h, mcP48h, topupNeeded, entry, vol,
-    deployPct, targetPrice, deployedUsd, undeployedUsd, newBtc, totalBtc, btcValueAtTarget, totalValue,
+    deployPct, targetPrice, deployPrice, deployedUsd, undeployedUsd, newBtc, totalBtc, btcValueAtTarget, totalValue,
     debtOwed, netProfit, levReturnPct, unlevReturnPct, unlevProfit,
     leverageEdge, breakevenPrice
   };
@@ -2745,7 +2788,7 @@ function renderPriceScenarios(d) {
         ? `${vsEntryPct >= 0 ? '+' : ''}${vsEntryPct.toFixed(0)}% vs your $${fmt(d.entry)} entry`
         : '';
       const borrowedStr = d.loan > 0
-        ? ` "P/L on Amount Borrowed" has its own breakeven — always today's price ($${fmt(d.price)}) — since that's what the borrowed money bought at.`
+        ? ` "P/L on Amount Borrowed" has its own breakeven — the price the loan was deployed at ($${fmt(d.deployPrice)}) — since that's what the borrowed money bought the BTC at.`
         : '';
       beEl.style.display = '';
       beEl.innerHTML = `
@@ -3330,11 +3373,14 @@ function renderLadderChart(d) {
   const beEl = el('ladder-breakeven');
   if (beEl) {
     if (basis === 'cb' && hasBorrowedBasis && d.newBtc > 0) {
+      const isCustomDeploy = Math.round(d.deployPrice) !== Math.round(d.price);
       beEl.style.display = '';
       beEl.innerHTML = `
         <span class="pt-be-label">Breakeven on Amount Borrowed</span>
-        <span class="pt-be-value">${fmtUSD(d.price)}</span>
-        <span class="pt-be-sub">Above this price the bars turn green — it's always today's price, since that's what the borrowed money bought the new BTC at. Your original collateral isn't part of this bar at all.</span>`;
+        <span class="pt-be-value">${fmtUSD(d.deployPrice)}</span>
+        <span class="pt-be-sub">Above this price the bars turn green — it's the price the loan was deployed at
+          (${isCustomDeploy ? "the custom deploy price you set" : "today's price, since none was set"}),
+          since that's what the borrowed money bought the new BTC at. Your original collateral isn't part of this bar at all.</span>`;
     } else if (basis === 'cbw' && hasCBW && d.totalBtc > 0) {
       const costBasisValueWhole = rows[0].costBasisValueWhole;
       const breakevenCBW = (d.debtOwed + costBasisValueWhole - d.undeployedUsd) / d.totalBtc;
@@ -3415,7 +3461,7 @@ function renderProfitCalc(d) {
   }
 
   el('pc-new-btc').textContent      = d.newBtc.toFixed(4) + ' BTC';
-  el('pc-deploy-sub').textContent   = fmtUSD(d.deployedUsd) + ` deployed @ $${fmt(d.price)}`;
+  el('pc-deploy-sub').textContent   = fmtUSD(d.deployedUsd) + ` deployed @ $${fmt(d.deployPrice)}`;
 
   el('pc-total-btc').textContent    = d.totalBtc.toFixed(4) + ' BTC';
   el('pc-total-value').textContent  = fmtUSD(d.totalValue);
@@ -3485,6 +3531,15 @@ function setTarget(which) {
   if (!inp) return;
   inp.value = Math.round(val);
   inp.dataset.initialized = '1';
+  render();
+  showRecalcNote();
+}
+
+function syncDeployPriceToCurrent() {
+  const d = calc();
+  const inp = el('inp-deploy-price');
+  if (!inp) return;
+  inp.value = Math.round(d.price);
   render();
   showRecalcNote();
 }
@@ -3997,15 +4052,15 @@ function exportSnapshot() {
     '━━  7. PROFIT CALCULATOR (LEVERAGE DEPLOY SCENARIO)  ━━',
     sep2,
     `Scenario: borrow against your ${d.btc} BTC, deploy part of the loan back into`,
-    `BTC at today's price, then mark everything to a target price.`,
+    `BTC at ${Math.round(d.deployPrice) === Math.round(d.price) ? "today's price" : 'your specified deploy price'}, then mark everything to a target price.`,
     ``,
     `INPUTS`,
     `  Deploy into BTC   : ${(d.deployPct * 100).toFixed(0)}%  of loan ($${fmt(d.loan)})`,
-    `  Deployment price  : $${fmt(d.price)}  (current BTC price)`,
+    `  Deployment price  : $${fmt(d.deployPrice)}  ${Math.round(d.deployPrice) === Math.round(d.price) ? '(current BTC price)' : '(custom — different from current price of $' + fmt(d.price) + ')'}`,
     `  Target price      : $${fmt(d.targetPrice)}`,
     ``,
     `DEPLOYMENT`,
-    `  Deployed to BTC   : $${fmt(d.deployedUsd)}  →  ${d.newBtc.toFixed(6)} new BTC @ $${fmt(d.price)}`,
+    `  Deployed to BTC   : $${fmt(d.deployedUsd)}  →  ${d.newBtc.toFixed(6)} new BTC @ $${fmt(d.deployPrice)}`,
     `  Undeployed cash   : $${fmt(d.undeployedUsd)}  (held, not converted to BTC)`,
     `  Total BTC held    : ${d.totalBtc.toFixed(6)} BTC  (${d.btc} collateral + ${d.newBtc.toFixed(6)} new)`,
     ``,
@@ -4032,7 +4087,7 @@ function exportSnapshot() {
           : `Target ($${fmt(d.targetPrice)}) is ${d.targetPrice > d.breakevenPrice ? 'above' : 'below'} breakeven ($${fmt(d.breakevenPrice)}) — leverage ${d.targetPrice > d.breakevenPrice ? 'adds to' : 'subtracts from'} your return at this target.`}`,
     ``,
     `⚠ Note: This model excludes accrued interest (time-dependent — see Loan Mechanics §3 for`,
-    `  $/yr cost at current APR) and assumes the new BTC is bought at today's price and held`,
+    `  $/yr cost at current APR) and assumes the new BTC is bought at ${Math.round(d.deployPrice) === Math.round(d.price) ? "today's price" : 'the deploy price above'} and held`,
     `  to the target price alongside the original collateral.`,
     '',
 
@@ -4194,7 +4249,7 @@ themeToggle.addEventListener('click', () => {
 /* ─────────────────────────────────────────────────────
    INPUT LISTENERS
 ───────────────────────────────────────────────────── */
-['inp-btc','inp-price','inp-ltv','inp-mc-ltv','inp-liq-ltv','inp-apr','inp-vol','inp-entry','inp-deploy-pct','inp-target-price'].forEach(id => {
+['inp-btc','inp-price','inp-ltv','inp-mc-ltv','inp-liq-ltv','inp-apr','inp-vol','inp-entry','inp-deploy-pct','inp-deploy-price','inp-target-price'].forEach(id => {
   const inp = el(id);
   if (!inp) return;
   inp.addEventListener('input', () => { render(); showRecalcNote(); });

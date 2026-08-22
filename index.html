@@ -1207,13 +1207,22 @@ button:focus-visible {
   .hero-verdict-title { font-size: 21px; }
   .hero-verdict-sub { font-size: 13px; }
 
-  /* two-card groups sit side by side */
+  /* two-card groups sit side by side.
+     Cost Basis spans both rows so it fills the same height as the
+     Position + Loan Parameters stack, instead of leaving an empty cell. */
   #inputs-body {
     display: grid;
     grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      "position costbasis"
+      "loan     costbasis";
     gap: 12px;
     align-items: start;
   }
+  #inputs-body .input-card:nth-of-type(1) { grid-area: position; }
+  #inputs-body .input-card:nth-of-type(2) { grid-area: costbasis; align-self: stretch; }
+  #inputs-body .input-card:nth-of-type(3) { grid-area: loan; }
   #inputs-body .recalc-toast { grid-column: 1 / -1; }
 
   #scenarios-body {

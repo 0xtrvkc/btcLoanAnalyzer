@@ -1366,6 +1366,22 @@ button:focus-visible {
         </div>
       </div>
       <div class="input-row">
+        <span class="input-row-label">Deployed BTC at Price</span>
+        <span class="input-row-unit">USD/BTC</span>
+        <div class="stepper-wrap">
+          <button class="stepper-btn" onclick="stepDeployPrice(-500)">−</button>
+          <input class="stepper-input" type="number" id="inp-deploy-price" placeholder="same as current" step="100" min="1" max="10000000"/>
+          <button class="stepper-btn" onclick="stepDeployPrice(500)">+</button>
+        </div>
+      </div>
+      <div class="target-quick-row">
+        <button class="quick-btn" onclick="syncDeployPriceToCurrent()">Use Current Price</button>
+      </div>
+      <div class="stat-sub" style="padding: 0 2px 8px; opacity:0.65;">
+        Price the loan was (or would be) deployed at, for the "P/L on Amount Borrowed" figures. Leave blank to
+        assume today's price.
+      </div>
+      <div class="input-row">
         <span class="input-row-label">Entry Date</span>
         <span class="input-row-unit"></span>
         <div class="stepper-wrap">
@@ -1613,23 +1629,6 @@ button:focus-visible {
           <input class="stepper-input" type="number" id="inp-deploy-pct" value="100" step="5" min="0" max="100"/>
           <button class="stepper-btn" onclick="step('inp-deploy-pct', 5, 0)">+</button>
         </div>
-      </div>
-      <div class="input-row">
-        <span class="input-row-label">Deployed BTC at price</span>
-        <span class="input-row-unit">USD/BTC · optional</span>
-        <div class="stepper-wrap">
-          <button class="stepper-btn" onclick="stepDeployPrice(-1000)">−</button>
-          <input class="stepper-input" type="number" id="inp-deploy-price" placeholder="same as current" step="1000" min="1" max="10000000"/>
-          <button class="stepper-btn" onclick="stepDeployPrice(1000)">+</button>
-        </div>
-      </div>
-      <div class="target-quick-row">
-        <button class="quick-btn" onclick="syncDeployPriceToCurrent()">Use Current Price</button>
-      </div>
-      <div class="stat-sub" style="padding: 0 2px 8px; opacity:0.65;">
-        Leave blank if you're deploying (or would deploy) the loan today — the "P/L on Amount Borrowed" figures
-        then use today's price as the cost of the margin-bought BTC. Set this only if you actually drew the loan
-        and bought BTC at a different, already-known price.
       </div>
       <div class="input-row">
         <span class="input-row-label">Target BTC Price</span>

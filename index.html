@@ -870,7 +870,8 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 }
 .price-table {
   width: 100%;
-  min-width: 700px;
+  min-width: 0;
+  table-layout: fixed;
   border-collapse: collapse;
   font-family: var(--mono);
   font-size: 13px;
@@ -883,20 +884,32 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   font-family: var(--sans);
   font-size: 11.5px;
   font-weight: 700;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
   text-align: right;
-  padding: 8px 10px;
+  padding: 6px 4px;
   border-bottom: 1px solid var(--border);
-  white-space: nowrap;
+  white-space: normal;
+  line-height: 1.2;
+  word-break: break-word;
 }
 .price-table thead th:first-child { text-align: left; }
+.price-table thead th:nth-child(1) { width: 15%; }
+.price-table thead th:nth-child(2) { width: 9%; }
+.price-table thead th:nth-child(3) { width: 8%; }
+.price-table thead th:nth-child(4) { width: 12%; }
+.price-table thead th:nth-child(5) { width: 13%; }
+.price-table thead th:nth-child(6) { width: 14%; }
+.price-table thead th:nth-child(7) { width: 14.5%; }
+.price-table thead th:nth-child(8) { width: 14.5%; }
 .price-table tbody td {
   text-align: right;
-  padding: 7px 10px;
+  padding: 6px 4px;
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
   color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .price-table tbody td:first-child { text-align: left; }
 .price-table tbody tr:last-child td { border-bottom: none; }
@@ -904,18 +917,26 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 .price-table tbody tr.pt-danger td.pt-status { color: var(--terracotta); font-weight: 700; }
 .price-table tbody tr.pt-warn   td.pt-status { color: var(--mustard); font-weight: 700; }
 .price-table tbody tr.pt-good   td.pt-status { color: var(--moss); font-weight: 700; }
+.price-table td.pt-status { white-space: normal; text-align: left; }
 .price-table .pt-label {
   font-family: var(--sans);
-  font-size: 11.5px;
+  font-size: 10px;
   font-weight: 700;
   color: var(--text-dim);
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
   display: block;
   margin-top: 1px;
+  white-space: normal;
 }
 .price-table .pt-pos { color: var(--moss); }
 .price-table .pt-neg { color: var(--terracotta); }
+@media (max-width: 600px) {
+  .price-table { font-size: 11px; }
+  .price-table thead th { font-size: 9.5px; padding: 5px 3px; }
+  .price-table tbody td { padding: 5px 3px; }
+  .price-table .pt-label { font-size: 8.5px; }
+}
 .price-table-note {
   font-size: 12.5px;
   color: var(--text-dim);
@@ -1003,12 +1024,15 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.01em;
-  padding: 7px 11px;
+  padding: 7px 9px;
   border-radius: 6px;
   background: transparent;
   color: var(--text-mid);
   white-space: nowrap;
   transition: background 0.15s ease, color 0.15s ease;
+}
+@media (max-width: 480px) {
+  .pt-basis-toggle-btn { font-size: 10.5px; padding: 6px 6px; }
 }
 .pt-basis-toggle-btn.active {
   background: var(--orange);
@@ -2016,9 +2040,8 @@ button:focus-visible {
             <th>Status</th>
             <th>Equity</th>
             <th>Net P/L</th>
-            <th>Return</th>
-            <th>P/L on Amount Borrowed</th>
-            <th>P/L vs Cost Basis <span style="opacity:0.55;font-weight:600;">(whole balance)</span></th>
+            <th class="gloss" data-term="P/L (Borrowed)" data-def="Full label: P/L on Amount Borrowed. Isolates just the leveraged bet — the BTC bought with your loan (plus undeployed loan cash) minus the loan itself. Excludes your original collateral.">P/L (Borrowed)</th>
+            <th class="gloss" data-term="P/L (Cost Basis)" data-def="Full label: P/L vs Cost Basis (whole balance). Treats your entire current BTC stack — original collateral plus whatever the loan bought — as if acquired at your entry price.">P/L (Cost Basis)</th>
           </tr>
         </thead>
         <tbody id="price-scenario-tbody"></tbody>
@@ -2081,9 +2104,9 @@ button:focus-visible {
           <div class="price-table-note" id="ladder-chart-note" style="margin:0;">Bars = Net P/L ($, left axis) at each ladder checkpoint · Line = LTV (%, right axis) · red/amber points mark liquidation and margin-call rows.</div>
         </div>
         <div class="pt-basis-toggle" id="ladder-basis-toggle" role="group" aria-label="Choose P/L basis for the bars">
-          <button type="button" class="pt-basis-toggle-btn" data-basis="cb" id="ladder-basis-btn-cb">P/L on Amount Borrowed</button>
-          <button type="button" class="pt-basis-toggle-btn" data-basis="cbw" id="ladder-basis-btn-cbw">Cost Basis (Whole Balance)</button>
-          <button type="button" class="pt-basis-toggle-btn" data-basis="collateral" id="ladder-basis-btn-collateral">P/L vs Today's Price</button>
+          <button type="button" class="pt-basis-toggle-btn" data-basis="cb" id="ladder-basis-btn-cb">P/L (Borrowed)</button>
+          <button type="button" class="pt-basis-toggle-btn" data-basis="cbw" id="ladder-basis-btn-cbw">P/L (Cost Basis)</button>
+          <button type="button" class="pt-basis-toggle-btn" data-basis="collateral" id="ladder-basis-btn-collateral">Today's Price</button>
         </div>
       </div>
       <div class="pt-chart-legend" style="margin-top:10px;">
@@ -2956,8 +2979,7 @@ function renderPriceScenarios(d) {
       <td>${isFinite(r.ltvPct) ? r.ltvPct.toFixed(0) + '%' : '—'}</td>
       <td class="pt-status">${r.status}</td>
       <td>${fmtUSD(r.equity)}</td>
-      <td class="${netCls}">${r.netProfit >= 0 ? '+' : ''}${fmtUSD(r.netProfit)}</td>
-      <td class="${netCls}">${isFinite(r.retPct) ? (r.retPct >= 0 ? '+' : '') + r.retPct.toFixed(0) + '%' : '—'}</td>
+      <td class="${netCls}">${r.netProfit >= 0 ? '+' : ''}${fmtUSD(r.netProfit)}<span class="pt-label">${isFinite(r.retPct) ? (r.retPct >= 0 ? '+' : '') + r.retPct.toFixed(0) + '%' : '—'}</span></td>
       <td class="${borCls}">${borCell}</td>
       <td class="${cbwCls}">${cbwCell}</td>
     </tr>`;

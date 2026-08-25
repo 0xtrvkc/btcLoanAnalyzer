@@ -197,7 +197,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 .live-dot.stale { background: var(--terracotta); box-shadow: 0 0 0 2px var(--terra-bg); animation: none; }
 .header-date-text {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 11.5px;
   color: var(--text-dim);
   flex: 1;
 }
@@ -223,7 +223,130 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 }
 [data-theme="dark"] .theme-toggle-btn { background: var(--orange); }
 [data-theme="dark"] .theme-toggle-btn::after { transform: translateX(16px); }
-.theme-emoji { font-size: 11px; }
+.theme-emoji { font-size: 12.5px; }
+
+/* ─── GLOSSARY TERMS (tap/hover to define jargon) ─── */
+.gloss {
+  border-bottom: 1px dotted var(--text-dim);
+  cursor: help;
+  white-space: nowrap;
+}
+#glossary-popover {
+  position: fixed;
+  z-index: 9999;
+  max-width: 260px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  box-shadow: var(--shadow-card);
+  padding: 10px 12px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text);
+  display: none;
+}
+#glossary-popover.show { display: block; }
+#glossary-popover .gp-term {
+  color: var(--orange);
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 4px;
+  display: block;
+}
+
+/* ─── HIDDEN COMMAND: CYBERPUNK 2077 TERMINAL OVERLAY ─── */
+@keyframes cp-flicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
+  20%, 22%, 24%, 55% { opacity: 0.72; }
+}
+@keyframes cp-scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+@keyframes cp-in {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.85); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+#cp-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: none;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(1px);
+}
+#cp-overlay.show { display: block; }
+#cp-box {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(300px, 82vw);
+  background: #050807;
+  border: 1px solid #00f6ff;
+  border-radius: 2px;
+  box-shadow:
+    0 0 2px #00f6ff,
+    0 0 14px rgba(0,246,255,0.55),
+    0 0 46px rgba(255,0,168,0.28),
+    inset 0 0 22px rgba(0,246,255,0.08);
+  padding: 20px 18px 18px;
+  font-family: var(--mono);
+  color: #7bffb0;
+  animation: cp-in 0.18s steps(6) both, cp-flicker 2.6s linear infinite 0.18s;
+  overflow: hidden;
+}
+#cp-box::before {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; height: 40%;
+  background: linear-gradient(rgba(0,246,255,0.08), rgba(0,246,255,0) 70%);
+  animation: cp-scan 2.4s linear infinite;
+  pointer-events: none;
+}
+#cp-box .cp-top {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: #ff00a8;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  opacity: 0.85;
+}
+#cp-box .cp-rule {
+  border: none;
+  border-top: 1px dashed rgba(0,246,255,0.35);
+  margin: 8px 0 10px;
+}
+#cp-box .cp-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #00f6ff;
+  text-shadow: 0 0 6px rgba(0,246,255,0.85), 0 0 18px rgba(0,246,255,0.4);
+  text-transform: uppercase;
+}
+#cp-box .cp-sub {
+  margin-top: 6px;
+  font-size: 11px;
+  color: #7bffb0;
+  opacity: 0.9;
+}
+#cp-box .cp-sub .cp-cursor {
+  display: inline-block;
+  width: 7px;
+  height: 12px;
+  background: #7bffb0;
+  margin-left: 2px;
+  vertical-align: -2px;
+  animation: cp-blink 1s steps(2) infinite;
+}
+@keyframes cp-blink { 50% { opacity: 0; } }
+#cp-box .cp-log { margin-top: 12px; font-size: 9.5px; color: #6df0ff; opacity: 0.75; line-height: 1.7; }
+#cp-box .cp-log div::before { content: "▸ "; color: #ff00a8; }
 
 /* ─── STALE BANNER ─── */
 .stale-banner {
@@ -232,7 +355,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   border-bottom: 2px solid var(--terracotta);
   padding: 10px 16px;
   font-family: var(--sans);
-  font-size: 12px;
+  font-size: 13px;
   color: var(--terracotta);
   align-items: flex-start;
   gap: 8px;
@@ -259,7 +382,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   border-radius: 20px;
   padding: 5px 14px;
   font-family: var(--display);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text);
   cursor: pointer;
@@ -271,7 +394,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 .spin { animation: spin 1s linear infinite; display: inline-block; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .refresh-info {
-  font-size: 11px;
+  font-size: 12.5px;
   color: var(--text-dim);
   font-family: var(--mono);
   flex: 1;
@@ -305,7 +428,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   flex: 1;
 }
 .section-caret {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-dim);
   transition: transform 0.25s;
 }
@@ -334,7 +457,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 }
 .hero-eyebrow {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 11.5px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--text-dim);
@@ -357,7 +480,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   text-anchor: middle;
 }
 .gauge-label-text {
-  font-size: 9px;
+  font-size: 11px;
   fill: var(--charcoal-dim);
   dominant-baseline: middle;
   text-anchor: middle;
@@ -377,7 +500,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 }
 .hero-verdict-title .verdict-color { color: var(--moss); }
 .hero-verdict-sub {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-mid);
   line-height: 1.5;
 }
@@ -394,7 +517,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 }
 .input-card-label {
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--text-dim);
@@ -417,7 +540,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 }
 .input-row-unit {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 11.5px;
   color: var(--text-dim);
   white-space: nowrap;
 }
@@ -468,7 +591,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 .recalc-toast {
   text-align: center;
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 11.5px;
   color: var(--moss);
   letter-spacing: 0.08em;
   margin-top: 4px;
@@ -500,10 +623,10 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 }
 .weights-toggle-sum {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 12.5px;
   color: var(--moss);
 }
-.weights-toggle-arrow { font-size: 12px; color: var(--text-dim); transition: transform 0.2s; }
+.weights-toggle-arrow { font-size: 13px; color: var(--text-dim); transition: transform 0.2s; }
 .weights-toggle-arrow.open { transform: rotate(180deg); }
 .weights-body { display: none; padding: 0 16px 14px; border-top: 1px solid var(--border); }
 .weights-body.open { display: block; padding-top: 12px; }
@@ -515,7 +638,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 }
 .weight-row-label {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 12.5px;
   color: var(--text-mid);
   width: 72px;
   flex-shrink: 0;
@@ -528,7 +651,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 }
 .weight-row-val {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 12.5px;
   color: var(--text);
   width: 32px;
   text-align: right;
@@ -552,7 +675,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 .stat-icon { font-size: 18px; margin-bottom: 4px; display: block; }
 .stat-label {
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--text-dim);
@@ -570,18 +693,18 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 .stat-value.warn   { color: var(--mustard); }
 .stat-value.danger { color: var(--terracotta); }
 .stat-sub {
-  font-size: 11px;
+  font-size: 12.5px;
   color: var(--text-mid);
   margin-top: 3px;
   line-height: 1.35;
 }
-.stat-sub .mono { font-family: var(--mono); font-size: 10px; }
+.stat-sub .mono { font-family: var(--mono); font-size: 11.5px; }
 
 /* ─── BADGE ─── */
 .badge {
   display: inline-block;
   font-family: var(--display);
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 20px;
@@ -609,7 +732,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 }
 .pct-bar-label {
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: 11px;
   color: var(--text-dim);
   margin-top: 3px;
 }
@@ -638,7 +761,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 .signal-pill.pill-bad   { border-color: var(--dusty-rose); background: var(--rose-bg); }
 .pill-label {
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-dim);
@@ -651,7 +774,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   color: var(--text);
   line-height: 1;
 }
-.pill-badge { margin-top: 5px; font-size: 9px; }
+.pill-badge { margin-top: 5px; font-size: 11px; }
 
 /* ─── CYCLE BAR ─── */
 .cycle-card {
@@ -665,13 +788,13 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   display: flex;
   justify-content: space-between;
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: 11px;
   color: var(--text-dim);
   margin-bottom: 6px;
 }
 .cycle-bar-today {
   font-family: var(--display);
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 700;
   color: var(--orange);
 }
@@ -701,7 +824,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   box-shadow: 0 0 0 2px var(--orange);
 }
 .cycle-note {
-  font-size: 11px;
+  font-size: 12.5px;
   color: var(--text-mid);
   margin-top: 10px;
   line-height: 1.5;
@@ -734,7 +857,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   font-size: 16px;
   font-weight: 800;
 }
-.liq-action-text { font-size: 11px; color: var(--text-mid); line-height: 1.3; margin-top: 2px; }
+.liq-action-text { font-size: 12.5px; color: var(--text-mid); line-height: 1.3; margin-top: 2px; }
 .liq-bar-col { width: 60px; flex-shrink: 0; }
 .liq-mini-bar { height: 5px; background: var(--cream-3); border-radius: 3px; overflow: hidden; }
 .liq-mini-fill { height: 100%; border-radius: 3px; }
@@ -750,7 +873,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   min-width: 700px;
   border-collapse: collapse;
   font-family: var(--mono);
-  font-size: 11.5px;
+  font-size: 13px;
 }
 .price-table thead th {
   position: sticky;
@@ -758,7 +881,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   background: var(--surface-2);
   color: var(--text-dim);
   font-family: var(--sans);
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -783,7 +906,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 .price-table tbody tr.pt-good   td.pt-status { color: var(--moss); font-weight: 700; }
 .price-table .pt-label {
   font-family: var(--sans);
-  font-size: 9.5px;
+  font-size: 11.5px;
   font-weight: 700;
   color: var(--text-dim);
   text-transform: uppercase;
@@ -794,7 +917,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 .price-table .pt-pos { color: var(--moss); }
 .price-table .pt-neg { color: var(--terracotta); }
 .price-table-note {
-  font-size: 11px;
+  font-size: 12.5px;
   color: var(--text-dim);
   line-height: 1.5;
   margin-top: 8px;
@@ -806,7 +929,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   border: 1px solid var(--border);
   border-radius: var(--radius-s);
   background: var(--surface-2);
-  font-size: 12px;
+  font-size: 13px;
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -818,7 +941,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  font-size: 10px;
+  font-size: 11.5px;
 }
 .pt-breakeven .pt-be-value {
   font-family: var(--mono);
@@ -827,7 +950,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   color: var(--text);
 }
 .pt-breakeven .pt-be-sub {
-  font-size: 10.5px;
+  font-size: 12px;
   color: var(--text-dim);
   width: 100%;
 }
@@ -844,7 +967,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   flex-wrap: wrap;
   gap: 14px;
   margin-bottom: 10px;
-  font-size: 10.5px;
+  font-size: 12px;
   color: var(--text-mid);
 }
 .pt-chart-legend-item { display: flex; align-items: center; gap: 5px; }
@@ -855,7 +978,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 .pt-chart-cb-empty {
   display: flex; align-items: center; justify-content: center;
   height: 210px; text-align: center; padding: 0 20px;
-  color: var(--text-dim); font-size: 12px;
+  color: var(--text-dim); font-size: 13px;
 }
 .pt-chart-header-row {
   display: flex;
@@ -877,7 +1000,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 }
 .pt-basis-toggle-btn {
   font-family: var(--sans);
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.01em;
   padding: 7px 11px;
@@ -916,7 +1039,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   display: flex;
   justify-content: space-between;
   margin-top: 8px;
-  font-size: 11px;
+  font-size: 12.5px;
   color: var(--text-mid);
 }
 .deploy-alloc-label { display: flex; align-items: center; gap: 6px; }
@@ -926,7 +1049,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 .deploy-alloc-label .val { font-family: var(--mono); font-weight: 700; color: var(--text); }
 .liq-drop-text {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 11.5px;
   color: var(--text-dim);
   text-align: right;
   margin-top: 3px;
@@ -944,7 +1067,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 .scenario-tag {
   display: inline-block;
   font-family: var(--display);
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 700;
   padding: 3px 10px;
   border-radius: 20px;
@@ -965,11 +1088,11 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   align-items: baseline;
   padding: 7px 0;
   border-bottom: 1px solid var(--cream-border);
-  font-size: 12px;
+  font-size: 13px;
 }
 .scenario-row:last-child { border-bottom: none; }
 .scenario-row-key { color: var(--text-mid); flex: 1; padding-right: 12px; line-height: 1.3; }
-.scenario-row-val { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--text); flex-shrink: 0; }
+.scenario-row-val { font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--text); flex-shrink: 0; }
 .scenario-row-val.up { color: var(--moss); }
 .scenario-row-val.dn { color: var(--terracotta); }
 
@@ -983,7 +1106,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 }
 .stress-title {
   font-family: var(--display);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--terracotta);
   margin-bottom: 12px;
@@ -992,9 +1115,9 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   gap: 6px;
 }
 .stress-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.stress-item-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-mid); margin-bottom: 2px; }
+.stress-item-label { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-mid); margin-bottom: 2px; }
 .stress-item-val { font-family: var(--display); font-size: 16px; font-weight: 800; color: var(--terracotta); }
-.stress-item-sub { font-size: 10px; color: var(--text-dim); margin-top: 1px; }
+.stress-item-sub { font-size: 11.5px; color: var(--text-dim); margin-top: 1px; }
 
 /* ─── PRO CON ─── */
 .procon-card {
@@ -1007,7 +1130,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 }
 .procon-title {
   font-family: var(--display);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   margin-bottom: 10px;
 }
@@ -1017,7 +1140,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   display: flex;
   gap: 8px;
   padding: 6px 0;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-mid);
   border-bottom: 1px solid var(--cream-border);
   line-height: 1.45;
@@ -1035,7 +1158,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 [data-theme="dark"] .quant-card { background: var(--cream-3); border: 1.5px solid var(--border); }
 .quant-header {
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: rgba(232,223,200,0.4);
@@ -1044,7 +1167,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 [data-theme="dark"] .quant-header { color: var(--text-dim); }
 .quant-text {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 12.5px;
   line-height: 1.85;
   letter-spacing: 0.01em;
   color: var(--cream);
@@ -1070,7 +1193,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   border-radius: var(--radius-xs);
   padding: 12px 14px;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 12.5px;
   color: var(--text-mid);
   line-height: 1.8;
 }
@@ -1090,7 +1213,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
   border-radius: var(--radius-xs);
   padding: 8px 6px;
   font-family: var(--display);
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 700;
   color: var(--text-mid);
   text-align: center;
@@ -1112,7 +1235,7 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 }
 .footer-text {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 11.5px;
   color: var(--text-dim);
   letter-spacing: 0.06em;
   line-height: 1.7;
@@ -1271,7 +1394,7 @@ button:focus-visible {
   <span class="live-dot" id="live-dot" title="Data status"></span>
   <span class="header-date-text" id="header-date">Loading…</span>
   <button class="theme-toggle-btn" id="theme-toggle" title="Toggle theme">
-    <span class="theme-emoji" style="position:absolute;left:4px;top:3px;font-size:10px;" id="theme-emoji">☀️</span>
+    <span class="theme-emoji" style="position:absolute;left:4px;top:3px;font-size: 11.5px;" id="theme-emoji">☀️</span>
   </button>
 </header>
 
@@ -1287,7 +1410,7 @@ button:focus-visible {
     <span class="refresh-icon" id="refresh-icon">↻</span> Refresh
   </button>
   <button class="refresh-chip" id="export-btn" onclick="exportSnapshot()" title="Export full snapshot as .txt for AI / GitHub">
-    <span style="font-size:13px;">↓</span> Export .txt
+    <span style="font-size: 13px;">↓</span> Export .txt
   </button>
   <span class="refresh-info" id="upload-filename">Connecting…</span>
   <span class="refresh-info" id="upload-status"></span>
@@ -1352,7 +1475,7 @@ button:focus-visible {
         </div>
       </div>
       <div class="input-row">
-        <span class="input-row-label">LTV</span>
+        <span class="input-row-label gloss" data-term="LTV" data-def="Loan-to-Value: your loan amount divided by your collateral's current dollar value. Lower LTV = more safety buffer.">LTV</span>
         <span class="input-row-unit">%</span>
         <div class="stepper-wrap">
           <button class="stepper-btn" onclick="step('inp-ltv', -1, 0)">−</button>
@@ -1407,7 +1530,7 @@ button:focus-visible {
     <div class="input-card">
       <div class="input-card-label">Loan Parameters</div>
       <div class="input-row">
-        <span class="input-row-label">Margin Call LTV</span>
+        <span class="input-row-label gloss" data-term="Margin Call LTV" data-def="The LTV level at which the lender warns you to add collateral or repay, or risk liquidation.">Margin Call LTV</span>
         <span class="input-row-unit">%</span>
         <div class="stepper-wrap">
           <button class="stepper-btn" onclick="step('inp-mc-ltv', -1, 0)">−</button>
@@ -1416,7 +1539,7 @@ button:focus-visible {
         </div>
       </div>
       <div class="input-row">
-        <span class="input-row-label">Liquidation LTV</span>
+        <span class="input-row-label gloss" data-term="Liquidation LTV" data-def="The LTV level at which the lender automatically sells your collateral to repay the loan.">Liquidation LTV</span>
         <span class="input-row-unit">%</span>
         <div class="stepper-wrap">
           <button class="stepper-btn" onclick="step('inp-liq-ltv', -1, 0)">−</button>
@@ -1425,7 +1548,7 @@ button:focus-visible {
         </div>
       </div>
       <div class="input-row">
-        <span class="input-row-label">APR</span>
+        <span class="input-row-label gloss" data-term="APR" data-def="Annual Percentage Rate: the yearly interest cost charged on your borrowed amount.">APR</span>
         <span class="input-row-unit">%/yr</span>
         <div class="stepper-wrap">
           <button class="stepper-btn" onclick="step('inp-apr', -0.1, 1)">−</button>
@@ -1434,7 +1557,7 @@ button:focus-visible {
         </div>
       </div>
       <div class="input-row">
-        <span class="input-row-label">30d Volatility</span>
+        <span class="input-row-label gloss" data-term="30d Volatility" data-def="How much BTC's price has swung, annualized, over the last 30 days. Higher = bigger, faster price moves.">30d Volatility</span>
         <span class="input-row-unit">%ann</span>
         <div class="stepper-wrap">
           <button class="stepper-btn" onclick="step('inp-vol', -1, 0)">−</button>
@@ -1481,7 +1604,7 @@ button:focus-visible {
         <input type="range" id="w-cycle" min="0" max="50" value="15" oninput="updateWeightDisplay()">
         <span class="weight-row-val" id="wv-cycle">15%</span>
       </div>
-      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:6px;">Weights normalize to 100% automatically.</div>
+      <div style="font-family:var(--mono);font-size: 11px;color:var(--text-dim);margin-top:6px;">Weights normalize to 100% automatically.</div>
     </div>
   </div>
 
@@ -1495,7 +1618,7 @@ button:focus-visible {
     <div class="stat-grid">
       <div class="stat-card">
         <span class="stat-icon">💰</span>
-        <div class="stat-label">Collateral Value</div>
+        <div class="stat-label gloss" data-term="Collateral Value" data-def="The current dollar value of the BTC you've pledged to secure your loan.">Collateral Value</div>
         <div class="stat-value" id="lm-collateral">$20,894</div>
         <div class="stat-sub"><span class="mono" id="lm-btc">0.337</span> BTC × $<span class="mono" id="lm-price">62,000</span></div>
       </div>
@@ -1509,7 +1632,7 @@ button:focus-visible {
         <span class="stat-icon">📅</span>
         <div class="stat-label">Interest (<span id="lm-apr-label">1.0</span>% APR)</div>
         <div class="stat-value" id="lm-interest">~$84/yr</div>
-        <div class="stat-sub" id="lm-interest-range" style="font-size:10px;"></div>
+        <div class="stat-sub" id="lm-interest-range" style="font-size: 11.5px;"></div>
       </div>
       <div class="stat-card highlight-good">
         <span class="stat-icon">🛡️</span>
@@ -1537,7 +1660,7 @@ button:focus-visible {
       </div>
       <div class="stat-card">
         <span class="stat-icon">🎯</span>
-        <div class="stat-label">Kelly-Optimal LTV</div>
+        <div class="stat-label gloss" data-term="Kelly-Optimal LTV" data-def="The mathematically ideal leverage level given your estimated win probability and risk/reward — from the Kelly Criterion staking formula.">Kelly-Optimal LTV</div>
         <div class="stat-value" id="lm-kelly">—</div>
         <div class="stat-sub">Edge + vol + ruin</div>
       </div>
@@ -1740,8 +1863,8 @@ button:focus-visible {
     <div class="pt-chart-wrap">
       <div class="pt-chart-legend">
         <span class="pt-chart-legend-item"><span class="pt-chart-legend-swatch line" style="background:var(--orange);"></span>Net P/L at exit price</span>
-        <span class="pt-chart-legend-item"><span class="pt-chart-legend-swatch" style="background:var(--moss);"></span>Above breakeven</span>
-        <span class="pt-chart-legend-item"><span class="pt-chart-legend-swatch" style="background:var(--terracotta);"></span>Below breakeven</span>
+        <span class="pt-chart-legend-item"><span class="pt-chart-legend-swatch" style="background:var(--moss);"></span>✓ Above breakeven</span>
+        <span class="pt-chart-legend-item"><span class="pt-chart-legend-swatch" style="background:var(--terracotta);"></span>✕ Below breakeven</span>
       </div>
       <div class="pt-chart-canvas-wrap">
         <canvas id="breakeven-chart" role="img" aria-label="Line chart of net profit and loss versus BTC exit price for the leveraged deploy scenario, shaded red below breakeven and green above it, with markers at the breakeven price and your target price"></canvas>
@@ -1785,48 +1908,48 @@ button:focus-visible {
       <div class="signal-pill" id="pill-ma">
         <div class="pill-label">MA Stack</div>
         <div class="pill-value" id="sig-ma">Bearish</div>
-        <div class="stat-sub" id="sig-ma-ctx" style="font-size:9px;margin-top:3px;"></div>
+        <div class="stat-sub" id="sig-ma-ctx" style="font-size: 11px;margin-top:3px;"></div>
         <div class="badge badge-warn pill-badge" id="sig-ma-badge">Watch</div>
       </div>
       <!-- ROC -->
       <div class="signal-pill" id="pill-roc">
         <div class="pill-label">ROC 90d</div>
         <div class="pill-value" id="sig-roc">−2.2%</div>
-        <div class="stat-sub" id="sig-roc-ctx" style="font-size:9px;margin-top:3px;"></div>
+        <div class="stat-sub" id="sig-roc-ctx" style="font-size: 11px;margin-top:3px;"></div>
         <div class="badge badge-warn pill-badge" id="sig-roc-badge">Bottoming</div>
       </div>
       <!-- Cycle -->
       <div class="signal-pill" id="pill-cycle">
         <div class="pill-label">Cycle Position</div>
         <div class="pill-value" id="sig-cycle">54.1%</div>
-        <div class="stat-sub" id="sig-cycle-ctx" style="font-size:9px;margin-top:3px;"></div>
+        <div class="stat-sub" id="sig-cycle-ctx" style="font-size: 11px;margin-top:3px;"></div>
         <div class="badge badge-good pill-badge" id="sig-cycle-badge">Mid-Cycle</div>
       </div>
       <!-- vs Peak -->
       <div class="signal-pill" id="pill-peak">
         <div class="pill-label">vs Cycle Peak</div>
         <div class="pill-value" id="sig-vs-peak">43%</div>
-        <div class="stat-sub" id="sig-vs-peak-ctx" style="font-size:9px;margin-top:3px;"></div>
+        <div class="stat-sub" id="sig-vs-peak-ctx" style="font-size: 11px;margin-top:3px;"></div>
         <div class="badge badge-good pill-badge" id="sig-vs-peak-badge">Deep Dip</div>
       </div>
       <!-- LTV Risk -->
       <div class="signal-pill">
-        <div class="pill-label">LTV / Risk</div>
+        <div class="pill-label gloss" data-term="LTV / Risk" data-def="Your current Loan-to-Value ratio and the risk tier it falls into (Low/Med/High).">LTV / Risk</div>
         <div class="pill-value" id="sig-ltv-risk">40% / Med</div>
-        <div class="stat-sub" id="sig-ltv-ctx" style="font-size:9px;margin-top:3px;">Buffer: <span id="sig-buf-pct">37%</span> drop</div>
+        <div class="stat-sub" id="sig-ltv-ctx" style="font-size: 11px;margin-top:3px;">Buffer: <span id="sig-buf-pct">37%</span> drop</div>
         <div class="badge badge-warn pill-badge" id="sig-ltv-badge">Moderate</div>
       </div>
       <!-- ATH Drop -->
       <div class="signal-pill">
         <div class="pill-label">Price vs ATH</div>
         <div class="pill-value" id="sig-ath-drop">−51.1%</div>
-        <div class="stat-sub" id="sig-ath-ctx" style="font-size:9px;margin-top:3px;"></div>
+        <div class="stat-sub" id="sig-ath-ctx" style="font-size: 11px;margin-top:3px;"></div>
         <div class="badge badge-neutral pill-badge">Drawdown</div>
       </div>
     </div>
     <!-- MVRV pct label -->
-    <div class="pct-bar-label" id="mvrv-pct-label" style="margin-top:4px;font-size:10px;color:var(--text-dim);"></div>
-    <div class="pct-bar-label" id="zscore-pct-label" style="margin-top:2px;font-size:10px;color:var(--text-dim);"></div>
+    <div class="pct-bar-label" id="mvrv-pct-label" style="margin-top:4px;font-size: 11.5px;color:var(--text-dim);"></div>
+    <div class="pct-bar-label" id="zscore-pct-label" style="margin-top:2px;font-size: 11.5px;color:var(--text-dim);"></div>
   </div>
 
   <!-- ══ CYCLE CONTEXT ══ -->
@@ -1850,17 +1973,17 @@ button:focus-visible {
     <div class="cycle-meta-grid">
       <div class="cycle-meta-card">
         <div class="stat-label" id="cm-c4-peak-label">C4 MVRV Peak</div>
-        <div style="font-family:var(--display);font-size:18px;font-weight:800;" id="cm-c4-peak">2.733</div>
+        <div style="font-family:var(--display);font-size: 18px;font-weight:800;" id="cm-c4-peak">2.733</div>
         <div class="stat-sub" id="cm-c4-peak-date">Nov 2024 · $99,013</div>
       </div>
       <div class="cycle-meta-card">
         <div class="stat-label" id="cm-ath-label">C4 Price ATH</div>
-        <div style="font-family:var(--display);font-size:18px;font-weight:800;" id="cm-ath">$124,728</div>
+        <div style="font-family:var(--display);font-size: 18px;font-weight:800;" id="cm-ath">$124,728</div>
         <div class="stat-sub" id="cm-ath-date">Oct 2025</div>
       </div>
       <div class="cycle-meta-card full">
         <div class="stat-label">Ceiling Consensus</div>
-        <div style="font-family:var(--display);font-size:18px;font-weight:800;" id="cm-ceiling">$120,584</div>
+        <div style="font-family:var(--display);font-size: 18px;font-weight:800;" id="cm-ceiling">$120,584</div>
         <div class="stat-sub" id="cm-ceiling-range">Range: $99k – $340k</div>
       </div>
     </div>
@@ -1931,8 +2054,8 @@ button:focus-visible {
         <span class="pt-chart-legend-item"><span class="pt-chart-legend-swatch line" style="background:var(--orange);"></span>Net P/L vs today's collateral</span>
         <span class="pt-chart-legend-item" id="pt-chart-legend-cb" style="display:none;"><span class="pt-chart-legend-swatch line" style="background:var(--taupe);"></span>P/L on amount borrowed</span>
         <span class="pt-chart-legend-item" id="pt-chart-legend-cbw" style="display:none;"><span class="pt-chart-legend-swatch line" style="background:#B983FF;"></span>P/L vs cost basis (whole balance)</span>
-        <span class="pt-chart-legend-item"><span class="pt-chart-legend-swatch" style="background:var(--mustard);"></span>Margin call zone</span>
-        <span class="pt-chart-legend-item"><span class="pt-chart-legend-swatch" style="background:var(--terracotta);"></span>Liquidation zone</span>
+        <span class="pt-chart-legend-item"><span class="pt-chart-legend-swatch" style="background:var(--mustard);"></span>⚠ Margin call zone</span>
+        <span class="pt-chart-legend-item"><span class="pt-chart-legend-swatch" style="background:var(--terracotta);"></span>✕ Liquidation zone</span>
       </div>
       <div class="pt-chart-canvas-wrap">
         <canvas id="price-scenario-chart" role="img" aria-label="Line chart of net profit and loss versus hypothetical BTC price, shaded to show margin call and liquidation zones, with a marker at today's price"></canvas>
@@ -1954,7 +2077,7 @@ button:focus-visible {
     <div class="pt-chart-wrap">
       <div class="pt-chart-header-row">
         <div>
-          <h3 style="margin:0 0 2px;font-family:var(--display);font-size:13px;font-weight:800;color:var(--text);" id="ladder-chart-title">Loan-to-Value &amp; Net P/L across the BTC price ladder</h3>
+          <h3 style="margin:0 0 2px;font-family:var(--display);font-size: 13px;font-weight:800;color:var(--text);" id="ladder-chart-title">Loan-to-Value &amp; Net P/L across the BTC price ladder</h3>
           <div class="price-table-note" id="ladder-chart-note" style="margin:0;">Bars = Net P/L ($, left axis) at each ladder checkpoint · Line = LTV (%, right axis) · red/amber points mark liquidation and margin-call rows.</div>
         </div>
         <div class="pt-basis-toggle" id="ladder-basis-toggle" role="group" aria-label="Choose P/L basis for the bars">
@@ -1964,9 +2087,9 @@ button:focus-visible {
         </div>
       </div>
       <div class="pt-chart-legend" style="margin-top:10px;">
-        <span class="pt-chart-legend-item"><span class="pt-chart-legend-swatch" style="background:var(--moss);"></span><span id="ladder-legend-profit">Net P/L (profit)</span></span>
-        <span class="pt-chart-legend-item"><span class="pt-chart-legend-swatch" style="background:var(--terracotta);"></span>Net P/L (loss) / Liquidated</span>
-        <span class="pt-chart-legend-item"><span class="pt-chart-legend-swatch" style="background:var(--mustard);"></span>Margin call row</span>
+        <span class="pt-chart-legend-item"><span class="pt-chart-legend-swatch" style="background:var(--moss);"></span><span id="ladder-legend-profit">✓ Net P/L (profit)</span></span>
+        <span class="pt-chart-legend-item"><span class="pt-chart-legend-swatch" style="background:var(--terracotta);"></span>✕ Net P/L (loss) / Liquidated</span>
+        <span class="pt-chart-legend-item"><span class="pt-chart-legend-swatch" style="background:var(--mustard);"></span>⚠ Margin call row</span>
         <span class="pt-chart-legend-item"><span class="pt-chart-legend-swatch line" style="background:var(--orange);"></span>LTV %</span>
       </div>
       <div class="pt-chart-canvas-wrap">
@@ -2985,11 +3108,11 @@ function renderPriceChart(d) {
         scales: {
           x: {
             type: 'linear', min: lo, max: hi,
-            ticks: { color: textDim, font: { size: 10 }, callback: v => '$' + Math.round(v / 1000) + 'k' },
+            ticks: { color: textDim, font: { size: 11.5 }, callback: v => '$' + Math.round(v / 1000) + 'k' },
             grid: { display: false }
           },
           y: {
-            ticks: { color: textDim, font: { size: 10 }, callback: v => (v < 0 ? '-$' : '$') + Math.round(Math.abs(v) / 1000) + 'k' },
+            ticks: { color: textDim, font: { size: 11.5 }, callback: v => (v < 0 ? '-$' : '$') + Math.round(Math.abs(v) / 1000) + 'k' },
             grid: { color: border }
           }
         }
@@ -3147,11 +3270,11 @@ function renderBreakevenChart(d) {
         scales: {
           x: {
             type: 'linear', min: lo, max: hi,
-            ticks: { color: textDim, font: { size: 10 }, callback: v => '$' + Math.round(v / 1000) + 'k' },
+            ticks: { color: textDim, font: { size: 11.5 }, callback: v => '$' + Math.round(v / 1000) + 'k' },
             grid: { display: false }
           },
           y: {
-            ticks: { color: textDim, font: { size: 10 }, callback: v => (v < 0 ? '-$' : '$') + Math.round(Math.abs(v) / 1000) + 'k' },
+            ticks: { color: textDim, font: { size: 11.5 }, callback: v => (v < 0 ? '-$' : '$') + Math.round(Math.abs(v) / 1000) + 'k' },
             grid: { color: border }
           }
         }
@@ -3354,16 +3477,16 @@ function renderLadderChart(d) {
       }
     },
     scales: {
-      x: { grid: { display: false }, ticks: { color: textDim, font: { size: 9.5 }, maxRotation: 45, minRotation: 45 } },
+      x: { grid: { display: false }, ticks: { color: textDim, font: { size: 11 }, maxRotation: 0, minRotation: 0, autoSkip: true, maxTicksLimit: 8 } },
       y: {
         position: 'left', grid: { color: border },
-        ticks: { color: textDim, font: { size: 10 }, callback: v => (v < 0 ? '-$' : '$') + Math.round(Math.abs(v) / 1000) + 'k' },
-        title: { display: true, text: basisLabel.toUpperCase() + ' P/L', color: textDim, font: { size: 10 } }
+        ticks: { color: textDim, font: { size: 11.5 }, callback: v => (v < 0 ? '-$' : '$') + Math.round(Math.abs(v) / 1000) + 'k' },
+        title: { display: true, text: basisLabel.toUpperCase() + ' P/L', color: textDim, font: { size: 11.5 } }
       },
       y1: {
         position: 'right', min: 0, grid: { display: false },
-        ticks: { color: orange, font: { size: 10 }, callback: v => v + '%' },
-        title: { display: true, text: 'LTV', color: orange, font: { size: 10 } }
+        ticks: { color: orange, font: { size: 11.5 }, callback: v => v + '%' },
+        title: { display: true, text: 'LTV', color: orange, font: { size: 11.5 } }
       }
     }
   };
@@ -4291,6 +4414,126 @@ window.addEventListener('load', () => {
   render();
   fetchLatestData();
 });
+
+/* ─────────────────────────────────────────────────────
+   GLOSSARY POPOVER — tap/hover a dotted-underline term
+───────────────────────────────────────────────────── */
+(function() {
+  const pop = document.getElementById('glossary-popover');
+  if (!pop) return;
+
+  function showPopover(target) {
+    const term = target.getAttribute('data-term');
+    const def  = target.getAttribute('data-def');
+    if (!term || !def) return;
+    pop.innerHTML = `<span class="gp-term">${term}</span>${def}`;
+    pop.classList.add('show');
+    const r = target.getBoundingClientRect();
+    const popW = 260;
+    let left = r.left;
+    if (left + popW > window.innerWidth - 12) left = window.innerWidth - popW - 12;
+    if (left < 12) left = 12;
+    let top = r.bottom + 8;
+    // flip above if not enough room below
+    if (top + 90 > window.innerHeight) top = r.top - 8;
+    pop.style.left = left + 'px';
+    pop.style.top = (top + (top === r.top - 8 ? -1 : 0)) + 'px';
+    if (top === r.top - 8) pop.style.transform = 'translateY(-100%)';
+    else pop.style.transform = 'none';
+  }
+  function hidePopover() { pop.classList.remove('show'); }
+
+  document.addEventListener('click', (e) => {
+    const term = e.target.closest('.gloss');
+    if (term) {
+      e.stopPropagation();
+      if (pop.classList.contains('show') && pop.dataset.forTerm === term.getAttribute('data-term')) {
+        hidePopover();
+      } else {
+        pop.dataset.forTerm = term.getAttribute('data-term');
+        showPopover(term);
+      }
+    } else if (!e.target.closest('#glossary-popover')) {
+      hidePopover();
+    }
+  });
+  document.querySelectorAll('.gloss').forEach(elm => {
+    elm.addEventListener('mouseenter', () => showPopover(elm));
+    elm.addEventListener('mouseleave', () => { if (!pop.matches(':hover')) hidePopover(); });
+  });
+  window.addEventListener('scroll', hidePopover, true);
+  window.addEventListener('resize', hidePopover);
+})();
+
+/* ─────────────────────────────────────────────────────
+   HIDDEN COMMAND — type "iii" to restore a saved position
+───────────────────────────────────────────────────── */
+(function() {
+  let buf = '';
+  let bufTimer = null;
+
+  function setInputValue(id, value) {
+    const inp = el(id);
+    if (!inp) return;
+    inp.value = value;
+    inp.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  function runHiddenCommand() {
+    setInputValue('inp-btc', 0.035);
+    setInputValue('inp-ltv', 30);
+    setInputValue('inp-entry', 65000);
+    setInputValue('inp-deploy-price', 65000);
+    setInputValue('inp-apr', 6);
+    if (typeof render === 'function') render();
+    if (typeof showRecalcNote === 'function') showRecalcNote();
+    showWelcomeBack();
+  }
+
+  function showWelcomeBack() {
+    const overlay = document.getElementById('cp-overlay');
+    if (!overlay) return;
+    overlay.classList.add('show');
+    const dismiss = () => overlay.classList.remove('show');
+    overlay.onclick = dismiss;
+    setTimeout(dismiss, 2600);
+  }
+
+  document.addEventListener('keydown', (e) => {
+    // ignore while typing in an input/textarea/number field
+    const tag = (e.target && e.target.tagName) || '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    if (e.key.length !== 1) return;
+
+    buf = (buf + e.key.toLowerCase()).slice(-3);
+    clearTimeout(bufTimer);
+    bufTimer = setTimeout(() => { buf = ''; }, 1500);
+
+    if (buf === 'iii') {
+      buf = '';
+      runHiddenCommand();
+    }
+  });
+})();
 </script>
+
+<div id="glossary-popover"></div>
+
+<div id="cp-overlay">
+  <div id="cp-box">
+    <div class="cp-top"><span>NET::ACCESS</span><span>OK</span></div>
+    <div class="cp-title">Welcome Back</div>
+    <div class="cp-sub">position parameters restored<span class="cp-cursor"></span></div>
+    <hr class="cp-rule"/>
+    <div class="cp-log">
+      <div>BTC AMOUNT → 0.035</div>
+      <div>LTV → 30%</div>
+      <div>ENTRY PRICE → $65,000</div>
+      <div>DEPLOYED @ → $65,000</div>
+      <div>APR → 6.0%</div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

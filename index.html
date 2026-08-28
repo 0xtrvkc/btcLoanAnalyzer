@@ -4501,20 +4501,44 @@ window.addEventListener('load', () => {
     inp.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
+  // Single source of truth for the restored position — edit these,
+  // and both the actual inputs AND the "Welcome Back" popup stay in sync.
+  const SAVED_POSITION = {
+    btc: 0.035,
+    ltv: 36,
+    entry: 79422,
+    deployPrice: 79422,
+    apr: 6
+  };
+
   function runHiddenCommand() {
-    setInputValue('inp-btc', 0.035);
-    setInputValue('inp-ltv', 36);
-    setInputValue('inp-entry', 79422);
-    setInputValue('inp-deploy-price', 79422);
-    setInputValue('inp-apr', 6);
+    setInputValue('inp-btc', SAVED_POSITION.btc);
+    setInputValue('inp-ltv', SAVED_POSITION.ltv);
+    setInputValue('inp-entry', SAVED_POSITION.entry);
+    setInputValue('inp-deploy-price', SAVED_POSITION.deployPrice);
+    setInputValue('inp-apr', SAVED_POSITION.apr);
     if (typeof render === 'function') render();
     if (typeof showRecalcNote === 'function') showRecalcNote();
     showWelcomeBack();
   }
 
+  function fmtUSD(n) {
+    return '$' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 });
+  }
+
   function showWelcomeBack() {
     const overlay = document.getElementById('cp-overlay');
     if (!overlay) return;
+    const log = overlay.querySelector('.cp-log');
+    if (log) {
+      log.innerHTML = `
+        <div>BTC AMOUNT → ${SAVED_POSITION.btc}</div>
+        <div>LTV → ${SAVED_POSITION.ltv}%</div>
+        <div>ENTRY PRICE → ${fmtUSD(SAVED_POSITION.entry)}</div>
+        <div>DEPLOYED @ → ${fmtUSD(SAVED_POSITION.deployPrice)}</div>
+        <div>APR → ${SAVED_POSITION.apr.toFixed(1)}%</div>
+      `;
+    }
     overlay.classList.add('show');
     const dismiss = () => overlay.classList.remove('show');
     overlay.onclick = dismiss;
@@ -4547,13 +4571,7 @@ window.addEventListener('load', () => {
     <div class="cp-title">Welcome Back</div>
     <div class="cp-sub">position parameters restored<span class="cp-cursor"></span></div>
     <hr class="cp-rule"/>
-    <div class="cp-log">
-      <div>BTC AMOUNT → 0.035</div>
-      <div>LTV → 30%</div>
-      <div>ENTRY PRICE → $65,000</div>
-      <div>DEPLOYED @ → $65,000</div>
-      <div>APR → 6.0%</div>
-    </div>
+    <div class="cp-log"></div>
   </div>
 </div>
 

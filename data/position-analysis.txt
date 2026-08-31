@@ -1,5 +1,5 @@
 BTC LOAN ANALYZER — SAVED POSITION SNAPSHOT
-Generated: 2026-08-31T08:23:48.721Z
+Generated: 2026-08-31T09:18:38.216Z
 Data source: ✓ Live data · price 2026-08-30 $78,057
 
 -- POSITION --
@@ -11,6 +11,10 @@ Loan amount:         $984
 APR:                 6.0%  (~$59/yr)
 Entry price:         $79,422
 
+-- FLOATING PNL --
+Collateral P&L:      $-47.78  (-1.72%)
+Accrued interest:    n/a (no entry date recorded)
+
 -- RISK --
 Margin call price:   $33,059  (MC LTV 85%)
 Liquidation price:   $31,223  (Liq LTV 90%)
@@ -21,9 +25,9 @@ Kelly-optimal LTV:   No edge
 Risk/Reward:         0.67:1
 
 -- ON-CHAIN CONTEXT --
-MVRV:                1.467  (hist. mean 1.853)
-Z-score:             -0.148
-Cycle:                C4 (2024-27), 60% through
+MVRV:                1.476  (hist. mean 1.853)
+Z-score:             -0.117
+Cycle:                C4 (2024-27), 60.1% through
 ATH:                 $124,728 on 2025-10-06  (current price is -37.4% from ATH)
 
 -- COMPOSITE SCORE --

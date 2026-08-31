@@ -62,14 +62,58 @@ function fmtUSD(n) {
   return '$' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 });
 }
 
+function fmtUSD2(n) {
+  if (!isFinite(n)) return '\u2014';
+  return '$' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 2 });
+}
+
 function fmtPct(n, digits = 1) {
   if (!isFinite(n)) return '\u2014';
   return Number(n).toFixed(digits) + '%';
 }
 
+/**
+ * Floating PnL: unrealized change in collateral value since entry
+ * (d.price vs d.entry, in BTC terms), net of interest accrued on the loan
+ * so far. Uses only fields calc()/D already expose — does not
+ * re-derive price or loan math independently.
+ *
+ * Interest accrual needs a start date. calc()'s d object doesn't appear to
+ * carry one (only d.entry, the entry *price*), so this looks for an
+ * optional D.entryDate / D.positionOpenedAt field and falls back to
+ * "n/a" if neither exists. If your SAVED_POSITION / D object stores the
+ * open date under a different key, change ENTRY_DATE_KEYS below.
+ */
+const ENTRY_DATE_KEYS = ['entryDate', 'positionOpenedAt', 'openedAt'];
+
+function computeFloatingPnl(d, D) {
+  if (!(d.entry > 0) || !isFinite(d.entry) || !isFinite(d.price) || !isFinite(d.btc)) {
+    return null;
+  }
+
+  const collateralPnl = (d.price - d.entry) * d.btc;
+  const collateralPnlPct = (d.price - d.entry) / d.entry * 100;
+
+  const entryDateRaw = ENTRY_DATE_KEYS.map((k) => D[k]).find(Boolean);
+  let daysHeld = null;
+  let accruedInterest = null;
+  let netPnl = collateralPnl;
+
+  if (entryDateRaw && isFinite(d.loan) && isFinite(d.apr)) {
+    daysHeld = (Date.now() - new Date(entryDateRaw).getTime()) / 86400000;
+    if (daysHeld > 0) {
+      accruedInterest = d.loan * d.apr * (daysHeld / 365);
+      netPnl = collateralPnl - accruedInterest;
+    }
+  }
+
+  return { collateralPnl, collateralPnlPct, daysHeld, accruedInterest, netPnl };
+}
+
 function buildReport({ d, D, uploadStatus, staleBannerVisible }) {
   const now = new Date().toISOString();
   const verdict = d.score >= 7 ? 'Borrow-Ready' : d.score >= 5 ? 'Proceed with Care' : 'Use Caution';
+  const pnl = computeFloatingPnl(d, D);
 
   const lines = [
     'BTC LOAN ANALYZER \u2014 SAVED POSITION SNAPSHOT',
@@ -84,6 +128,25 @@ function buildReport({ d, D, uploadStatus, staleBannerVisible }) {
     `Loan amount:         ${fmtUSD(d.loan)}`,
     `APR:                 ${(d.apr * 100).toFixed(1)}%  (~${fmtUSD(d.interest)}/yr)`,
     `Entry price:         ${fmtUSD(d.entry)}`,
+    '',
+    '-- FLOATING PNL --',
+  ];
+
+  if (!pnl) {
+    lines.push('n/a (no entry price set)');
+  } else {
+    lines.push(
+      `Collateral P&L:      ${pnl.collateralPnl >= 0 ? '+' : ''}${fmtUSD2(pnl.collateralPnl)}  (${pnl.collateralPnlPct >= 0 ? '+' : ''}${fmtPct(pnl.collateralPnlPct, 2)})`
+    );
+    if (pnl.accruedInterest !== null) {
+      lines.push(`Accrued interest:    -${fmtUSD2(pnl.accruedInterest)}  (${pnl.daysHeld.toFixed(0)}d held)`);
+      lines.push(`Net P&L:             ${pnl.netPnl >= 0 ? '+' : ''}${fmtUSD2(pnl.netPnl)}`);
+    } else {
+      lines.push('Accrued interest:    n/a (no entry date recorded)');
+    }
+  }
+
+  lines.push(
     '',
     '-- RISK --',
     `Margin call price:   ${fmtUSD(d.mcPrice)}  (MC LTV ${(d.mcLtv * 100).toFixed(0)}%)`,
@@ -109,8 +172,8 @@ function buildReport({ d, D, uploadStatus, staleBannerVisible }) {
     `Est. net gain:       ${d.netGain >= 0 ? '+' : ''}${fmtUSD(d.netGain)}`,
     '',
     '(auto-generated daily by scripts/export-position.js \u2014 do not edit by hand)',
-    '',
-  ];
+    ''
+  );
   return lines.join('\n');
 }
 

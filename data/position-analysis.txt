@@ -1,25 +1,25 @@
 BTC LOAN ANALYZER — SAVED POSITION SNAPSHOT
-Generated: 2026-08-31T09:18:38.216Z
-Data source: ✓ Live data · price 2026-08-30 $78,057
+Generated: 2026-09-01T02:14:48.565Z
+Data source: ✓ Live data · price 2026-08-31 $77,977
 
 -- POSITION --
 BTC collateral:      0.035 BTC
-BTC price:           $78,057  (as of 2026-08-30)
-Collateral value:    $2,732
+BTC price:           $77,977  (as of 2026-08-31)
+Collateral value:    $2,729
 LTV:                 36%
-Loan amount:         $984
+Loan amount:         $983
 APR:                 6.0%  (~$59/yr)
 Entry price:         $79,422
 
 -- FLOATING PNL --
-Collateral P&L:      $-47.78  (-1.72%)
+Collateral P&L:      $-50.56  (-1.82%)
 Accrued interest:    n/a (no entry date recorded)
 
 -- RISK --
-Margin call price:   $33,059  (MC LTV 85%)
-Liquidation price:   $31,223  (Liq LTV 90%)
+Margin call price:   $33,026  (MC LTV 85%)
+Liquidation price:   $31,191  (Liq LTV 90%)
 Drop to liquidation: 60.0%
-Buffer to MC:        $44,997  (57.6%)
+Buffer to MC:        $44,952  (57.6%)
 P(liq within 90d):   0.0%
 Kelly-optimal LTV:   No edge
 Risk/Reward:         0.67:1
@@ -28,7 +28,7 @@ Risk/Reward:         0.67:1
 MVRV:                1.476  (hist. mean 1.853)
 Z-score:             -0.117
 Cycle:                C4 (2024-27), 60.1% through
-ATH:                 $124,728 on 2025-10-06  (current price is -37.4% from ATH)
+ATH:                 $124,728 on 2025-10-06  (current price is -37.5% from ATH)
 
 -- COMPOSITE SCORE --
 Score:               5.9 / 10
@@ -36,6 +36,6 @@ Verdict:             Proceed with Care
 
 -- SCENARIO (price at cycle ceiling) --
 Ceiling price:       $111,822
-Est. net gain:       +$198
+Est. net gain:       +$202
 
 (auto-generated daily by scripts/export-position.js — do not edit by hand)

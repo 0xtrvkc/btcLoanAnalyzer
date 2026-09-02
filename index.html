@@ -3733,6 +3733,42 @@ function parseCycleName(name) {
 const REPO_RAW_BASE = 'https://raw.githubusercontent.com/0xtrvkc/dynamic-btc-analytics-dashboard/main/exports/';
 const DAILY_PRICE_URL = 'https://raw.githubusercontent.com/0xtrvkc/dynamic-btc-analytics-dashboard/main/btc_daily_price.json';
 
+/* ─────────────────────────────────────────────────────
+   LIVE BTC PRICE — Hyperliquid public "info" API
+   (same keyless quote source zframes/zTerminal use for
+   crypto quote-stream/day-stats — no API key, no signup)
+───────────────────────────────────────────────────── */
+const HYPERLIQUID_INFO_URL = 'https://api.hyperliquid.xyz/info';
+
+async function fetchHyperliquidBtcPrice() {
+  const res = await fetch(HYPERLIQUID_INFO_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'allMids' }),
+    cache: 'no-store'
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const mids = await res.json();
+  const price = Number(mids && mids.BTC);
+  if (!isFinite(price) || price <= 0) throw new Error('No BTC mid price in Hyperliquid response');
+  return price;
+}
+
+/* Live price with graceful fallback: try Hyperliquid's free public
+   WebSocket-backed "info" endpoint first (real-time mid price, no
+   key). If that's unreachable (network blocked, CORS, etc.), fall
+   back to the daily snapshot JSON so the app still gets a price. */
+async function fetchLiveBtcPrice() {
+  try {
+    const price = await fetchHyperliquidBtcPrice();
+    return { date: getDateStr(0), price, live: true, source: 'Hyperliquid' };
+  } catch (e) {
+    console.warn('Hyperliquid live price fetch failed, falling back to daily snapshot:', e.message);
+    const dp = await fetchDailyPrice();
+    return { date: dp.date, price: dp.price, live: false, source: 'daily snapshot' };
+  }
+}
+
 function getDateStr(daysAgo) {
   const now = new Date();
   now.setUTCDate(now.getUTCDate() - daysAgo);
@@ -3858,17 +3894,20 @@ async function fetchLatestData() {
 
   let priceNote = '';
   try {
-    const dp = await fetchDailyPrice();
+    const dp = await fetchLiveBtcPrice();
     D.btcPrice = dp.price;
     D.btcPriceDate = dp.date;
+    D.btcPriceLive = dp.live;
     el('inp-price').value = D.btcPrice;
-    priceNote = ` · price ${dp.date} $${fmt(dp.price)}`;
+    priceNote = dp.live
+      ? ` · live price $${fmt(dp.price)} (Hyperliquid)`
+      : ` · price ${dp.date} $${fmt(dp.price)} (fallback snapshot)`;
   } catch (e) {
-    console.error('Daily price fetch failed', e);
+    console.error('BTC price fetch failed', e);
   }
 
   if (!loaded) {
-    el('upload-filename').textContent = (priceNote ? 'Price updated from btc_daily_price.json' : 'Network error') + ' — using built-in MVRV snapshot';
+    el('upload-filename').textContent = (priceNote ? 'Price updated' : 'Network error') + ' — using built-in MVRV snapshot';
     setStatus(priceNote ? `✓ Live price only${priceNote}` : '✗ Could not reach GitHub', priceNote ? 'ok' : 'err');
     const ageHrs = getDataAgeHours(D.date);
     setStaleBanner(true, `⚠ STALE — Using built-in MVRV snapshot (${D.date}, ${Math.round(ageHrs)}h ago). Figures may be outdated.`);
@@ -3879,7 +3918,7 @@ async function fetchLatestData() {
   try {
     const parsed = parseTxt(loaded.text);
     validateParsed(parsed);
-    const btcPrice = D.btcPrice, btcPriceDate = D.btcPriceDate; // preserve JSON-sourced price
+    const btcPrice = D.btcPrice, btcPriceDate = D.btcPriceDate; // preserve live-fetched price
     D = parsed;
     D.btcPrice = btcPrice;
     D.btcPriceDate = btcPriceDate;

@@ -587,6 +587,28 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 .stepper-input.input-error { color: var(--terracotta); }
 .stepper-input.input-ok { color: var(--moss); }
 
+/* ─── LONG-PRESS "CHARGING" INDICATOR (mobile hidden-command trigger) ─── */
+.stepper-wrap.lp-target {
+  position: relative;
+  transition: box-shadow 120ms ease, border-color 120ms ease;
+}
+.stepper-wrap.lp-charging {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 0 rgba(255,122,26,0);
+  transition: box-shadow var(--lp-duration, 800ms) linear, border-color 120ms ease;
+}
+.stepper-wrap.lp-charging.lp-fill {
+  box-shadow: 0 0 0 2px var(--orange), 0 0 16px 3px rgba(255,122,26,0.5);
+}
+.stepper-wrap.lp-complete {
+  animation: lp-pop 320ms ease;
+}
+@keyframes lp-pop {
+  0%   { box-shadow: 0 0 0 2px var(--orange), 0 0 16px 3px rgba(255,122,26,0.5); }
+  40%  { box-shadow: 0 0 0 4px var(--orange), 0 0 26px 8px rgba(255,122,26,0.7); }
+  100% { box-shadow: 0 0 0 0 rgba(255,122,26,0); }
+}
+
 /* ─── LIVE UPDATE NOTE ─── */
 .recalc-toast {
   text-align: center;
@@ -1483,7 +1505,7 @@ button:focus-visible {
       <div class="input-row">
         <span class="input-row-label">BTC Amount</span>
         <span class="input-row-unit">BTC</span>
-        <div class="stepper-wrap">
+        <div class="stepper-wrap" id="btc-amount-wrap">
           <button class="stepper-btn" onclick="step('inp-btc', -0.001, 3)">−</button>
           <input class="stepper-input" type="number" id="inp-btc" value="1" step="0.001" min="0.001" max="1000"/>
           <button class="stepper-btn" onclick="step('inp-btc', 0.001, 3)">+</button>
@@ -4599,6 +4621,91 @@ window.addEventListener('load', () => {
       runHiddenCommand();
     }
   });
+
+  /* ── MOBILE TRIGGER: long-press the BTC Amount field ──
+     Typing "iii" isn't possible on a numeric mobile keypad (no letter
+     keys), so on touch devices the same restore fires from a ~0.8s
+     press-and-hold on the BTC Amount input instead, with a charging
+     glow so it's clear something is happening while you hold it. */
+  (function() {
+    const inp  = el('inp-btc');
+    const wrap = document.getElementById('btc-amount-wrap');
+    if (!inp || !wrap) return;
+    wrap.classList.add('lp-target');
+
+    const HOLD_MS = 800;
+    const MOVE_TOLERANCE = 12;
+    let holdTimer = null, rafId1 = null, rafId2 = null;
+    let pressing = false, completedThisPress = false;
+    let startX = 0, startY = 0;
+
+    function startCharge(x, y) {
+      if (pressing) return;
+      pressing = true;
+      completedThisPress = false;
+      startX = x; startY = y;
+      wrap.style.setProperty('--lp-duration', HOLD_MS + 'ms');
+      wrap.classList.add('lp-charging');
+      // double rAF so the browser paints the "empty" state first —
+      // otherwise it can skip straight to the filled box-shadow.
+      rafId1 = requestAnimationFrame(() => {
+        rafId2 = requestAnimationFrame(() => wrap.classList.add('lp-fill'));
+      });
+      holdTimer = setTimeout(complete, HOLD_MS);
+    }
+
+    function stopCharge() {
+      pressing = false;
+      clearTimeout(holdTimer);
+      cancelAnimationFrame(rafId1);
+      cancelAnimationFrame(rafId2);
+      wrap.classList.remove('lp-charging', 'lp-fill');
+    }
+
+    function complete() {
+      stopCharge();
+      completedThisPress = true;
+      wrap.classList.add('lp-complete');
+      setTimeout(() => wrap.classList.remove('lp-complete'), 340);
+      if (navigator.vibrate) navigator.vibrate(30);
+      if (document.activeElement === inp) inp.blur();
+      runHiddenCommand();
+    }
+
+    function moved(x, y) {
+      return Math.abs(x - startX) > MOVE_TOLERANCE || Math.abs(y - startY) > MOVE_TOLERANCE;
+    }
+
+    // Block the native focus/keyboard while a press could still turn into
+    // a long-press, so the on-screen keyboard doesn't pop up mid-charge.
+    // A quick tap that releases early still focuses the field normally
+    // below, so typing the BTC amount by hand keeps working as before.
+    inp.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const t = e.touches[0];
+      startCharge(t.clientX, t.clientY);
+    }, { passive: false });
+
+    inp.addEventListener('touchmove', (e) => {
+      if (!pressing) return;
+      const t = e.touches[0];
+      if (moved(t.clientX, t.clientY)) stopCharge();
+    }, { passive: true });
+
+    inp.addEventListener('touchend', () => {
+      const wasLongPress = completedThisPress;
+      stopCharge();
+      if (!wasLongPress) inp.focus(); // ordinary tap — edit as usual
+    });
+    inp.addEventListener('touchcancel', stopCharge);
+
+    // Click-and-hold works the same way with a mouse, so it's testable
+    // on desktop too without touching the existing "type iii" shortcut.
+    inp.addEventListener('mousedown', (e) => startCharge(e.clientX, e.clientY));
+    inp.addEventListener('mousemove', (e) => { if (pressing && moved(e.clientX, e.clientY)) stopCharge(); });
+    window.addEventListener('mouseup', stopCharge);
+    inp.addEventListener('mouseleave', stopCharge);
+  })();
 })();
 </script>
 

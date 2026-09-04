@@ -225,6 +225,81 @@ button { font-family: var(--display); cursor: pointer; border: none; }
 [data-theme="dark"] .theme-toggle-btn::after { transform: translateX(16px); }
 .theme-emoji { font-size: 12.5px; }
 
+/* ─── MAIN TABS (Loan / Spot+Futures) ─── */
+.main-tabs {
+  position: sticky;
+  top: 44px;
+  z-index: 99;
+  display: flex;
+  gap: 0;
+  background: var(--cream-2);
+  border-bottom: 1.5px solid var(--border);
+  padding: 0 14px;
+}
+.main-tab-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 11px 6px 10px;
+  font-family: var(--display);
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-dim);
+  border-bottom: 2.5px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.main-tab-btn.active { color: var(--orange); border-bottom-color: var(--orange); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ─── FUTURES: read-only position summary chips ─── */
+.pos-summary-card {
+  background: var(--cream-2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-s);
+  padding: 12px 14px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  align-items: center;
+}
+.pos-summary-item { display: flex; flex-direction: column; gap: 1px; }
+.pos-summary-label {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--text-dim);
+}
+.pos-summary-value { font-family: var(--display); font-weight: 800; font-size: 15px; color: var(--text); }
+.pos-summary-edit {
+  margin-left: auto;
+  background: var(--orange-bg);
+  color: var(--orange-dark);
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+[data-theme="dark"] .pos-summary-edit { color: var(--orange); }
+
+/* ─── FUTURES: side-by-side compare table ─── */
+.cmp-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.cmp-table th, .cmp-table td { padding: 9px 8px; border-bottom: 1px solid var(--border); text-align: right; }
+.cmp-table th:first-child, .cmp-table td:first-child { text-align: left; color: var(--text-mid); font-weight: 600; }
+.cmp-table thead th {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-dim); border-bottom: 1.5px solid var(--border);
+}
+.cmp-table tbody tr:last-child td { border-bottom: none; }
+.cmp-table td.cmp-loan { color: var(--charcoal); font-weight: 700; font-family: var(--mono); }
+.cmp-table td.cmp-fut  { color: var(--orange); font-weight: 700; font-family: var(--mono); }
+[data-theme="dark"] .cmp-table td.cmp-fut { color: var(--orange-2); }
+.cmp-table td .cmp-sub { display: block; font-family: var(--sans); font-weight: 400; font-size: 10.5px; color: var(--text-dim); margin-top: 1px; }
+
 /* ─── GLOSSARY TERMS (tap/hover to define jargon) ─── */
 .gloss {
   border-bottom: 1px dotted var(--text-dim);
@@ -1444,6 +1519,12 @@ button:focus-visible {
   </button>
 </header>
 
+<!-- ═══ MAIN TABS ═══ -->
+<div class="main-tabs" id="main-tabs">
+  <button class="main-tab-btn active" id="tab-btn-loan" onclick="switchTab('loan')">🏦 Loan</button>
+  <button class="main-tab-btn" id="tab-btn-futures" onclick="switchTab('futures')">📉 Spot + Futures</button>
+</div>
+
 <!-- ═══ STALE BANNER ═══ -->
 <div class="stale-banner" id="stale-banner">
   <span>⚠️</span>
@@ -1463,7 +1544,7 @@ button:focus-visible {
 </div>
 
 <!-- ═══ MAIN PAGE ═══ -->
-<div class="page">
+<div class="page tab-panel active" id="tab-panel-loan">
 
   <!-- ══ HERO CARD ══ -->
   <div class="hero-card" id="verdict-hero">
@@ -2191,6 +2272,197 @@ button:focus-visible {
 
 </div><!-- /page -->
 
+<!-- ═══ FUTURES PAGE ═══ -->
+<div class="page tab-panel" id="tab-panel-futures">
+
+  <!-- ══ SHARED POSITION SUMMARY ══ -->
+  <div class="spacer-10"></div>
+  <div class="pos-summary-card">
+    <div class="pos-summary-item">
+      <span class="pos-summary-label">BTC Held</span>
+      <span class="pos-summary-value" id="fs-btc">—</span>
+    </div>
+    <div class="pos-summary-item">
+      <span class="pos-summary-label">Price</span>
+      <span class="pos-summary-value" id="fs-price">—</span>
+    </div>
+    <div class="pos-summary-item">
+      <span class="pos-summary-label">Target</span>
+      <span class="pos-summary-value" id="fs-target">—</span>
+    </div>
+    <button class="pos-summary-edit" onclick="switchTab('loan')">✎ Edit on Loan tab</button>
+  </div>
+  <div class="stat-sub" style="padding:6px 2px 0; opacity:0.7;">
+    BTC amount, price, LTV% (used to size the position) and target price come from the Loan tab — both strategies are sized to the exact same $ exposure so the comparison below is apples-to-apples.
+  </div>
+
+  <!-- ══ FUTURES PARAMETERS ══ -->
+  <div class="spacer-10"></div>
+  <div class="section-header" onclick="toggleSection('fut-inputs-body', this)">
+    <span class="section-header-icon">🎛️</span>
+    <span class="section-header-title">Futures Parameters</span>
+    <span class="section-caret open" id="fut-inputs-caret">▾</span>
+  </div>
+  <div class="section-body" id="fut-inputs-body">
+    <div class="input-card">
+      <div class="input-card-label">Perpetual Long — sized to match your loan's borrow amount</div>
+      <div class="input-row">
+        <span class="input-row-label gloss" data-term="Leverage" data-def="Notional position size ÷ margin you post. Higher leverage = less margin required but a closer liquidation price.">Leverage</span>
+        <span class="input-row-unit">×</span>
+        <div class="stepper-wrap">
+          <button class="stepper-btn" onclick="step('inp-fut-leverage', -1, 0)">−</button>
+          <input class="stepper-input" type="number" id="inp-fut-leverage" value="5" step="1" min="2" max="50"/>
+          <button class="stepper-btn" onclick="step('inp-fut-leverage', 1, 0)">+</button>
+        </div>
+      </div>
+      <div class="input-row">
+        <span class="input-row-label gloss" data-term="Maintenance Margin" data-def="The minimum margin ratio the exchange requires you to maintain. Fall below it and you're liquidated.">Maint. Margin</span>
+        <span class="input-row-unit">%</span>
+        <div class="stepper-wrap">
+          <button class="stepper-btn" onclick="step('inp-fut-mm', -0.1, 1)">−</button>
+          <input class="stepper-input" type="number" id="inp-fut-mm" value="0.5" step="0.1" min="0.1" max="5"/>
+          <button class="stepper-btn" onclick="step('inp-fut-mm', 0.1, 1)">+</button>
+        </div>
+      </div>
+      <div class="input-row">
+        <span class="input-row-label gloss" data-term="Funding Rate" data-def="The periodic payment longs make to shorts (or vice-versa) on a perpetual future, annualized here. Positive = longs pay, a running cost like loan interest.">Funding Rate</span>
+        <span class="input-row-unit">%/yr</span>
+        <div class="stepper-wrap">
+          <button class="stepper-btn" onclick="step('inp-fut-funding', -1, 1)">−</button>
+          <input class="stepper-input" type="number" id="inp-fut-funding" value="10.0" step="1" min="-20" max="60"/>
+          <button class="stepper-btn" onclick="step('inp-fut-funding', 1, 1)">+</button>
+        </div>
+      </div>
+      <div class="input-row">
+        <span class="input-row-label gloss" data-term="Comparison Horizon" data-def="How long you assume it takes to reach your target price. Used only to turn the loan's APR and the futures funding rate into a $ cost for the comparison below.">Horizon to Target</span>
+        <span class="input-row-unit">months</span>
+        <div class="stepper-wrap">
+          <button class="stepper-btn" onclick="step('inp-fut-horizon', -1, 0)">−</button>
+          <input class="stepper-input" type="number" id="inp-fut-horizon" value="12" step="1" min="1" max="48"/>
+          <button class="stepper-btn" onclick="step('inp-fut-horizon', 1, 0)">+</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ FUTURES POSITION ══ -->
+  <div class="spacer-10"></div>
+  <div class="section-header" onclick="toggleSection('fut-position-body', this)">
+    <span class="section-header-icon">📉</span>
+    <span class="section-header-title">Your Futures Position</span>
+    <span class="section-caret open" id="fut-position-caret">▾</span>
+  </div>
+  <div class="section-body" id="fut-position-body">
+    <div class="stat-grid">
+      <div class="stat-card">
+        <span class="stat-icon">🪙</span>
+        <div class="stat-label">Notional Added</div>
+        <div class="stat-value" id="fut-notional-btc">—</div>
+        <div class="stat-sub" id="fut-notional-usd">—</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">🛡️</span>
+        <div class="stat-label">Margin Required</div>
+        <div class="stat-value" id="fut-margin">—</div>
+        <div class="stat-sub" id="fut-margin-sub">Posted to the futures leg only</div>
+      </div>
+      <div class="stat-card full-width" id="fut-spot-safe-card">
+        <span class="stat-icon">🔒</span>
+        <div class="stat-label">Your Spot BTC — Untouched</div>
+        <div class="stat-value" id="fut-spot-safe">—</div>
+        <div class="stat-sub">Not pledged, not at risk of forced liquidation — unlike the loan, where this collateral secures the debt</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">💥</span>
+        <div class="stat-label">Liquidation Price</div>
+        <div class="stat-value" id="fut-liq-price">—</div>
+        <div class="stat-sub" id="fut-liq-drop">—</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">💸</span>
+        <div class="stat-label">Funding Cost</div>
+        <div class="stat-value" id="fut-funding-cost">—</div>
+        <div class="stat-sub" id="fut-funding-cost-sub">Over the horizon above</div>
+      </div>
+    </div>
+    <div class="spacer-10"></div>
+    <div class="formula-box">
+      Notional = your Loan tab's borrow amount (Collateral × LTV%) &nbsp;·&nbsp; Margin = Notional ÷ Leverage &nbsp;·&nbsp;
+      Liq. Price ≈ Entry × (1 − 1/Leverage + Maint. Margin%) &nbsp;·&nbsp; Funding Cost = Notional × Funding Rate × (Horizon ÷ 12)
+    </div>
+  </div>
+
+  <!-- ══ LOAN VS FUTURES COMPARISON ══ -->
+  <div class="spacer-10"></div>
+  <div class="section-header" onclick="toggleSection('fut-compare-body', this)">
+    <span class="section-header-icon">⚖️</span>
+    <span class="section-header-title">Loan vs Futures · Side by Side</span>
+    <span class="section-caret open" id="fut-compare-caret">▾</span>
+  </div>
+  <div class="section-body" id="fut-compare-body">
+    <div class="price-table-wrap">
+      <table class="cmp-table">
+        <thead>
+          <tr><th></th><th>🏦 Loan</th><th>📉 Futures</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Extra BTC exposure</td>
+            <td class="cmp-loan" id="cmp-loan-exposure">—</td>
+            <td class="cmp-fut" id="cmp-fut-exposure">—</td>
+          </tr>
+          <tr>
+            <td>Collateral / margin at risk</td>
+            <td class="cmp-loan" id="cmp-loan-risk">—</td>
+            <td class="cmp-fut" id="cmp-fut-risk">—</td>
+          </tr>
+          <tr>
+            <td>Liquidation trigger</td>
+            <td class="cmp-loan" id="cmp-loan-liq">—</td>
+            <td class="cmp-fut" id="cmp-fut-liq">—</td>
+          </tr>
+          <tr>
+            <td>Distance to liquidation</td>
+            <td class="cmp-loan" id="cmp-loan-liq-dist">—</td>
+            <td class="cmp-fut" id="cmp-fut-liq-dist">—</td>
+          </tr>
+          <tr>
+            <td>Financing cost (horizon)</td>
+            <td class="cmp-loan" id="cmp-loan-cost">—</td>
+            <td class="cmp-fut" id="cmp-fut-cost">—</td>
+          </tr>
+          <tr>
+            <td>Breakeven (excl. cost)</td>
+            <td class="cmp-loan" id="cmp-loan-be">—</td>
+            <td class="cmp-fut" id="cmp-fut-be">—</td>
+          </tr>
+          <tr>
+            <td>Breakeven (incl. cost)</td>
+            <td class="cmp-loan" id="cmp-loan-be-adj">—</td>
+            <td class="cmp-fut" id="cmp-fut-be-adj">—</td>
+          </tr>
+          <tr>
+            <td>Net P&amp;L at target</td>
+            <td class="cmp-loan" id="cmp-loan-pnl">—</td>
+            <td class="cmp-fut" id="cmp-fut-pnl">—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="spacer-10"></div>
+    <div class="quant-card" id="fut-narrative-box">
+      <div class="quant-header">Analyst View · Loan vs Futures</div>
+      <div class="quant-text" id="fut-narrative-text"></div>
+    </div>
+    <div class="price-table-note">
+      Both legs are sized to the exact same extra BTC exposure, so any P&amp;L difference above comes only from financing cost
+      (APR vs funding rate) and where the two liquidation prices sit. Funding rates float in reality — this uses the flat annualized
+      rate you set above as an assumption. Not financial advice.
+    </div>
+  </div>
+
+</div><!-- /futures page -->
+
 <!-- ═══ FOOTER ═══ -->
 <footer class="app-footer">
   <div class="footer-text" id="footer-data">MVRV Data: loading…</div>
@@ -2263,6 +2535,22 @@ function showRecalcNote() {
   setTimeout(() => { note.textContent = '↺ All figures update live'; }, 1400);
 }
 
+/* ─────────────────────────────────────────────────────
+   TAB SWITCHING (Loan / Spot+Futures)
+───────────────────────────────────────────────────── */
+function switchTab(tab) {
+  const loanBtn = el('tab-btn-loan'), futBtn = el('tab-btn-futures');
+  const loanPanel = el('tab-panel-loan'), futPanel = el('tab-panel-futures');
+  if (!loanBtn || !futBtn || !loanPanel || !futPanel) return;
+  const toFutures = tab === 'futures';
+  loanBtn.classList.toggle('active', !toFutures);
+  futBtn.classList.toggle('active', toFutures);
+  loanPanel.classList.toggle('active', !toFutures);
+  futPanel.classList.toggle('active', toFutures);
+  window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+  render();
+}
+
 /* Section toggle */
 function toggleSection(bodyId, headerEl) {
   const body = el(bodyId);
@@ -2293,6 +2581,14 @@ function getDeployPrice(fallback) {
   return v;
 }
 function getTargetPrice(){ return readInput('inp-target-price', 1000, 10000000, D.btcPrice); }
+
+/* ─────────────────────────────────────────────────────
+   FUTURES PARAMETER GETTERS
+───────────────────────────────────────────────────── */
+function getFutLeverage() { return readInput('inp-fut-leverage', 2,    50, 5);    }
+function getFutMM()       { return readInput('inp-fut-mm',       0.1,  5,  0.5)  / 100; }
+function getFutFunding()  { return readInput('inp-fut-funding', -20,  60, 10.0)  / 100; }
+function getFutHorizon()  { return readInput('inp-fut-horizon',  1,   48, 12);   }
 
 /* ─────────────────────────────────────────────────────
    DATA STATE
@@ -2528,6 +2824,57 @@ function calc() {
 }
 
 /* ─────────────────────────────────────────────────────
+   FUTURES CALCULATION — sized to match the Loan tab's
+   borrowed $ amount, so exposure is identical and only
+   cost + liquidation mechanics differ.
+───────────────────────────────────────────────────── */
+function calcFutures(d) {
+  const leverage   = getFutLeverage();
+  const mmRate     = getFutMM();
+  const fundingApr = getFutFunding();
+  const horizonM   = getFutHorizon();
+  const horizonYrs = horizonM / 12;
+
+  // Same $ notional as the loan would have borrowed; same BTC-equivalent as newBtc.
+  const notionalUsd  = d.loan;
+  const notionalBtc  = d.newBtc;
+  const entryPrice   = d.deployPrice;
+  const margin       = leverage > 0 ? notionalUsd / leverage : NaN;
+
+  // Isolated-margin long liquidation price (standard perp approximation)
+  let liqPrice = entryPrice * (1 - (1 / leverage) + mmRate);
+  if (!isFinite(liqPrice) || liqPrice < 0) liqPrice = 0;
+  const liqDropPct = parseFloat(pctDrop(d.price, liqPrice));
+
+  const fundingCost = notionalUsd * fundingApr * horizonYrs;
+  const interestCostHorizon = d.loan * d.apr * horizonYrs;
+
+  // Breakeven excl. financing cost — mirrors the loan's simple breakeven but
+  // with no principal owed (margin is your own money, not debt).
+  const breakevenSimple = d.totalBtc > 0 ? (d.collateral - d.undeployedUsd) / d.totalBtc : NaN;
+  const breakevenAdj    = breakevenSimple + (isFinite(fundingCost) && d.totalBtc > 0 ? fundingCost / d.totalBtc : 0);
+
+  // Loan's cost-adjusted breakeven, for the comparison table
+  const loanBreakevenAdj = d.breakevenPrice + (isFinite(interestCostHorizon) && d.totalBtc > 0 ? interestCostHorizon / d.totalBtc : 0);
+
+  // P&L at target, cost-adjusted. d.netProfit already isolates the pure
+  // price-exposure gain (identical for both legs) excluding financing cost.
+  const pnlLoanAdj = d.netProfit - interestCostHorizon;
+  const pnlFutAdj  = d.netProfit - fundingCost;
+
+  const returnLoanPct = margin > 0 ? (pnlLoanAdj / d.collateral) * 100 : NaN; // vs collateral pledged
+  const returnFutPct  = margin > 0 ? (pnlFutAdj  / margin) * 100 : NaN;      // vs margin actually posted
+
+  return {
+    leverage, mmRate, fundingApr, horizonM, horizonYrs,
+    notionalUsd, notionalBtc, entryPrice, margin,
+    liqPrice, liqDropPct, fundingCost, interestCostHorizon,
+    breakevenSimple, breakevenAdj, loanBreakevenAdj,
+    pnlLoanAdj, pnlFutAdj, returnLoanPct, returnFutPct
+  };
+}
+
+/* ─────────────────────────────────────────────────────
    WEIGHT DISPLAY
 ───────────────────────────────────────────────────── */
 function updateWeightDisplay() {
@@ -2675,6 +3022,72 @@ function renderSignals() {
 /* ─────────────────────────────────────────────────────
    MAIN RENDER
 ───────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────
+   RENDER FUTURES TAB
+───────────────────────────────────────────────────── */
+function renderFuturesTab(d) {
+  const f = calcFutures(d);
+
+  // Position summary chips
+  el('fs-btc').textContent    = d.btc + ' BTC';
+  el('fs-price').textContent  = fmtUSD(d.price);
+  el('fs-target').textContent = fmtUSD(d.targetPrice);
+
+  // Futures position stats
+  el('fut-notional-btc').textContent = '+' + f.notionalBtc.toFixed(4) + ' BTC';
+  el('fut-notional-usd').textContent = fmtUSD(f.notionalUsd) + ' notional @ ' + f.leverage + '×';
+  el('fut-margin').textContent = fmtUSD(f.margin);
+  el('fut-margin-sub').textContent = `Posted to the futures leg only (${f.leverage}× leverage)`;
+  el('fut-spot-safe').textContent = d.btc + ' BTC (' + fmtUSD(d.collateral) + ')';
+  el('fut-liq-price').textContent = fmtUSD(f.liqPrice);
+  const futLiqDropEl = el('fut-liq-drop');
+  futLiqDropEl.textContent = f.liqDropPct.toFixed(1) + '% from current price';
+  futLiqDropEl.parentElement.classList.toggle('highlight-danger', Math.abs(f.liqDropPct) < 15);
+  el('fut-funding-cost').textContent = (f.fundingCost >= 0 ? '' : '+') + fmtUSD(Math.abs(f.fundingCost)) + (f.fundingCost >= 0 ? ' paid' : ' received');
+  el('fut-funding-cost-sub').textContent = `${f.horizonM} mo @ ${(f.fundingApr*100).toFixed(1)}%/yr on ${fmtUSD(f.notionalUsd)} notional`;
+
+  // Comparison table
+  el('cmp-loan-exposure').textContent = '+' + d.newBtc.toFixed(4) + ' BTC';
+  el('cmp-fut-exposure').textContent  = '+' + f.notionalBtc.toFixed(4) + ' BTC';
+
+  el('cmp-loan-risk').innerHTML = fmtUSD(d.collateral) + '<span class="cmp-sub">entire ' + d.btc + ' BTC collateral</span>';
+  el('cmp-fut-risk').innerHTML  = fmtUSD(f.margin) + '<span class="cmp-sub">margin only — spot BTC untouched</span>';
+
+  el('cmp-loan-liq').textContent = fmtUSD(d.liqPrice);
+  el('cmp-fut-liq').textContent  = fmtUSD(f.liqPrice);
+
+  el('cmp-loan-liq-dist').textContent = d.liqDropPct.toFixed(1) + '%';
+  el('cmp-fut-liq-dist').textContent  = f.liqDropPct.toFixed(1) + '%';
+
+  el('cmp-loan-cost').innerHTML = fmtUSD(f.interestCostHorizon) + '<span class="cmp-sub">' + (d.apr*100).toFixed(1) + '%/yr APR</span>';
+  el('cmp-fut-cost').innerHTML  = fmtUSD(f.fundingCost) + '<span class="cmp-sub">' + (f.fundingApr*100).toFixed(1) + '%/yr funding</span>';
+
+  el('cmp-loan-be').textContent = fmtUSD(d.breakevenPrice);
+  el('cmp-fut-be').textContent  = fmtUSD(f.breakevenSimple);
+
+  el('cmp-loan-be-adj').textContent = fmtUSD(f.loanBreakevenAdj);
+  el('cmp-fut-be-adj').textContent  = fmtUSD(f.breakevenAdj);
+
+  const loanPnlEl = el('cmp-loan-pnl'), futPnlEl = el('cmp-fut-pnl');
+  loanPnlEl.innerHTML = (f.pnlLoanAdj >= 0 ? '+' : '−') + fmtUSD(Math.abs(f.pnlLoanAdj)) + '<span class="cmp-sub">' + (isFinite(f.returnLoanPct) ? f.returnLoanPct.toFixed(0)+'% on collateral' : '') + '</span>';
+  futPnlEl.innerHTML  = (f.pnlFutAdj  >= 0 ? '+' : '−') + fmtUSD(Math.abs(f.pnlFutAdj))  + '<span class="cmp-sub">' + (isFinite(f.returnFutPct)  ? f.returnFutPct.toFixed(0)+'% on margin'     : '') + '</span>';
+
+  // Narrative
+  const costDiff = f.fundingCost - f.interestCostHorizon;
+  const cheaper = costDiff < 0 ? 'Futures' : costDiff > 0 ? 'Loan' : 'Neither';
+  const liqDiff = Math.abs(f.liqDropPct) - Math.abs(d.liqDropPct); // + means futures liq is farther away
+  const saferSide = liqDiff > 0 ? 'the loan' : liqDiff < 0 ? 'futures' : 'neither';
+  const pnlDiff = f.pnlFutAdj - f.pnlLoanAdj;
+  let narrative = `Both legs add the same <strong>${f.notionalBtc.toFixed(4)} BTC</strong> of exposure, so at your target of ${fmtUSD(d.targetPrice)} the raw price gain is identical — the difference is entirely cost and liquidation risk. `;
+  narrative += `Over ${f.horizonM} months, <strong>${cheaper}</strong> is the cheaper way to carry the position, by ${fmtUSD(Math.abs(costDiff))} `
+    + `(loan interest ${fmtUSD(f.interestCostHorizon)} vs. futures funding ${fmtUSD(f.fundingCost)} — funding is a floating rate in reality, this uses your flat assumption above). `;
+  narrative += `On liquidation risk, ${saferSide === 'neither' ? 'both sides sit the same distance away' : saferSide + ' currently needs a bigger drop to get liquidated'} `
+    + `(loan: ${Math.abs(d.liqDropPct).toFixed(0)}% to ${fmtUSD(d.liqPrice)} · futures: ${Math.abs(f.liqDropPct).toFixed(0)}% to ${fmtUSD(f.liqPrice)} at ${f.leverage}× leverage). `;
+  narrative += `Note the loan puts your entire ${d.btc} BTC collateral at risk if it liquidates, while the futures leg only risks the ${fmtUSD(f.margin)} margin posted — your spot BTC stays untouched either way. `;
+  narrative += `Net result at target: futures ${pnlDiff >= 0 ? 'comes out ahead by' : 'trails by'} ${fmtUSD(Math.abs(pnlDiff))} after costs, given the assumptions above.`;
+  el('fut-narrative-text').innerHTML = narrative;
+}
+
 function render() {
   const d = calc();
 
@@ -2812,6 +3225,7 @@ function render() {
   renderDeployAllocation(d);
   renderBreakevenChart(d);
   renderLadderChart(d);
+  renderFuturesTab(d);
 }
 
 /* ─────────────────────────────────────────────────────
@@ -4463,7 +4877,8 @@ themeToggle.addEventListener('click', () => {
 /* ─────────────────────────────────────────────────────
    INPUT LISTENERS
 ───────────────────────────────────────────────────── */
-['inp-btc','inp-price','inp-ltv','inp-mc-ltv','inp-liq-ltv','inp-apr','inp-vol','inp-entry','inp-deploy-pct','inp-deploy-price','inp-target-price'].forEach(id => {
+['inp-btc','inp-price','inp-ltv','inp-mc-ltv','inp-liq-ltv','inp-apr','inp-vol','inp-entry','inp-deploy-pct','inp-deploy-price','inp-target-price',
+ 'inp-fut-leverage','inp-fut-mm','inp-fut-funding','inp-fut-horizon'].forEach(id => {
   const inp = el(id);
   if (!inp) return;
   inp.addEventListener('input', () => { render(); showRecalcNote(); });
@@ -4569,7 +4984,8 @@ window.addEventListener('load', () => {
     ltv: 36,
     entry: 79422,
     deployPrice: 79422,
-    apr: 6
+    apr: 6,
+    get target() { return this.entry * 2; } // always 2x entry, never hardcoded
   };
 
   function runHiddenCommand() {
@@ -4578,6 +4994,7 @@ window.addEventListener('load', () => {
     setInputValue('inp-entry', SAVED_POSITION.entry);
     setInputValue('inp-deploy-price', SAVED_POSITION.deployPrice);
     setInputValue('inp-apr', SAVED_POSITION.apr);
+    setInputValue('inp-target-price', SAVED_POSITION.target);
     if (typeof render === 'function') render();
     if (typeof showRecalcNote === 'function') showRecalcNote();
     showWelcomeBack();
@@ -4598,6 +5015,7 @@ window.addEventListener('load', () => {
         <div>ENTRY PRICE → ${fmtUSD(SAVED_POSITION.entry)}</div>
         <div>DEPLOYED @ → ${fmtUSD(SAVED_POSITION.deployPrice)}</div>
         <div>APR → ${SAVED_POSITION.apr.toFixed(1)}%</div>
+        <div>TARGET (2× ENTRY) → ${fmtUSD(SAVED_POSITION.target)}</div>
       `;
     }
     overlay.classList.add('show');

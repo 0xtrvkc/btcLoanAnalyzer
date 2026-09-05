@@ -1,41 +1,41 @@
 BTC LOAN ANALYZER — SAVED POSITION SNAPSHOT
-Generated: 2026-09-04T05:46:46.901Z
-Data source: ✓ Live data · live price $80,956 (Hyperliquid)
+Generated: 2026-09-05T05:30:14.293Z
+Data source: ✓ Live data · live price $79,554 (Hyperliquid)
 
 -- POSITION --
 BTC collateral:      0.035 BTC
-BTC price:           $80,956  (as of 2026-09-04)
-Collateral value:    $2,833
+BTC price:           $79,554  (as of 2026-09-05)
+Collateral value:    $2,784
 LTV:                 36%
-Loan amount:         $1,020
-APR:                 6.0%  (~$61/yr)
+Loan amount:         $1,002
+APR:                 6.0%  (~$60/yr)
 Entry price:         $79,422
 
 -- FLOATING PNL --
-Collateral P&L:      +$53.67  (+1.93%)
+Collateral P&L:      +$4.6  (+0.17%)
 Accrued interest:    n/a (no entry date recorded)
 
 -- RISK --
-Margin call price:   $34,287  (MC LTV 85%)
-Liquidation price:   $32,382  (Liq LTV 90%)
+Margin call price:   $33,693  (MC LTV 85%)
+Liquidation price:   $31,821  (Liq LTV 90%)
 Drop to liquidation: 60.0%
-Buffer to MC:        $46,668  (57.6%)
+Buffer to MC:        $45,860  (57.6%)
 P(liq within 90d):   0.0%
-Kelly-optimal LTV:   No edge
-Risk/Reward:         0.69:1
+Kelly-optimal LTV:   1%
+Risk/Reward:         0.68:1
 
 -- ON-CHAIN CONTEXT --
-MVRV:                1.455  (hist. mean 1.853)
-Z-score:             -0.168
-Cycle:                C4 (2024-27), 60.3% through
-ATH:                 $124,728 on 2025-10-06  (current price is -35.1% from ATH)
+MVRV:                1.518  (hist. mean 1.853)
+Z-score:             0.044
+Cycle:                C4 (2024-27), 60.4% through
+ATH:                 $124,728 on 2025-10-06  (current price is -36.2% from ATH)
 
 -- COMPOSITE SCORE --
-Score:               6.0 / 10
+Score:               6.8 / 10
 Verdict:             Proceed with Care
 
 -- SCENARIO (price at cycle ceiling) --
 Ceiling price:       $111,822
-Est. net gain:       +$60
+Est. net gain:       +$127
 
 (auto-generated daily by scripts/export-position.js — do not edit by hand)

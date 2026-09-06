@@ -1964,6 +1964,128 @@ button:focus-visible {
     </div>
 
     <div class="spacer-10"></div>
+    <div class="scenario-card" id="pc-twopots-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:2px;">
+        <span class="scenario-tag" style="background:var(--orange-bg);color:var(--orange);">Two Separate Pots</span>
+        <div class="pt-basis-toggle" role="tablist" aria-label="Display mode">
+          <button type="button" class="pt-basis-toggle-btn active" id="tp-mode-btn-eli5" onclick="setTwoPotsMode('eli5')">🧸 ELI5</button>
+          <button type="button" class="pt-basis-toggle-btn" id="tp-mode-btn-quant" onclick="setTwoPotsMode('quant')">📊 Quant</button>
+        </div>
+      </div>
+      <div style="font-size:10.5px;color:var(--text-dim);margin-bottom:2px;">Priced at today's BTC price — not the Target Price above</div>
+
+      <!-- ══ ELI5 VIEW ══ -->
+      <div id="tp-view-eli5">
+      <div class="scenario-title">You end up with TWO piggy banks of BTC</div>
+
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:14px 0 6px;">
+        <!-- POT 1 -->
+        <div style="flex:1;min-width:140px;background:var(--moss-bg);border:1.5px solid var(--moss-light);border-radius:var(--radius-s);padding:14px 10px;text-align:center;">
+          <div style="font-size:32px;line-height:1;">🐷</div>
+          <div style="font-family:var(--display);font-weight:800;font-size:11px;letter-spacing:0.03em;color:var(--text-mid);margin:8px 0 1px;">POT 1</div>
+          <div style="font-family:var(--display);font-weight:700;font-size:13px;margin-bottom:10px;">Your Own Coins</div>
+
+          <div style="font-size:10.5px;color:var(--text-mid);">You started with</div>
+          <div style="font-family:var(--mono);font-weight:600;font-size:14px;" id="tp-collateral-btc">— BTC</div>
+          <div style="font-family:var(--mono);font-size:10.5px;color:var(--text-dim);margin-bottom:8px;" id="tp-collateral-value">—</div>
+
+          <div style="font-size:10.5px;color:var(--text-mid);">🧾 Pay back what you owe</div>
+          <div style="font-family:var(--mono);font-size:12.5px;color:var(--terracotta);margin-bottom:8px;" id="tp-collateral-minus-debt">−$0</div>
+
+          <div style="height:1px;background:var(--moss-light);opacity:0.4;margin:8px 0;"></div>
+          <div style="font-size:10.5px;color:var(--text-mid);">🎉 You keep</div>
+          <div style="font-family:var(--mono);font-weight:800;font-size:18px;color:var(--moss);" id="tp-collateral-leftover-btc">— BTC</div>
+          <div style="font-family:var(--mono);font-size:10.5px;color:var(--text-dim);" id="tp-collateral-leftover">—</div>
+        </div>
+
+        <div style="font-size:22px;font-weight:800;color:var(--text-dim);padding:0 2px;">+</div>
+
+        <!-- POT 2 -->
+        <div style="flex:1;min-width:140px;background:var(--orange-bg);border:1.5px solid var(--orange-2);border-radius:var(--radius-s);padding:14px 10px;text-align:center;display:flex;flex-direction:column;justify-content:center;">
+          <div style="font-size:32px;line-height:1;">🎁</div>
+          <div style="font-family:var(--display);font-weight:800;font-size:11px;letter-spacing:0.03em;color:var(--text-mid);margin:8px 0 1px;">POT 2</div>
+          <div style="font-family:var(--display);font-weight:700;font-size:13px;margin-bottom:10px;">Bonus Coins</div>
+
+          <div style="font-size:10.5px;color:var(--text-mid);">Bought with borrowed money</div>
+          <div style="font-size:10.5px;color:var(--text-mid);margin-bottom:8px;">(already paid back in Pot 1 👆)</div>
+
+          <div style="height:1px;background:var(--orange-2);opacity:0.4;margin:8px 0;"></div>
+          <div style="font-size:10.5px;color:var(--text-mid);">🎉 All yours</div>
+          <div style="font-family:var(--mono);font-weight:800;font-size:18px;color:var(--orange);" id="tp-newbtc-amt">— BTC</div>
+          <div style="font-family:var(--mono);font-size:10.5px;color:var(--text-dim);" id="tp-newbtc-value">—</div>
+        </div>
+      </div>
+
+      <div style="text-align:center;font-size:20px;color:var(--text-dim);margin:2px 0;">⬇️</div>
+
+      <div style="background:var(--surface);border:2px solid var(--moss-light);border-radius:var(--radius-s);padding:16px;text-align:center;">
+        <div style="font-size:26px;">🏆</div>
+        <div style="font-family:var(--display);font-weight:700;font-size:12.5px;color:var(--text-mid);margin:6px 0 4px;">Total BTC in your wallet</div>
+        <div style="font-family:var(--mono);font-weight:800;font-size:26px;color:var(--moss);" id="tp-combined-btc">— BTC</div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:4px;">worth about <span id="tp-combined">—</span></div>
+      </div>
+
+      <div class="price-table-note" style="margin-top:12px;">
+        Two jars, not one. 🐷 Jar 1 is your own coins — some get used to pay back what you borrowed, and whatever's left comes back to you. 🎁 Jar 2 is brand-new coins bought with the borrowed money — they're a separate jar, fully yours, and their value goes up and down on its own. Add the two jars together and that's everything you end up holding.
+      </div>
+      </div>
+
+      <!-- ══ QUANT VIEW ══ -->
+      <div id="tp-view-quant" style="display:none;">
+        <div class="scenario-title">Position decomposition at current price</div>
+
+        <div class="scenario-row">
+          <span class="scenario-row-key">Collateral, ₿<sub>0</sub></span>
+          <span class="scenario-row-val" id="qt-collateral-btc">—</span>
+        </div>
+        <div class="scenario-row">
+          <span class="scenario-row-key">Mark value, ₿<sub>0</sub> × P<sub>0</sub></span>
+          <span class="scenario-row-val" id="qt-collateral-value">—</span>
+        </div>
+        <div class="scenario-row">
+          <span class="scenario-row-key">Debt notional (principal + accrued interest)</span>
+          <span class="scenario-row-val dn" id="qt-debt-usd">—</span>
+        </div>
+        <div class="scenario-row">
+          <span class="scenario-row-key">Debt, BTC-equiv @ P<sub>0</sub> → D / P<sub>0</sub></span>
+          <span class="scenario-row-val dn" id="qt-debt-btc">—</span>
+        </div>
+        <div class="scenario-row" style="border-top:1.5px dashed var(--cream-border);margin-top:4px;padding-top:11px;">
+          <span class="scenario-row-key">Residual collateral, ₿<sub>res</sub> = ₿<sub>0</sub> − D/P<sub>0</sub></span>
+          <span class="scenario-row-val up" id="qt-residual-btc">—</span>
+        </div>
+        <div class="scenario-row">
+          <span class="scenario-row-key">Residual mark value, ₿<sub>res</sub> × P<sub>0</sub></span>
+          <span class="scenario-row-val" id="qt-residual-usd">—</span>
+        </div>
+        <div class="scenario-row" style="border-top:1.5px dashed var(--cream-border);margin-top:4px;padding-top:11px;">
+          <span class="scenario-row-key">New position, ₿<sub>new</sub> = Loan × Deploy% / P<sub>deploy</sub></span>
+          <span class="scenario-row-val" id="qt-newbtc-btc">—</span>
+        </div>
+        <div class="scenario-row">
+          <span class="scenario-row-key">Mark value, ₿<sub>new</sub> × P<sub>0</sub></span>
+          <span class="scenario-row-val" id="qt-newbtc-usd">—</span>
+        </div>
+        <div class="scenario-row" style="border-top:1.5px solid var(--cream-border);margin-top:4px;padding-top:11px;">
+          <span class="scenario-row-key"><strong>Aggregate exposure, ₿<sub>agg</sub> = ₿<sub>res</sub> + ₿<sub>new</sub></strong></span>
+          <span class="scenario-row-val" id="qt-agg-btc" style="font-size:14px;font-weight:700;">—</span>
+        </div>
+        <div class="scenario-row">
+          <span class="scenario-row-key">Mark-to-market, ₿<sub>agg</sub> × P<sub>0</sub></span>
+          <span class="scenario-row-val" id="qt-agg-usd">—</span>
+        </div>
+        <div class="scenario-row">
+          <span class="scenario-row-key">Implied collateral utilization, D / (₿<sub>0</sub> × P<sub>0</sub>)</span>
+          <span class="scenario-row-val" id="qt-util-pct">—</span>
+        </div>
+
+        <div class="formula-box" style="margin-top:12px;">
+          ₿<sub>res</sub> = ₿<sub>0</sub> − D/P<sub>0</sub> &nbsp;·&nbsp; ₿<sub>agg</sub> = ₿<sub>res</sub> + ₿<sub>new</sub> &nbsp;·&nbsp; <span style="opacity:0.6;">₿<sub>new</sub> is uncorrelated with the repayment math above — it's an independent long position, not a residual.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="spacer-10"></div>
     <div class="formula-box" id="pc-formula">
       New BTC = (Loan × Deploy%) ÷ Current BTC Price &nbsp;·&nbsp; Total Assets = (Collateral + New) BTC × Target Price + Undeployed Cash &nbsp;·&nbsp; Net P&amp;L = Total Assets − Loan Principal − Original Collateral Value &nbsp;·&nbsp; <span style="opacity:0.6;">Interest accrues separately (see Loan Math above) and is not deducted here.</span>
     </div>
@@ -4103,6 +4225,64 @@ function renderProfitCalc(d) {
     breakEl.textContent = '—';
     el('pc-breakeven-sub').textContent = 'Set position values above to calculate';
   }
+
+  // ── Two Pots breakdown ──
+  // Makes explicit that (1) leftover collateral after repaying the loan and
+  // (2) new BTC bought with the borrowed money are two separate pools —
+  // they don't merge into one balance automatically, mirroring how a
+  // "Repay With Collateral" flow on an exchange only ever touches pot 1.
+  const collateralValueAtTarget = d.btc * d.price;
+  const collateralLeftover      = collateralValueAtTarget - d.debtOwed;
+  const debtBtcAtTarget         = d.price > 0 ? d.debtOwed / d.price : 0;
+  const collateralLeftoverBtc   = d.btc - debtBtcAtTarget; // BTC actually returned, repay-with-collateral style
+  const newBtcValueAtTarget     = d.newBtc * d.price;
+  const combinedAfterRepay      = collateralLeftover + newBtcValueAtTarget + (d.undeployedUsd || 0);
+  const combinedBtcAfterRepay   = collateralLeftoverBtc + d.newBtc;
+
+  const tpVals = {
+    'tp-collateral-btc':        d.btc.toFixed(4) + ' BTC',
+    'tp-collateral-value':      fmtUSD(collateralValueAtTarget),
+    'tp-collateral-minus-debt': '−' + fmtUSD(d.debtOwed),
+    'tp-collateral-leftover':   (collateralLeftover < 0 ? '−' : '') + fmtUSD(Math.abs(collateralLeftover)),
+    'tp-collateral-leftover-btc': (collateralLeftoverBtc < 0 ? '−' : '') + Math.abs(collateralLeftoverBtc).toFixed(4) + ' BTC',
+    'tp-newbtc-amt':            d.newBtc.toFixed(4) + ' BTC',
+    'tp-newbtc-value':          fmtUSD(newBtcValueAtTarget),
+    'tp-combined':              fmtUSD(combinedAfterRepay),
+    'tp-combined-btc':          (combinedBtcAfterRepay < 0 ? '−' : '') + Math.abs(combinedBtcAfterRepay).toFixed(4) + ' BTC',
+
+    // Quant view — same underlying numbers, higher precision, denser labels
+    'qt-collateral-btc':   d.btc.toFixed(6) + ' ₿',
+    'qt-collateral-value': fmtUSD(collateralValueAtTarget),
+    'qt-debt-usd':         '−' + fmtUSD(d.debtOwed),
+    'qt-debt-btc':         '−' + debtBtcAtTarget.toFixed(6) + ' ₿',
+    'qt-residual-btc':     (collateralLeftoverBtc < 0 ? '−' : '') + Math.abs(collateralLeftoverBtc).toFixed(6) + ' ₿',
+    'qt-residual-usd':     fmtUSD(collateralLeftover),
+    'qt-newbtc-btc':       d.newBtc.toFixed(6) + ' ₿',
+    'qt-newbtc-usd':       fmtUSD(newBtcValueAtTarget),
+    'qt-agg-btc':          (combinedBtcAfterRepay < 0 ? '−' : '') + Math.abs(combinedBtcAfterRepay).toFixed(6) + ' ₿',
+    'qt-agg-usd':          fmtUSD(combinedAfterRepay),
+    'qt-util-pct':         collateralValueAtTarget > 0 ? (d.debtOwed / collateralValueAtTarget * 100).toFixed(1) + '%' : '—'
+  };
+  Object.keys(tpVals).forEach(id => { const e = el(id); if (e) e.textContent = tpVals[id]; });
+
+  const leftoverEl = el('tp-collateral-leftover');
+  if (leftoverEl) leftoverEl.className = 'scenario-row-val ' + (collateralLeftover >= 0 ? 'up' : 'dn');
+}
+
+/* Toggle between the ELI5 jar-card view and the dense quant decomposition
+   view in the "Two Separate Pots" card — same underlying numbers and same
+   goal (show returned collateral vs. new BTC separately), two reading levels. */
+function setTwoPotsMode(mode) {
+  const eli5View  = el('tp-view-eli5');
+  const quantView = el('tp-view-quant');
+  const btnEli5   = el('tp-mode-btn-eli5');
+  const btnQuant  = el('tp-mode-btn-quant');
+  if (!eli5View || !quantView) return;
+  const isQuant = mode === 'quant';
+  eli5View.style.display  = isQuant ? 'none' : '';
+  quantView.style.display = isQuant ? '' : 'none';
+  if (btnEli5)  btnEli5.className  = 'pt-basis-toggle-btn' + (isQuant ? '' : ' active');
+  if (btnQuant) btnQuant.className = 'pt-basis-toggle-btn' + (isQuant ? ' active' : '');
 }
 
 /* Quick-target buttons */

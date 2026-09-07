@@ -1,10 +1,13 @@
 {
   "name": "btc-loan-analyzer-export",
   "private": true,
-  "version": "1.0.0",
-  "description": "Headless export of the saved BTC loan position analysis to data/position-analysis.txt",
+  "version": "2.0.0",
+  "description": "BTC loan scenario terminal with a shared calculation and report engine",
   "scripts": {
-    "export": "node scripts/export-position.js"
+    "export": "node scripts/export-position.js",
+    "test": "node --test tests/*.test.js",
+    "build": "node scripts/build-static.js",
+    "export:offline": "node scripts/export-position.js --offline"
   },
   "dependencies": {
     "puppeteer": "^25.0.0"

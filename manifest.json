@@ -1,13 +1,13 @@
 {
-  "name": "btc loan analyzer",
-  "short_name": "₿ loan",
-  "description": "btc loan analyzer",
+  "name": "BTC Loan Terminal",
+  "short_name": "BTC Loan",
+  "description": "BTC collateral, scenarios, signals, and risk.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#0a0a0a",
-  "theme_color": "#0a0a0a",
+  "orientation": "any",
+  "background_color": "#090c11",
+  "theme_color": "#090c11",
   "icons": [
     {
       "src": "icons/icon-192.png",

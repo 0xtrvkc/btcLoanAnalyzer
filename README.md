@@ -1,6 +1,7 @@
-# BTC Loan Terminal (0xtrvkc.github.io/btcLoanAnalyzer)
+# BTC Loan Terminal 
 
 A static BTC-backed loan scenario planner with a quant terminal interface. Build a position, compare exits, stress test liquidation, inspect MVRV signals, and compare a loan with a spot-plus-futures position of equal additional BTC exposure.
+live: [0xtrvkc.github.io/btcLoanAnalyzer](https://0xtrvkc.github.io/btcLoanAnalyzer/)
 
 ## Run
 

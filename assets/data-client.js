@@ -19,8 +19,10 @@
   }
   async function summary(now=Date.now()){
     const dates=[0,1,2,3].map(i=>new Date(now-i*864e5).toISOString().slice(0,10));
-    const reports=await Promise.allSettled(dates.map(async date=>{const raw=await request(BASE+'exports/mvrv_summary_'+date+'.txt',{},true);const data=M.parseSummary(raw);if(data.date!==date)throw new Error('Report date mismatch');return data;}));
-    const valid=reports.find(r=>r.status==='fulfilled');if(!valid)throw new Error('No valid on-chain report in the last four days');return valid.value;
+    const reports=await Promise.allSettled(dates.map(async date=>{const raw=await request(BASE+'exports/mvrv_summary_'+date+'.txt',{},true);const data=M.parseSummary(raw);// Export filenames use generation day; observations may be from the prior day.
+      if(data.date>date||data.date<dates.at(-1))throw new Error('Report observation date outside the allowed window');return data;}));
+    const valid=reports.filter(r=>r.status==='fulfilled').map(r=>r.value).sort((a,b)=>b.date.localeCompare(a.date));
+    if(!valid.length)throw new Error('No valid on-chain report in the last four days');return valid[0];
   }
   async function refresh(now=Date.now()){
     const [onchain,market]=await Promise.allSettled([summary(now),quote(now)]);

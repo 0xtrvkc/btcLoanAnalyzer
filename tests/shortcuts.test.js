@@ -1,0 +1,11 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict');
+const S=require('../assets/shortcuts');
+function keyboard(){let time=0,calls=0;return {handler:S.keyHandler(()=>calls++,()=>time),advance:ms=>time+=ms,get calls(){return calls;}};}
+const key=(key='i',extra={})=>({key,target:{tagName:'BODY'},...extra});
+test('iii restores once; pauses and other keys reset the sequence',()=>{const h=keyboard();h.handler(key());h.handler(key());h.handler(key());assert.equal(h.calls,1);h.handler(key());h.advance(1600);h.handler(key());h.handler(key('x'));h.handler(key());assert.equal(h.calls,1);});
+test('typing in fields, composition, modified keys, and held key repeat cannot activate iii',()=>{for(const extra of [{target:{tagName:'INPUT'}},{target:{tagName:'TEXTAREA'}},{target:{tagName:'SELECT'}},{target:{isContentEditable:true}},{ctrlKey:true},{metaKey:true},{altKey:true},{repeat:true},{isComposing:true}]){const h=keyboard();for(let i=0;i<3;i++)h.handler(key('i',extra));assert.equal(h.calls,0);}});
+function touch(){let activate=0,focus=0,blur=0,charge=false,pending=null;const h=S.holdHandlers({activate:()=>activate++,focus:()=>focus++,blur:()=>blur++,charge:x=>charge=x,schedule:f=>(pending=f,1),cancel:()=>pending=null});return {h,fire:()=>pending?.(),get state(){return {activate,focus,blur,charge};}};}
+const pointer=(extra={})=>({pointerId:1,pointerType:'touch',button:0,isPrimary:true,clientX:20,clientY:20,preventDefault(){},...extra});
+test('mobile 800ms hold restores once, while a quick tap opens normal editing',()=>{const a=touch();a.h.down(pointer());a.fire();a.h.up(pointer());assert.deepEqual(a.state,{activate:1,focus:0,blur:1,charge:false});const b=touch();b.h.down(pointer());b.h.up(pointer());b.fire();assert.deepEqual(b.state,{activate:0,focus:1,blur:0,charge:false});});
+test('scroll gestures, pointer cancellation, and secondary touches cancel the hold',()=>{const a=touch();a.h.down(pointer());a.h.move(pointer({clientY:50}));a.fire();a.h.up(pointer());assert.equal(a.state.activate,0);assert.equal(a.state.focus,0);const b=touch();b.h.down(pointer());b.h.cancel();b.fire();assert.equal(b.state.activate,0);const c=touch();c.h.down(pointer({isPrimary:false}));c.fire();assert.equal(c.state.activate,0);});

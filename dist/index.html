@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BTC Loan Terminal · Collateral &amp; Risk</title>
+<meta name="description" content="Plan a BTC-backed loan, stress test liquidation risk, explore on-chain signals, and compare futures with matching exposure.">
+<meta name="theme-color" content="#090c11">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="manifest" href="manifest.json">
+<style>@charset "UTF-8";
+:root{color-scheme:dark;--bg:#090c11;--surface:#10151d;--surface2:#151c26;--surface3:#1c2632;--line:#26313e;--line-soft:#1b2531;--text:#eef2f6;--muted:#99a8b9;--dim:#78899d;--accent:#ffba66;--accent-soft:#ffba6614;--green:#57d9ad;--red:#ff7b89;--cyan:#74d6ea;--purple:#b5a2ff;--mono:'SFMono-Regular',Consolas,'Liberation Mono',monospace;--sans:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;--radius:8px}
+[data-theme=light]{color-scheme:light;--bg:#eaf0f5;--surface:#f9fbfd;--surface2:#edf2f7;--surface3:#e0e8f0;--line:#c2cfda;--line-soft:#dce4ec;--text:#172434;--muted:#455b70;--dim:#576b7d;--accent:#985007;--accent-soft:#b3711410;--green:#087552;--red:#b82b43;--cyan:#006f89;--purple:#6c49b7}
+*{box-sizing:border-box}html{font-size:16px;scroll-behavior:smooth;scroll-padding-top:125px}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.55;font-size:1rem;-webkit-font-smoothing:antialiased}button,input,select{font:inherit}button,a,input,select,summary{-webkit-tap-highlight-color:transparent}button{cursor:pointer}button:disabled{cursor:wait;opacity:.55}button,a,summary{touch-action:manipulation}a{color:var(--cyan);text-underline-offset:4px}button{border:0;background:none;color:inherit}button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible,select:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--cyan);outline-offset:4px}input{min-width:0}h1,h2,h3,p{margin:0}h1{font-size:1.55rem;font-weight:600;letter-spacing:-.04em;line-height:1.25}h2{font-size:1rem;font-weight:600;letter-spacing:-.015em}h3{font-size:.9375rem;font-weight:600}svg{display:block}button svg{width:17px;height:17px;flex-shrink:0}button{display:inline-flex;align-items:center;justify-content:center;gap:8px}button:active{transform:translateY(1px)}[hidden]{display:none!important}.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}.muted{color:var(--muted)}.dim{color:var(--dim)}.good{color:var(--green)!important}.bad{color:var(--red)!important}.amber{color:var(--accent)!important}.cyan{color:var(--cyan)!important}.num{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.04em}.overline{font-family:var(--mono);font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}.hint{font-size:.8125rem;color:var(--muted);line-height:1.55}.rule{height:1px;background:var(--line-soft);margin:16px 0}.skip{position:fixed;top:-80px;left:20px;z-index:100;padding:10px;background:var(--surface);border:1px solid var(--cyan)}.skip:focus{top:10px}
+.topbar{position:sticky;top:0;z-index:20;background:var(--bg);border-top:2px solid var(--accent);border-bottom:1px solid var(--line);backdrop-filter:blur(18px)}.topbar-inner{max-width:1720px;margin:auto;min-height:68px;padding:12px 28px;display:flex;align-items:center;justify-content:space-between;gap:20px}.brand{display:flex;align-items:center;gap:11px;white-space:nowrap}.brand-icon{width:34px;height:34px;border:1px solid var(--accent);color:var(--accent);font-size:24px;line-height:1;display:grid;place-items:center;background:var(--accent-soft)}.brand-name{font-family:var(--mono);font-size:1rem;letter-spacing:-.06em;font-weight:700}.brand-name span{font-weight:400;color:var(--muted)}.brand-sub{font-family:var(--mono);font-size:.75rem;letter-spacing:.14em;color:var(--dim);margin-top:1px}.header-tools{display:flex;gap:8px;align-items:center}.time{font-size:.75rem;margin-right:16px;color:var(--dim)}.button{min-height:40px;padding:8px 12px;border:1px solid var(--line);border-radius:5px;font-size:.8125rem;white-space:nowrap;background:var(--surface);transition:background .2s,border-color .2s,color .2s}.button:hover{background:var(--surface3);border-color:var(--muted)}.button.primary{background:var(--accent);color:var(--bg);border-color:var(--accent);font-weight:650}.button.primary:hover{filter:brightness(1.1)}.button.icon{padding:9px;min-width:40px}.button.small{min-height:36px;padding:5px 9px}.button.ghost{background:transparent;border-color:transparent;color:var(--muted)}.button.ghost:hover{color:var(--text);border-color:var(--line)}.spin svg{animation:spin .9s linear infinite}.ticker{display:flex;border-bottom:1px solid var(--line-soft);max-width:1720px;margin:auto;padding:0 28px;min-height:78px;align-items:center}.ticker-item{padding:8px 30px;border-left:1px solid var(--line-soft);min-width:155px}.ticker-item:first-child{padding-left:0;border-left:0;min-width:260px}.ticker-label{font-size:.75rem;font-family:var(--mono);letter-spacing:.09em;color:var(--dim);text-transform:uppercase}.ticker-val{font-size:1rem;font-family:var(--mono);font-variant-numeric:tabular-nums;margin-top:3px}.ticker-price{font-size:1.55rem;letter-spacing:-.055em}.ticker-item:first-child .ticker-val{display:flex;align-items:baseline;gap:13px}.ticker-note{font-size:.75rem;color:var(--muted);font-family:var(--mono)}.ticker-source{margin-left:auto;min-width:150px;text-align:right}.status-dot{display:inline-block;width:6px;height:6px;background:currentColor;margin-right:7px;border-radius:50%;vertical-align:middle}.workspace{max-width:1720px;margin:0 auto;display:grid;grid-template-columns:310px minmax(0,1fr);gap:24px;padding:28px}.position{position:sticky;top:95px;align-self:start;max-height:calc(100dvh - 120px);overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);min-width:0;overflow:hidden}.position>summary{list-style:none;padding:20px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;border-bottom:1px solid var(--line-soft)}summary::-webkit-details-marker{display:none}.position>summary h2{font-size:1rem}.position>summary .chevron{color:var(--dim);width:16px;transition:transform .25s}.position[open]>summary .chevron{transform:rotate(180deg)}.position-content{padding:20px}.section-label{display:flex;align-items:center;gap:8px;margin:24px 0 14px;font-family:var(--mono);font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}.section-label:first-child{margin-top:0}.section-label span{color:var(--accent);font-size:.75rem}.field{margin-bottom:16px}.field-label{display:flex;justify-content:space-between;gap:8px;align-items:baseline;margin-bottom:7px;font-size:.875rem;color:var(--muted)}.field-label label{cursor:pointer}.field-label .unit{font-family:var(--mono);font-size:.75rem;color:var(--dim)}.input-shell{display:flex;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:5px;min-height:44px;overflow:hidden;transition:border-color .2s,box-shadow .2s}.input-shell:focus-within{border-color:var(--cyan);box-shadow:0 0 0 2px #74d6ea0e}.input-shell input{width:100%;border:0;outline:0;background:transparent;color:var(--text);padding:11px 12px;font-family:var(--mono);font-size:.9375rem;line-height:1.25;font-variant-numeric:tabular-nums}.input-shell input:focus-visible{outline:0}.input-shell .suffix{padding-right:12px;color:var(--dim);font-size:.75rem;font-family:var(--mono)}input[type=number]{appearance:textfield;-moz-appearance:textfield}input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}.input-shell:has([aria-invalid=true]){border-color:var(--red)}.field-error{font-size:.75rem;color:var(--red);margin-top:6px}.field-error:empty{display:none}.field-note{font-size:.75rem;color:var(--dim);margin-top:6px}.range{appearance:none;display:block;width:100%;height:4px;border-radius:2px;background:var(--line);margin:17px 0 12px;cursor:pointer}.range::-webkit-slider-thumb{appearance:none;width:13px;height:13px;background:var(--accent);border:2px solid var(--surface);border-radius:2px;box-shadow:0 0 0 1px var(--accent)}.range::-moz-range-thumb{width:11px;height:11px;background:var(--accent);border-radius:2px;border:2px solid var(--surface)}.range-labels{display:flex;justify-content:space-between;font-size:.75rem;font-family:var(--mono);color:var(--dim)}.presets{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}.preset{font-family:var(--mono);font-size:.75rem;flex:1;padding:6px 7px;min-height:34px;border:1px solid var(--line);border-radius:4px;color:var(--muted);transition:all .18s}.preset:hover,.preset[aria-pressed=true]{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}.split-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}.advanced{border-top:1px solid var(--line-soft);padding-top:12px;margin-top:8px}.advanced>summary{cursor:pointer;display:flex;justify-content:space-between;align-items:center;min-height:40px;font-size:.875rem;color:var(--muted)}.advanced>summary::after{content:'+';font-family:var(--mono);color:var(--dim)}.advanced[open]>summary::after{content:'−'}.advanced-body{padding-top:16px}.full{width:100%}.position-footer{border-top:1px solid var(--line-soft);padding:16px 20px}.auto-note{font-size:.75rem;font-family:var(--mono);color:var(--dim);text-align:center;margin-top:10px}.desk{min-width:0}.desk-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 22px}.desk-heading .overline{margin-bottom:6px}.view-meta{text-align:right;font-family:var(--mono);font-size:.75rem;color:var(--muted)}.view-meta .badge{margin-bottom:4px}.badge{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:.75rem;line-height:1.3;padding:5px 7px;border:1px solid var(--line);border-radius:3px;color:var(--muted);white-space:nowrap}.badge.amber{background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 28%,transparent)}.badge.good{background:color-mix(in srgb,var(--green) 6%,transparent);border-color:color-mix(in srgb,var(--green) 28%,transparent)}.badge.bad{background:color-mix(in srgb,var(--red) 6%,transparent);border-color:color-mix(in srgb,var(--red) 28%,transparent)}.data-notice{display:flex;align-items:center;gap:10px;padding:11px 14px;border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);background:var(--accent-soft);color:var(--accent);font-size:.8125rem;border-radius:5px;margin-bottom:18px}.data-notice svg{width:16px;height:16px;flex-shrink:0}.data-notice span{flex:1}.data-notice a{color:inherit}.validation-banner{border-color:var(--red);background:color-mix(in srgb,var(--red) 6%,transparent);color:var(--red)}.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--surface);margin-bottom:22px}.kpi{padding:18px 20px;border-right:1px solid var(--line);position:relative;min-width:0}.kpi:last-child{border-right:0}.kpi-label{font-size:.875rem;color:var(--muted);display:flex;gap:6px;align-items:center;margin-bottom:9px}.kpi-value{font-size:clamp(1.05rem,1.6vw,1.6rem);line-height:1.2;font-weight:500;font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.055em;overflow-wrap:anywhere}.kpi-sub{font-size:.75rem;margin-top:8px;color:var(--dim);font-family:var(--mono)}.kpi:first-child::before{content:'';position:absolute;top:0;left:0;width:2px;height:100%;background:var(--accent)}.tabs{display:flex;gap:6px;margin-bottom:20px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}.tab{position:relative;min-height:46px;white-space:nowrap;padding:10px 15px 13px;color:var(--muted);font-size:.875rem;transition:color .2s}.tab span{color:var(--dim);font-family:var(--mono);font-size:.75rem;margin-right:3px}.tab:hover{color:var(--text)}.tab[aria-selected=true]{color:var(--accent)}.tab[aria-selected=true]::after{content:'';position:absolute;bottom:0;left:12px;right:12px;height:2px;background:var(--accent);animation:tabin .25s ease}.pane{animation:rise .32s ease both}.panel-head{padding:18px 20px;border-bottom:1px solid var(--line-soft);display:flex;justify-content:space-between;gap:12px;align-items:center}.panel-head .hint{margin-top:3px}.panel-head .overline{font-size:.75rem}.panel-body{padding:20px}.overview-grid{display:grid;grid-template-columns:minmax(0,1fr) 265px;gap:18px}.chart-panel{position:relative}.chart-topline{display:flex;justify-content:space-between;gap:16px;padding:20px 20px 2px;align-items:flex-start}.chart-result{font-size:2rem;font-weight:500;margin:4px 0;line-height:1.2}.chart-return{font-size:.875rem;color:var(--muted)}.chart-target{text-align:right}.chart-target .num{font-size:1.125rem;margin:4px 0}.chart-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.75rem;font-family:var(--mono);color:var(--muted);padding:15px 20px 0}.legend-item{display:inline-flex;align-items:center;gap:6px}.swatch{display:inline-block;width:13px;height:2px;background:var(--accent)}.swatch.hold{background:var(--dim)}.swatch.zone{height:8px;width:8px;background:#ff7b8930;border:1px solid #ff7b8955}.chart{height:290px;width:100%;position:relative}.chart svg{width:100%;height:100%;overflow:visible}.chart path.curve{stroke-dasharray:1400;stroke-dashoffset:0;animation:draw 1.05s ease both}.chart text{font-family:var(--mono);font-size:12px;fill:var(--dim)}.chart text.accent{fill:var(--accent)}.chart text.red{fill:var(--red)}.chart .gridline{stroke:var(--line-soft);stroke-width:1;vector-effect:non-scaling-stroke}.chart .zero{stroke:var(--line);stroke-dasharray:3 4}.chart .curve{fill:none;stroke:var(--accent);stroke-width:2;vector-effect:non-scaling-stroke}.chart .hold-line{fill:none;stroke:var(--dim);stroke-width:1.2;stroke-dasharray:4 4;vector-effect:non-scaling-stroke}.chart-foot{padding:13px 20px;border-top:1px solid var(--line-soft);display:flex;justify-content:space-between;gap:8px;font-size:.75rem;color:var(--muted)}.chart-foot .num{color:var(--text)}.chart-tooltip{position:absolute;z-index:5;pointer-events:none;background:var(--surface3);border:1px solid var(--line);border-radius:5px;padding:9px 12px;font-size:.75rem;min-width:160px;box-shadow:0 10px 30px #0003}.chart-tooltip strong{display:block;font-family:var(--mono);margin-top:3px}.chart-controls{display:flex;align-items:center;gap:12px;padding:0 20px 16px;font-size:.75rem;color:var(--muted)}.chart-controls .range{flex:1;margin:0}.chart-controls output{font-family:var(--mono);color:var(--text);white-space:nowrap}.stack{display:flex;flex-direction:column;gap:18px}.score-display{display:flex;align-items:baseline;gap:6px;margin:11px 0 14px}.score-number{font-family:var(--mono);font-size:2.5rem;letter-spacing:-.06em;line-height:1}.score-max{font-family:var(--mono);color:var(--dim);font-size:.9375rem}.score-track{display:flex;gap:4px;height:6px;margin-bottom:14px}.score-seg{background:var(--line);flex:1;border-radius:1px;transition:background .3s}.score-seg.on{background:var(--accent)}.score-sentence{font-size:.8125rem;color:var(--muted);margin-top:12px}.signal-mini{padding-top:13px;margin-top:13px;border-top:1px solid var(--line-soft);display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted)}.signal-mini b{font-family:var(--mono);font-weight:400;color:var(--text)}.link-button{font-size:.8125rem;color:var(--cyan);padding:0;justify-content:space-between;width:100%;min-height:32px}.allocation-track{display:flex;height:7px;background:var(--line);border-radius:2px;margin:18px 0}.allocation-fill{background:var(--accent);transition:width .45s ease;border-radius:2px}.key-row{display:flex;justify-content:space-between;gap:15px;font-size:.875rem;padding:8px 0;color:var(--muted)}.key-row strong{font-weight:400;font-family:var(--mono);color:var(--text);text-align:right}.key-row.total{border-top:1px solid var(--line);margin-top:7px;padding-top:12px}.key-row.total strong{color:var(--accent)}.wide-panel{margin-top:18px}.level-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:0}.level-item{padding:18px 20px;border-right:1px solid var(--line-soft)}.level-item:last-child{border-right:0}.level-item .num{font-size:1.125rem;margin:7px 0 3px}.level-item .hint{font-size:.75rem}.level-label{display:flex;align-items:center;gap:7px;font-size:.75rem;color:var(--muted)}.level-bar{width:3px;height:11px;background:var(--accent);display:inline-block}.level-bar.bad{background:var(--red)}.level-bar.cyan{background:var(--cyan)}.level-bar.good{background:var(--green)}.bottom-note{display:flex;justify-content:space-between;gap:20px;font-size:.75rem;color:var(--dim);padding:20px 2px}.bottom-note span{max-width:740px}.section-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.metrics-three{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:18px}.big-metric{font-family:var(--mono);font-size:1.75rem;margin:10px 0;letter-spacing:-.05em}.metric-label{font-size:.8125rem;color:var(--muted)}.table-wrap{overflow:auto;max-width:100%;scrollbar-width:thin}table{width:100%;border-collapse:collapse;font-size:.875rem;white-space:nowrap}caption{text-align:left;padding:16px 20px;font-size:.875rem;font-weight:500}th{text-align:right;padding:13px 16px;font-family:var(--mono);font-size:.75rem;font-weight:400;text-transform:uppercase;letter-spacing:.04em;color:var(--dim);background:var(--surface2);border-bottom:1px solid var(--line)}th:first-child,td:first-child{text-align:left}td{padding:13px 16px;border-bottom:1px solid var(--line-soft);font-family:var(--mono);text-align:right;color:var(--muted)}tbody tr:last-child td{border-bottom:0}tbody tr:hover{background:var(--surface2)}tr.target-row{background:var(--accent-soft)}tr.target-row td:first-child{border-left:2px solid var(--accent)}.row-label{font-size:.75rem;margin-left:7px;color:var(--accent)}.row-price{color:var(--text);font-weight:500}.table-note{padding:16px 20px;border-top:1px solid var(--line-soft);font-size:.8125rem;color:var(--muted)}.table-note code{font-family:var(--mono);font-size:.75rem;color:var(--cyan)}.segmented{display:inline-flex;padding:3px;background:var(--bg);border:1px solid var(--line);border-radius:5px;gap:2px}.segmented button{padding:6px 9px;min-height:32px;font-size:.75rem;color:var(--muted);border-radius:3px}.segmented button[aria-pressed=true]{color:var(--accent);background:var(--surface3)}.select{background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:5px;padding:9px 12px;font-size:.8125rem;min-height:40px}.notes p{font-size:.875rem;color:var(--muted);margin-bottom:12px}.notes p:last-child{margin:0}.notes strong{font-weight:500;color:var(--text)}.formula{font-family:var(--mono);font-size:.75rem;line-height:1.8;padding:14px;background:var(--bg);color:var(--cyan);border:1px solid var(--line-soft);border-radius:5px;overflow-wrap:anywhere}.risk-track{height:9px;display:flex;margin:25px 0 12px;border-radius:2px;overflow:hidden}.risk-track span{transition:width .4s}.cycle-track{height:6px;background:var(--line);margin:16px 0}.cycle-fill{height:100%;background:var(--cyan);transition:width .8s}.signal-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-bottom:18px}.signal-card .big-metric{margin:12px 0 6px}.signal-card .badge{margin-bottom:12px}.weight-row{display:grid;grid-template-columns:110px 1fr 40px;gap:16px;align-items:center;min-height:48px;font-size:.875rem}.weight-row .range{margin:0}.weight-row output{text-align:right;font-family:var(--mono);font-size:.8125rem;color:var(--accent)}.compare-table td:first-child{font-family:var(--sans);color:var(--muted)}.compare-table td{font-size:.875rem;white-space:normal}.compare-table th{font-size:.75rem}.compare-table small{display:block;font-family:var(--sans);font-size:.75rem;color:var(--dim);margin-top:4px}.comparison-controls{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;padding:20px}.comparison-controls .field{margin:0}.insight{border-left:2px solid var(--accent);padding:18px 20px;background:var(--accent-soft);border-radius:0 5px 5px 0;margin-top:18px}.insight h3{margin-bottom:6px}.insight p{font-size:.875rem;color:var(--muted)}.history-empty{padding:22px;color:var(--muted);font-size:.875rem}.toast{position:fixed;bottom:25px;left:50%;transform:translate(-50%,20px);z-index:60;max-width:calc(100% - 32px);padding:12px 18px;border:1px solid var(--line);background:var(--surface3);box-shadow:0 14px 40px #0005;border-radius:5px;color:var(--text);font-size:.875rem;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}.toast.show{opacity:1;transform:translate(-50%,0)}.footer{max-width:1720px;margin:auto;border-top:1px solid var(--line-soft);padding:17px 28px;display:flex;justify-content:space-between;font-family:var(--mono);font-size:.75rem;color:var(--dim);gap:20px}.footer a{color:var(--muted)}.invalid-results .kpi-value,.invalid-results .chart-result{color:var(--dim)!important}.reveal{animation:rise .45s ease both}.reveal.delay{animation-delay:.09s}.metric-flash{animation:flash .55s ease}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}.noscript{padding:30px;background:var(--surface);border:1px solid var(--red);margin:30px;color:var(--text)}
+@keyframes rise{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}@keyframes draw{from{stroke-dashoffset:1400}to{stroke-dashoffset:0}}@keyframes spin{to{transform:rotate(360deg)}}@keyframes tabin{from{transform:scaleX(.3);opacity:0}to{transform:scaleX(1);opacity:1}}@keyframes flash{0%{background:var(--accent-soft)}100%{background:transparent}}
+@media(min-width:1650px){.workspace{grid-template-columns:330px minmax(0,1fr)}.overview-grid{grid-template-columns:minmax(0,1fr) 295px}.chart{height:330px}.kpi-value{font-size:1.65rem}}
+@media(max-width:1250px){.workspace{padding:22px;gap:18px;grid-template-columns:285px minmax(0,1fr)}.overview-grid{grid-template-columns:minmax(0,1fr)}.overview-grid>.stack{display:grid;grid-template-columns:1fr 1fr}.ticker-item{padding:8px 22px;min-width:120px}.ticker-item:first-child{min-width:225px}.ticker-item.optional{display:none}.kpi{padding:16px 12px}.chart{height:315px}.signal-grid{grid-template-columns:repeat(2,1fr)}.metrics-three{gap:12px}.big-metric{font-size:1.5rem}.tab{padding:10px 11px 13px}.level-item{padding:16px 12px}}
+@media(max-width:980px){.workspace{grid-template-columns:250px minmax(0,1fr);padding:20px 16px;gap:16px}.position-content,.panel-body{padding:16px}.position>summary{padding:16px}.topbar-inner{padding:12px 16px}.ticker{padding:0 16px}.ticker-item{padding:8px 16px}.ticker-source{display:none}.kpis{grid-template-columns:repeat(2,1fr)}.kpi:nth-child(2){border-right:0}.kpi:nth-child(-n+2){border-bottom:1px solid var(--line)}.kpi-value{font-size:1.35rem}.time{display:none}.desk-heading h1{font-size:1.4rem}.view-meta{display:none}.section-grid,.metrics-three{grid-template-columns:1fr}.level-strip{grid-template-columns:repeat(2,1fr)}.level-item:nth-child(2){border-right:0}.level-item:nth-child(-n+2){border-bottom:1px solid var(--line-soft)}.comparison-controls{grid-template-columns:1fr}.chart-result{font-size:1.7rem}.chart-target .num{font-size:1rem}.overview-grid>.stack{grid-template-columns:1fr 1fr}.score-number{font-size:2.1rem}.panel-head{padding:16px}.tabs{gap:0}.tab span{display:none}}
+@media(max-width:760px){.topbar-inner{min-height:62px;padding:11px 16px;gap:10px}.brand-name{font-size:.9375rem}.brand-sub{font-size:.75rem}.header-tools{gap:6px}.header-tools .button{min-height:38px}.header-tools .button span{display:none}.header-tools .button.primary{padding:9px 11px}.ticker{min-height:70px;display:grid;grid-template-columns:1.5fr 1fr}.ticker-item{padding:8px 16px!important;min-width:0!important}.ticker-item:first-child{padding-left:0!important}.ticker-item:nth-child(n+3){display:none}.ticker-price{font-size:1.4rem}.ticker-item:first-child .ticker-val{gap:6px;flex-wrap:wrap}.ticker-note{font-size:.75rem}.workspace{display:flex;flex-direction:column;gap:0;padding:22px 16px}.desk{display:contents}.desk-heading{order:0;margin-bottom:16px}.data-notice{order:1}.kpis{order:2;margin-bottom:16px}.position{position:relative;top:auto;width:100%;max-height:none;order:3;margin-bottom:18px}.position>summary{padding:15px 16px}.position>summary h2{font-size:.9375rem}.position>summary .overline{display:none}.position-content{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}.position-content>.section-label,.position-content>.advanced,.position-content>.field.wide,.position-content>.hint,.position-content>.split-fields{grid-column:1/-1}.position-content>.section-label{margin-top:14px}.position-content>.section-label:first-child{margin-top:0}.position-content>.split-fields{gap:16px}.position-content .advanced-body{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}.advanced-body>.hint,.advanced-body>.field.wide{grid-column:1/-1}.tabs{order:4;gap:0;position:sticky;top:62px;z-index:10;background:var(--bg);margin:0 0 16px;flex-shrink:0}.tab{flex:1;padding:10px 10px 13px;font-size:.8125rem}.pane{order:5}.bottom-note{order:6;flex-direction:column;gap:8px}.desk-heading h1{font-size:1.45rem}.kpi{padding:16px}.kpi-label{font-size:.875rem}.kpi-value{font-size:1.4rem}.kpi-sub{font-size:.75rem}.overview-grid{gap:16px}.overview-grid>.stack{gap:16px}.chart{height:280px}.chart-topline{padding:18px 16px 2px}.chart-legend{padding:14px 16px 0;gap:10px;font-size:.75rem}.chart-result{font-size:1.75rem}.chart-target .overline{font-size:.75rem}.chart-foot{padding:13px 16px;flex-wrap:wrap}.chart-controls{padding:0 16px 16px}.signal-grid{gap:12px}.metrics-three,.section-grid{gap:16px}.panel-head.flexible{flex-wrap:wrap}.chart .curve{animation-duration:.7s}.footer{padding:16px;flex-wrap:wrap;gap:7px}.footer span:last-child{margin-left:0}.compare-table th,.compare-table td{padding:12px 10px}.compare-table{min-width:530px}.time{display:none}.table-note{padding:16px}.weight-row{grid-template-columns:95px 1fr 36px;gap:12px}}
+@media(max-width:400px){.brand-sub{display:none}.brand-name{font-size:.8125rem}.brand-icon{width:29px;height:29px;font-size:21px}.topbar-inner{padding:11px 12px}.workspace{padding:18px 12px}.header-tools .button{padding:8px}.header-tools .button.primary{padding:8px}.overview-grid>.stack{grid-template-columns:1fr}.chart-result{font-size:1.5rem}.chart-target .num{font-size:.875rem}.tab{padding-left:7px;padding-right:7px;font-size:.75rem}.position-content{gap:0 12px}.signal-grid{grid-template-columns:1fr}.ticker-item{padding-right:8px!important}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.chart path.curve{stroke-dasharray:none}}
+@media print{.topbar,.position,.tabs,.header-tools,.chart-controls,.footer,.toast{display:none!important}.workspace{display:block;padding:0}.pane[hidden]{display:block!important}.panel,.kpis{break-inside:avoid;margin-bottom:18px}body{background:white;color:black}.desk{display:block}.ticker{padding:0}.data-notice{color:black}.chart{height:270px}}
+
+/* A shared .panel overflow rule used to disable the sidebar scrollbar.
+   Let the entire form participate in page scrolling, at any height or zoom. */
+.position.panel{position:static;max-height:none;overflow:visible;align-self:start}
+.position-footer .button{white-space:normal;overflow-wrap:anywhere}
+.pots-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.pot-card{border:1px solid var(--line);border-radius:6px;padding:20px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.pot-card:first-child{border-top:2px solid var(--green)}.pot-card:last-child{border-top:2px solid var(--accent)}
+.pot-total{display:flex;flex-direction:column;gap:5px;padding-top:16px;margin-top:auto;border-top:1px solid var(--line-soft)}.pot-total strong{font-size:1.45rem;overflow-wrap:anywhere}
+.pots-combined{display:flex;justify-content:space-between;gap:20px;background:var(--bg);border:1px solid var(--line);padding:20px;margin-top:18px;border-radius:6px}
+#pots-total-btc{font-size:1.5rem;margin:7px 0}.pots-cash{display:flex;flex-direction:column;gap:6px;text-align:right}.pots-cash strong{font-size:1.15rem}
+#btc-amount-wrap{position:relative;touch-action:pan-y pinch-zoom}#btc-amount-wrap.hold-charging{border-color:var(--cyan)}
+#btc-amount-wrap.hold-charging::after{content:'';position:absolute;left:0;bottom:0;height:3px;background:var(--cyan);width:100%;transform-origin:left;animation:hold-charge .8s linear both;pointer-events:none}
+#btc-amount-wrap input{-webkit-touch-callout:none}
+.preset-notice{position:fixed;right:24px;bottom:24px;z-index:55;width:min(380px,calc(100vw - 32px));padding:22px;background:var(--surface);border:1px solid var(--cyan);box-shadow:0 0 28px #74d6ea24;border-radius:6px;animation:rise .25s ease both}
+.preset-notice>.button{float:right}.preset-notice h2{font-size:1.35rem;color:var(--cyan);margin:8px 0 12px}#preset-values{font-size:.8125rem;line-height:1.8;color:var(--muted)}
+@keyframes hold-charge{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@media(max-width:760px){.pots-grid{grid-template-columns:1fr}.pots-combined{flex-direction:column}.pots-cash{text-align:left}.position input{font-size:1rem}.preset-notice{right:16px;bottom:16px}}
+@media(prefers-reduced-motion:reduce){.preset-notice,#btc-amount-wrap.hold-charging::after{animation:none}}
+</style>
+</head>
+<body>
+<a href="#workspace" class="skip">Skip to analysis</a>
+<noscript>
+<div class="noscript">This calculator needs JavaScript to calculate your position. Enable JavaScript, then reload.</div>
+</noscript>
+<header class="topbar">
+<div class="topbar-inner">
+<div class="brand">
+<div class="brand-icon" aria-hidden="true">₿</div>
+<div>
+<div class="brand-name">BTC LOAN <span>/ TERMINAL</span>
+</div>
+<div class="brand-sub">COLLATERAL · EXPOSURE · RISK</div>
+</div>
+</div>
+<div class="header-tools">
+<span class="time mono" id="utc-clock">
+</span>
+<button id="theme-toggle" class="button icon" aria-label="Switch to light theme" title="Switch theme">
+<svg class="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<circle cx="12" cy="12" r="4"/>
+<path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.4 1.4m11.2 11.2L19 19M5 19l1.4-1.4M17.6 6.4 19 5"/>
+</svg>
+</button>
+<button id="export-btn" class="button" title="Export full analysis as text">
+<svg class="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<path d="M12 3v12m-4-4 4 4 4-4M5 16v5h14v-5"/>
+</svg>
+<span>Export</span>
+</button>
+<button id="refresh-btn" class="button primary" title="Refresh market data">
+<svg class="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<path d="M20 7v5h-5M4 17v-5h5"/>
+<path d="M6.1 7a7 7 0 0 1 11.6-2L20 8M4 16l2.3 3A7 7 0 0 0 18 17"/>
+</svg>
+<span>Refresh data</span>
+</button>
+</div>
+</div>
+</header>
+<div class="ticker" aria-label="Market snapshot">
+<div class="ticker-item">
+<div class="ticker-label">Bitcoin <span class="muted">/ USD</span>
+</div>
+<div class="ticker-val">
+<span class="ticker-price" id="market-price">—</span>
+<span class="ticker-note" id="quote-source">Snapshot</span>
+</div>
+</div>
+<div class="ticker-item">
+<div class="ticker-label">MVRV ratio</div>
+<div class="ticker-val" id="ticker-mvrv">—</div>
+</div>
+<div class="ticker-item">
+<div class="ticker-label">Z-score</div>
+<div class="ticker-val" id="ticker-zscore">—</div>
+</div>
+<div class="ticker-item">
+<div class="ticker-label">MVRV trend</div>
+<div class="ticker-val" id="ticker-trend">—</div>
+</div>
+<div class="ticker-item optional">
+<div class="ticker-label">Cycle position</div>
+<div class="ticker-val" id="ticker-cycle">—</div>
+</div>
+<div class="ticker-source">
+<div class="ticker-label">On-chain snapshot</div>
+<div class="ticker-val" style="font-size:.8125rem" id="data-date">—</div>
+</div>
+</div>
+<main class="workspace" id="workspace" tabindex="-1">
+<details class="position panel reveal" id="position-panel" open>
+<summary>
+<div>
+<div class="overline" style="margin-bottom:5px">Position builder</div>
+<h2>Your loan parameters</h2>
+</div>
+<svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<path d="m6 9 6 6 6-6"/>
+</svg>
+</summary>
+<div class="position-content">
+<div class="section-label">
+<span>01</span> Collateral &amp; borrowing</div>
+<div class="field">
+<div class="field-label">
+<label for="inp-btc">BTC collateral</label>
+<span class="unit">BTC</span>
+</div>
+<div class="input-shell" id="btc-amount-wrap">
+<input id="inp-btc" data-field="btc" type="number" inputmode="decimal" value="1" step="0.001" min="0.00000001" max="1000000" placeholder="" aria-describedby="error-btc" autocomplete="off"/>
+<span class="suffix">BTC</span>
+</div>
+<p class="field-error" id="error-btc">
+</p>
+</div>
+<div class="field">
+<div class="field-label">
+<label for="inp-price">Reference price</label>
+<span class="unit">USD</span>
+</div>
+<div class="input-shell">
+<input id="inp-price" data-field="price" type="number" inputmode="decimal" value="79946" step="100" min="1" max="1000000000" placeholder="" aria-describedby="error-price note-price" autocomplete="off"/>
+<span class="suffix">USD</span>
+</div>
+<p class="field-error" id="error-price">
+</p>
+<p class="field-note" id="note-price">A new loan is sized at this price. Editing it does not track a fixed existing debt.</p>
+</div>
+<div class="field wide">
+<div class="field-label">
+<label for="inp-ltv">Initial loan-to-value</label>
+<span class="unit">LTV</span>
+</div>
+<div class="input-shell">
+<input id="inp-ltv" data-field="ltv" type="number" min="0" max="99" step="1" value="40" aria-describedby="error-ltv">
+<span class="suffix">%</span>
+</div>
+<p class="field-error" id="error-ltv">
+</p>
+<input class="range" id="ltv-range" type="range" min="0" max="84" step="1" value="40" aria-label="Initial loan-to-value percentage">
+<div class="range-labels">
+<span>0% / lower debt</span>
+<span id="ltv-max-label">84%</span>
+</div>
+</div>
+<div class="section-label">
+<span>02</span> Deploy &amp; simulate</div>
+<div class="field">
+<div class="field-label">
+<label for="inp-deploy">Loan deployed into BTC</label>
+<span class="unit">%</span>
+</div>
+<div class="input-shell">
+<input id="inp-deploy" data-field="deploy" type="number" inputmode="decimal" value="100" step="5" min="0" max="100" placeholder="" aria-describedby="error-deploy" autocomplete="off"/>
+<span class="suffix">%</span>
+</div>
+<p class="field-error" id="error-deploy">
+</p>
+</div>
+<div class="field">
+<div class="field-label">
+<label for="inp-deployPrice">BTC purchase price</label>
+<span class="unit">USD</span>
+</div>
+<div class="input-shell">
+<input id="inp-deployPrice" data-field="deployPrice" type="number" inputmode="decimal" value="" step="100" min="0" max="1000000000" placeholder="Reference price" aria-describedby="error-deployPrice note-deployPrice" autocomplete="off"/>
+<span class="suffix">USD</span>
+</div>
+<p class="field-error" id="error-deployPrice">
+</p>
+<p class="field-note" id="note-deployPrice">Leave blank to use the reference price.</p>
+</div>
+<div class="field wide">
+<div class="field-label">
+<label for="inp-target">Target BTC price</label>
+<span class="unit">USD</span>
+</div>
+<div class="input-shell">
+<input id="inp-target" data-field="target" type="number" min="1" max="1000000000" step="1000" value="100000" aria-describedby="error-target">
+<span class="suffix">USD</span>
+</div>
+<p class="field-error" id="error-target">
+</p>
+<div class="presets" aria-label="Target price shortcuts">
+<button class="preset" data-target="current">Current</button>
+<button class="preset" data-target="floor">Floor</button>
+<button class="preset" data-target="ceiling">Ceiling</button>
+<button class="preset" data-target="liq">Liq.</button>
+</div>
+</div>
+<div class="split-fields">
+<div class="field">
+<div class="field-label">
+<label for="inp-apr">Loan APR</label>
+<span class="unit">%</span>
+</div>
+<div class="input-shell">
+<input id="inp-apr" data-field="apr" type="number" inputmode="decimal" value="1" step="0.1" min="0" max="100" placeholder="" aria-describedby="error-apr" autocomplete="off"/>
+<span class="suffix">%</span>
+</div>
+<p class="field-error" id="error-apr">
+</p>
+</div>
+<div class="field">
+<div class="field-label">
+<label for="inp-months">Holding period</label>
+<span class="unit">mo</span>
+</div>
+<div class="input-shell">
+<input id="inp-months" data-field="months" type="number" inputmode="decimal" value="12" step="1" min="0" max="120" placeholder="" aria-describedby="error-months" autocomplete="off"/>
+<span class="suffix">mo</span>
+</div>
+<p class="field-error" id="error-months">
+</p>
+</div>
+</div>
+<p class="hint">All scenario P/L includes simple interest for this holding period.</p>
+<details class="advanced">
+<summary>Risk &amp; cost basis</summary>
+<div class="advanced-body">
+<div class="field">
+<div class="field-label">
+<label for="inp-mc">Margin call LTV</label>
+<span class="unit">%</span>
+</div>
+<div class="input-shell">
+<input id="inp-mc" data-field="mc" type="number" inputmode="decimal" value="85" step="1" min="1" max="99.9" placeholder="" aria-describedby="error-mc" autocomplete="off"/>
+<span class="suffix">%</span>
+</div>
+<p class="field-error" id="error-mc">
+</p>
+</div>
+<div class="field">
+<div class="field-label">
+<label for="inp-liq">Liquidation LTV</label>
+<span class="unit">%</span>
+</div>
+<div class="input-shell">
+<input id="inp-liq" data-field="liq" type="number" inputmode="decimal" value="90" step="1" min="1" max="99.99" placeholder="" aria-describedby="error-liq" autocomplete="off"/>
+<span class="suffix">%</span>
+</div>
+<p class="field-error" id="error-liq">
+</p>
+</div>
+<div class="field">
+<div class="field-label">
+<label for="inp-vol">Annualized volatility</label>
+<span class="unit">%</span>
+</div>
+<div class="input-shell">
+<input id="inp-vol" data-field="vol" type="number" inputmode="decimal" value="65" step="1" min="0" max="300" placeholder="" aria-describedby="error-vol" autocomplete="off"/>
+<span class="suffix">%</span>
+</div>
+<p class="field-error" id="error-vol">
+</p>
+</div>
+<div class="field">
+<div class="field-label">
+<label for="inp-entry">Original BTC cost basis</label>
+<span class="unit">USD</span>
+</div>
+<div class="input-shell">
+<input id="inp-entry" data-field="entry" type="number" inputmode="decimal" value="" step="100" min="0" max="1000000000" placeholder="Optional" aria-describedby="error-entry note-entry" autocomplete="off"/>
+<span class="suffix">USD</span>
+</div>
+<p class="field-error" id="error-entry">
+</p>
+<p class="field-note" id="note-entry">Applied only to your original collateral; loan-funded BTC keeps its own purchase price.</p>
+</div>
+<div class="field wide">
+<div class="field-label">
+<label for="entry-date">Look up entry date</label>
+<span class="unit">Optional</span>
+</div>
+<div class="input-shell">
+<input type="date" id="entry-date" min="2012-01-01">
+</div>
+<button class="button small full" style="margin-top:8px" id="lookup-entry">Look up historical price</button>
+<p id="entry-lookup-status" class="field-note" role="status">
+</p>
+</div>
+<p class="hint">Thresholds and rates are assumptions. Set them to your lender’s terms.</p>
+</div>
+</details>
+</div>
+<div class="position-footer">
+<button class="button full" id="save-position">
+<svg class="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<path d="M4 3h13l4 4v14H3V3h1Zm3 0v6h10V3M7 21v-8h10v8"/>
+</svg> Save position on this device</button>
+<button class="button ghost full" id="restore-position">Load saved position</button>
+<p class="auto-note" id="position-status">Calculations update as you type</p>
+</div>
+</details>
+<div class="desk">
+<div class="desk-heading reveal">
+<div>
+<div class="overline">Workspace / <span id="breadcrumb">Overview</span>
+</div>
+<h1 id="page-title">Position overview</h1>
+</div>
+<div class="view-meta">
+<span class="badge" id="plan-status">NEW LOAN SCENARIO</span>
+<div id="horizon-label">12 month horizon · USD</div>
+</div>
+</div>
+<div class="data-notice" id="data-notice" role="status">
+<svg class="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<circle cx="12" cy="12" r="9"/>
+<path d="M12 11v6m0-10v1"/>
+</svg>
+<span id="data-notice-text">Bundled market snapshot. Refresh to check for newer data.</span>
+<button class="button ghost small" data-view="signals">Details <svg class="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<path d="M5 12h14m-5-5 5 5-5 5"/>
+</svg>
+</button>
+</div>
+<div class="data-notice validation-banner" id="validation-banner" role="alert" hidden>
+<svg class="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<circle cx="12" cy="12" r="9"/>
+<path d="M12 11v6m0-10v1"/>
+</svg>
+<span id="validation-message">
+</span>
+</div>
+<section class="kpis reveal delay" aria-label="Loan summary">
+<div class="kpi">
+<div class="kpi-label">Loan principal</div>
+<div class="kpi-value amber" id="kpi-loan">—</div>
+<div class="kpi-sub" id="kpi-loan-sub">— of collateral</div>
+</div>
+<div class="kpi">
+<div class="kpi-label">Collateral value</div>
+<div class="kpi-value" id="kpi-collateral">—</div>
+<div class="kpi-sub" id="kpi-collateral-sub">— BTC pledged</div>
+</div>
+<div class="kpi">
+<div class="kpi-label">Liquidation price · now</div>
+<div class="kpi-value bad" id="kpi-liq">—</div>
+<div class="kpi-sub" id="kpi-liq-sub">— drop from reference</div>
+</div>
+<div class="kpi">
+<div class="kpi-label">Financing cost</div>
+<div class="kpi-value" id="kpi-cost">—</div>
+<div class="kpi-sub" id="kpi-cost-sub">— simple interest</div>
+</div>
+</section>
+<nav class="tabs" role="tablist" aria-label="Analysis views">
+<button class="tab" id="tab-overview" role="tab" aria-selected="true" aria-controls="pane-overview" tabindex="0" data-view="overview">
+<span>01</span>Overview</button>
+<button class="tab" id="tab-scenarios" role="tab" aria-selected="false" aria-controls="pane-scenarios" tabindex="-1" data-view="scenarios">
+<span>02</span>Scenarios</button>
+<button class="tab" id="tab-risk" role="tab" aria-selected="false" aria-controls="pane-risk" tabindex="-1" data-view="risk">
+<span>03</span>Risk</button>
+<button class="tab" id="tab-signals" role="tab" aria-selected="false" aria-controls="pane-signals" tabindex="-1" data-view="signals">
+<span>04</span>Signals</button>
+<button class="tab" id="tab-futures" role="tab" aria-selected="false" aria-controls="pane-futures" tabindex="-1" data-view="futures">
+<span>05</span>Futures</button>
+</nav>
+<section class="pane" id="pane-overview" role="tabpanel" aria-labelledby="tab-overview" tabindex="0">
+<div class="overview-grid">
+<div class="panel chart-panel">
+<div class="panel-head">
+<div>
+<h2>Scenario payoff</h2>
+<p class=hint>Loan-funded BTC vs. holding your original BTC</p>
+</div>
+<span class="badge">AFTER INTEREST</span>
+</div>
+<div class="chart-topline">
+<div>
+<div class="overline">Net P/L at target</div>
+<div class="chart-result num" id="target-pnl">—</div>
+<div class="chart-return" id="target-return">— return on collateral</div>
+</div>
+<div class="chart-target">
+<div class="overline">At BTC price</div>
+<div class="num" id="target-value">—</div>
+<span class="badge" id="target-status">ACTIVE</span>
+</div>
+</div>
+<div class="chart-legend">
+<span class="legend-item">
+<i class="swatch">
+</i>Loan strategy</span>
+<span class="legend-item">
+<i class="swatch hold">
+</i>Spot only</span>
+<span class="legend-item">
+<i class="swatch zone">
+</i>Liquidation zone</span>
+</div>
+<div class="chart" id="payoff-chart" aria-label="Profit and loss at hypothetical BTC prices">
+</div>
+<div class="chart-controls">
+<label for="chart-scrub">Inspect price</label>
+<input class="range" id="chart-scrub" type="range" min="1" max="200000" step="100" value="100000">
+<output id="scrub-output" for="chart-scrub">—</output>
+</div>
+<div class="chart-foot">
+<span>Breakeven <span class="num" id="overview-breakeven">—</span>
+</span>
+<span>Edge vs. spot <span class="num" id="overview-edge">—</span>
+</span>
+</div>
+</div>
+<div class="stack">
+<div class="panel">
+<div class="panel-body">
+<div class="overline">Cycle signal</div>
+<div class="score-display">
+<span class="score-number amber" id="score-number">—</span>
+<span class="score-max">/ 10</span>
+<span class="badge amber" style="margin-left:auto" id="score-badge">HEURISTIC</span>
+</div>
+<div class="score-track" id="score-track" aria-hidden="true">
+</div>
+<h3 id="score-title">Reading market signals</h3>
+<p class="score-sentence" id="score-context">Weighted on-chain model.</p>
+<div class="signal-mini">
+<span>Snapshot</span>
+<b id="score-date">—</b>
+</div>
+<button class="link-button" style="margin-top:12px" data-view="signals">Explore signals <svg class="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<path d="M5 12h14m-5-5 5 5-5 5"/>
+</svg>
+</button>
+</div>
+</div>
+<div class="panel">
+<div class="panel-body">
+<div class="overline">Capital allocation</div>
+<div class="allocation-track">
+<div class="allocation-fill" id="allocation-fill">
+</div>
+</div>
+<div class="key-row">
+<span>Deployed in BTC</span>
+<strong id="allocation-deployed">—</strong>
+</div>
+<div class="key-row">
+<span>Cash held</span>
+<strong id="allocation-cash">—</strong>
+</div>
+<div class="key-row total">
+<span>Additional BTC</span>
+<strong id="allocation-btc">—</strong>
+</div>
+<div class="key-row">
+<span>Total BTC</span>
+<strong id="allocation-total">—</strong>
+</div>
+</div>
+</div>
+</div>
+</div>
+<section class="panel wide-panel" id="two-pots" aria-labelledby="two-pots-title">
+<div class="panel-head flexible"><div><h2 id="two-pots-title">Two Separate Pots</h2><p class="hint">At the reference BTC price, after the selected holding period’s interest.</p></div>
+<div class="segmented" role="group" aria-label="Two Separate Pots display"><button id="pots-simple-btn" data-pots-mode="simple" aria-pressed="true" aria-controls="pots-simple">Simple</button><button id="pots-quant-btn" data-pots-mode="quant" aria-pressed="false" aria-controls="pots-quant">Quant</button></div></div>
+<div class="panel-body"><p class="hint bad" id="pots-warning" hidden></p><div id="pots-simple"><div class="pots-grid">
+<article class="pot-card"><div class="overline">POT 01 · YOUR ORIGINAL BTC</div><h3>What remains after repayment</h3><div id="pot-original-details"></div><div class="pot-total"><span class="hint">BTC you keep</span><strong class="num good" id="pot-original-btc">—</strong><span class="hint" id="pot-original-value">—</span></div></article>
+<article class="pot-card"><div class="overline">POT 02 · LOAN-FUNDED BTC</div><h3>The BTC bought with your loan</h3><p class="hint">The debt is repaid in Pot 01. This BTC stays separate from your pledged collateral.</p><div class="pot-total"><span class="hint">Additional BTC you keep</span><strong class="num amber" id="pot-new-btc">—</strong><span class="hint" id="pot-new-value">—</span></div></article>
+</div><div class="pots-combined"><div><div class="overline">POT 01 + POT 02</div><div class="num" id="pots-total-btc">—</div><p class="hint" id="pots-total-note">—</p></div><div class="pots-cash"><span class="hint">Unused loan cash</span><strong class="num" id="pots-cash">—</strong><span class="hint" id="pots-net-value">—</span></div></div></div>
+<div id="pots-quant" hidden><div id="pots-quant-rows"></div><div class="formula">Residual BTC = pledged BTC − (principal + interest) ÷ reference price<br>Wallet BTC = residual BTC + loan-funded BTC<br>Net assets = wallet BTC × reference price + unused cash</div></div>
+<p class="hint" style="margin-top:14px">Illustrative repayment by selling collateral at the reference price. Fees are excluded, and the position must survive liquidation. Unused cash is shown separately; borrowing itself creates no profit.</p></div></section>
+<div class="panel wide-panel">
+<div class="panel-head">
+<div>
+<h2>Price checkpoints</h2>
+<p class=hint>Loan thresholds include the selected holding period’s interest.</p>
+</div>
+<button class="link-button" style="width:auto" data-view="risk">Risk details <svg class="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<path d="M5 12h14m-5-5 5 5-5 5"/>
+</svg>
+</button>
+</div>
+<div class="level-strip">
+<div class="level-item">
+<div class="level-label">
+<i class="level-bar bad">
+</i>Liquidation</div>
+<div class="num bad" id="level-liq">—</div>
+<p class="hint" id="level-liq-sub">—</p>
+</div>
+<div class="level-item">
+<div class="level-label">
+<i class="level-bar">
+</i>Margin call</div>
+<div class="num amber" id="level-mc">—</div>
+<p class="hint" id="level-mc-sub">—</p>
+</div>
+<div class="level-item">
+<div class="level-label">
+<i class="level-bar cyan">
+</i>Model floor</div>
+<div class="num cyan" id="level-floor">—</div>
+<p class="hint">MVRV model estimate</p>
+</div>
+<div class="level-item">
+<div class="level-label">
+<i class="level-bar good">
+</i>Model ceiling</div>
+<div class="num good" id="level-ceiling">—</div>
+<p class="hint">MVRV model estimate</p>
+</div>
+</div>
+</div>
+<div class="insight">
+<h3 id="overview-insight-title">Position assessment</h3>
+<p id="overview-insight">—</p>
+</div>
+</section>
+<section class="pane" id="pane-scenarios" role="tabpanel" aria-labelledby="tab-scenarios" tabindex="0" hidden>
+<div class="panel">
+<div class="panel-head flexible">
+<div>
+<h2>Price ladder</h2>
+<p class="hint">Collateral, LTV, and P/L at each exit price.</p>
+</div>
+<div>
+<label for="pnl-basis" class="sr-only">Profit and loss basis</label>
+<select id="pnl-basis" class="select">
+<option value="pnl">P/L vs. reference price</option>
+<option value="borrowed">P/L on borrowed capital</option>
+<option value="cost">P/L vs. actual cost basis</option>
+</select>
+</div>
+</div>
+<div class="chart" id="ladder-chart">
+</div>
+<div class="table-wrap" tabindex="0" aria-label="Scrollable price ladder">
+<table>
+<thead>
+<tr>
+<th scope="col">BTC price</th>
+<th scope="col">Δ reference</th>
+<th scope="col">LTV at horizon</th>
+<th scope="col">Position status</th>
+<th scope="col">Net equity</th>
+<th scope="col" id="ladder-pnl-label">Net P/L</th>
+</tr>
+</thead>
+<tbody id="ladder-rows">
+</tbody>
+</table>
+</div>
+<div class="table-note" id="ladder-note">
+</div>
+</div>
+<div class="section-grid wide-panel">
+<div class="panel">
+<div class="panel-head">
+<h2>Position decomposition</h2>
+<span class="badge">AT TARGET</span>
+</div>
+<div class="panel-body" id="decomposition">
+</div>
+</div>
+<div class="panel">
+<div class="panel-head">
+<h2>How the numbers connect</h2>
+</div>
+<div class="panel-body notes">
+<p>Your original BTC and loan-funded BTC keep <strong>separate cost bases</strong>. Undeployed borrowing stays as cash, with matching debt.</p>
+<div class="formula">Assets = total BTC × exit price + cash<br>Debt = principal + simple interest<br>Net P/L = assets − debt − initial collateral value</div>
+<p style="margin-top:14px">Below liquidation, the open-position model stops. Actual proceeds depend on sale execution, fees, remaining collateral, and your lender’s terms. A rebound to a higher target does not undo an earlier liquidation.</p>
+</div>
+</div>
+</div>
+</section>
+<section class="pane" id="pane-risk" role="tabpanel" aria-labelledby="tab-risk" tabindex="0" hidden>
+<div class="metrics-three">
+<div class="panel">
+<div class="panel-body">
+<div class="metric-label">Drop to margin call · now</div>
+<div class="big-metric amber" id="risk-buffer">—</div>
+<p class="hint" id="risk-buffer-note">—</p>
+</div>
+</div>
+<div class="panel">
+<div class="panel-body">
+<div class="metric-label">90d liquidation-barrier touch</div>
+<div class="big-metric" id="risk-probability">—</div>
+<p class="hint">Illustrative, fixed barrier, zero log drift.</p>
+</div>
+</div>
+<div class="panel">
+<div class="panel-body">
+<div class="metric-label">Reward / risk from cost basis</div>
+<div class="big-metric" id="risk-rr">—</div>
+<p class="hint">Model ceiling vs. current liquidation threshold.</p>
+</div>
+</div>
+</div>
+<div class="section-grid">
+<div class="panel">
+<div class="panel-head">
+<h2>Liquidation mechanics</h2>
+</div>
+<div class="panel-body" id="risk-mechanics">
+</div>
+</div>
+<div class="panel">
+<div class="panel-head">
+<h2>Margin call stress test</h2>
+</div>
+<div class="panel-body" id="stress-test">
+</div>
+</div>
+</div>
+<div class="panel wide-panel">
+<div class="panel-head">
+<h2>Model assumptions &amp; limits</h2>
+<span class="badge">READ WITH RESULTS</span>
+</div>
+<div class="panel-body notes">
+<p>
+<strong>Loan sizing:</strong> a new loan is sized from your reference price and initial LTV. This is a scenario planner; existing loan debt must not be inferred by changing today’s price.</p>
+<p>
+<strong>Interest:</strong> simple APR × months ÷ 12, accrued into the horizon debt. Displayed “now” thresholds use principal only. No trading fees, liquidation fees, tax, slippage, or compounding are included.</p>
+<p>
+<strong>Barrier probability:</strong> 2Φ[ln(liquidation price ÷ reference price) ÷ (σ√(90/365))], assuming constant volatility and zero log-price drift. It estimates touching a fixed principal-only barrier, and excludes jumps and interest-driven barrier changes. It is not a calibrated forecast.</p>
+<p>
+<strong>Cycle score &amp; sizing:</strong> the score uses heuristic weights, not backtested success probabilities. The retained half-Kelly illustration maps the score to an assumed win probability; it is not an optimal or recommended LTV.</p>
+<div class="key-row total">
+<span>Illustrative half-Kelly output</span>
+<strong id="risk-kelly">—</strong>
+</div>
+<p>
+<a href="https://www.itl.nist.gov/div898/handbook/eda/section3/eda3661.htm" target="_blank" rel="noopener noreferrer">Normal distribution reference</a> · <a href="https://almostsuremath.com/2023/04/18/the-maximum-of-brownian-motion-and-the-reflection-principle/" target="_blank" rel="noopener noreferrer">Reflection principle derivation</a>
+</p>
+</div>
+</div>
+</section>
+<section class="pane" id="pane-signals" role="tabpanel" aria-labelledby="tab-signals" tabindex="0" hidden>
+<div class="signal-grid" id="signal-cards">
+</div>
+<div class="section-grid">
+<div class="panel">
+<div class="panel-head">
+<h2>Signal weights</h2>
+<button class="button ghost small" id="reset-weights">Reset</button>
+</div>
+<div class="panel-body">
+<p class="hint" style="margin-bottom:12px">Weights normalize to 100%. Set an individual weight to zero to exclude it.</p>
+<div id="weight-controls">
+</div>
+<p class="hint" id="weight-note" style="margin-top:14px">
+</p>
+</div>
+</div>
+<div class="panel">
+<div class="panel-head">
+<h2 id="cycle-title">Cycle context</h2>
+</div>
+<div class="panel-body" id="cycle-context">
+</div>
+</div>
+</div>
+<div class="panel wide-panel">
+<div class="panel-head">
+<h2>Signal reading</h2>
+<span class="badge">MODEL CONTEXT</span>
+</div>
+<div class="panel-body notes" id="signal-reading">
+</div>
+</div>
+<div class="panel wide-panel">
+<div class="panel-head">
+<div>
+<h2>Data provenance &amp; recent snapshots</h2>
+<p class="hint" id="data-provenance">—</p>
+</div>
+</div>
+<div class="table-wrap" tabindex="0" aria-label="Recent local snapshots">
+<table>
+<thead>
+<tr>
+<th scope="col">Date</th>
+<th scope="col">MVRV</th>
+<th scope="col">Z-score</th>
+<th scope="col">Report BTC price</th>
+</tr>
+</thead>
+<tbody id="history-rows">
+</tbody>
+</table>
+</div>
+<p class="table-note">Up to 14 daily on-chain snapshots are kept on this device. Market quotes and on-chain reports have separate timestamps. A fresh quote never makes an older MVRV report current.</p>
+</div>
+</section>
+<section class="pane" id="pane-futures" role="tabpanel" aria-labelledby="tab-futures" tabindex="0" hidden>
+<div class="panel">
+<div class="panel-head">
+<div>
+<h2>Loan vs. spot + futures</h2>
+<p class=hint>The same additional BTC exposure, with different capital requirements.</p>
+</div>
+<span class="badge">ISOLATED LONG</span>
+</div>
+<div class="comparison-controls">
+<div class="field">
+<div class="field-label">
+<label for="inp-leverage">Futures leverage</label>
+<span class="unit">×</span>
+</div>
+<div class="input-shell">
+<input id="inp-leverage" data-field="leverage" type="number" inputmode="decimal" value="5" step="1" min="1" max="50" placeholder="" aria-describedby="error-leverage" autocomplete="off"/>
+<span class="suffix">×</span>
+</div>
+<p class="field-error" id="error-leverage">
+</p>
+</div>
+<div class="field">
+<div class="field-label">
+<label for="inp-mm">Maintenance margin</label>
+<span class="unit">%</span>
+</div>
+<div class="input-shell">
+<input id="inp-mm" data-field="mm" type="number" inputmode="decimal" value="0.5" step="0.1" min="0" max="20" placeholder="" aria-describedby="error-mm" autocomplete="off"/>
+<span class="suffix">%</span>
+</div>
+<p class="field-error" id="error-mm">
+</p>
+</div>
+<div class="field">
+<div class="field-label">
+<label for="inp-funding">Assumed funding APR</label>
+<span class="unit">%</span>
+</div>
+<div class="input-shell">
+<input id="inp-funding" data-field="funding" type="number" inputmode="decimal" value="10" step="0.5" min="-100" max="200" placeholder="" aria-describedby="error-funding" autocomplete="off"/>
+<span class="suffix">%</span>
+</div>
+<p class="field-error" id="error-funding">
+</p>
+</div>
+</div>
+<div class="table-wrap" tabindex="0" aria-label="Loan and futures comparison">
+<table class="compare-table">
+<thead>
+<tr>
+<th scope="col">Metric</th>
+<th scope="col">BTC-backed loan</th>
+<th scope="col">Spot + futures</th>
+</tr>
+</thead>
+<tbody id="comparison-rows">
+</tbody>
+</table>
+</div>
+<div class="table-note">Loan carry is charged on the full principal; futures funding is estimated on deployed entry notional. Funding can vary and become negative. Futures margin is additional cash; your spot BTC remains outside the isolated futures account.</div>
+</div>
+<div class="insight">
+<h3>Cost &amp; liquidation trade-off</h3>
+<p id="futures-insight">—</p>
+</div>
+<div class="panel wide-panel">
+<div class="panel-head">
+<div>
+<h2>Comparison assumptions</h2>
+</div>
+</div>
+<div class="panel-body notes">
+<p>
+<strong>Consistent returns:</strong> loan return uses pledged collateral value. Futures portfolio return uses spot value plus posted margin. Futures-leg return uses only the futures P/L and its margin.</p>
+<p>
+<strong>Liquidation:</strong> the simplified isolated-long threshold is entry × (1 − 1/leverage) ÷ (1 − maintenance margin). Funding deductions, exchange margin tiers, fees, and changing maintenance requirements can move it. Targets below a liquidation threshold are shown as unavailable, because the open-position comparison no longer applies.</p>
+<p>
+<strong>Zero deployment:</strong> no futures position is opened. There is no futures funding, margin requirement, or futures liquidation price.</p>
+</div>
+</div>
+</section>
+<div class="bottom-note">
+<span>Scenario estimates, not execution prices. Model targets are uncertain; loan terms, fees, and liquidation paths can change the outcome.</span>
+<span class="mono" id="update-status" role="status">Ready</span>
+</div>
+</div>
+</main>
+<footer class="footer">
+<span>BTC LOAN TERMINAL <span class="muted">/ v2.0</span>
+</span>
+<span>Built on <a href="https://github.com/0xtrvkc/btcLoanAnalyzer" target="_blank" rel="noopener noreferrer">0xtrvkc/btcLoanAnalyzer</a>
+</span>
+<span>LOCAL SCENARIOS · USD DENOMINATED</span>
+</footer>
+<aside id="preset-notice" class="preset-notice" role="status" hidden><button id="preset-dismiss" class="button icon" aria-label="Dismiss preset confirmation">×</button><div class="overline">III / POSITION RESTORED</div><h2>Welcome back.</h2><div id="preset-values" class="mono"></div></aside>
+<div class="toast" id="toast" role="status" aria-live="polite">
+</div>
+<script>
+/* Shared, dependency-free calculation engine. Used by the UI and daily export. */
+(function (root, factory) {
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.LoanEngine = api;
+})(typeof window !== 'undefined' ? window : this, function () {
+  'use strict';
+  const DEFAULTS = Object.freeze({btc:1,price:61042,ltv:40,apr:1,mc:85,liq:90,vol:65,entry:0,deployPrice:0,deploy:100,target:100000,months:12,leverage:5,mm:0.5,funding:10});
+  const SAVED_POSITION = Object.freeze({btc:0.035,ltv:36,entry:79422,deployPrice:79422,apr:6,target:158844});
+  const WEIGHTS = Object.freeze({mvrv:30,zscore:25,ma:20,roc:10,cycle:15});
+  const FIELDS = {
+    btc:[0.00000001,1000000,'BTC collateral'],price:[1,1e9,'Reference price'],ltv:[0,99,'Initial LTV'],
+    apr:[0,100,'Loan APR'],mc:[1,99.9,'Margin call LTV'],liq:[1,99.99,'Liquidation LTV'],
+    vol:[0,300,'Annualized volatility'],entry:[0,1e9,'Cost basis'],deployPrice:[0,1e9,'Deployment price'],
+    deploy:[0,100,'Deployment'],target:[1,1e9,'Target price'],months:[0,120,'Holding period'],
+    leverage:[1,50,'Futures leverage'],mm:[0,20,'Maintenance margin'],funding:[-100,200,'Funding APR']
+  };
+  const clamp = (x,a,b) => Math.max(a,Math.min(b,x));
+  function validate(input) {
+    const value={}, errors={};
+    for (const [key,[min,max,label]] of Object.entries(FIELDS)) {
+      const raw=input[key];
+      const optional=key==='entry'||key==='deployPrice';
+      const n=(raw===''||raw==null)?(optional?0:NaN):Number(raw);
+      if (!Number.isFinite(n)||n<min||n>max) errors[key]=`${label} must be between ${min.toLocaleString('en-US')} and ${max.toLocaleString('en-US')}.`;
+      else value[key]=n;
+    }
+    if (!errors.mc&&!errors.liq&&value.mc>=value.liq) errors.mc='Margin call LTV must be below liquidation LTV.';
+    if (!errors.ltv&&!errors.mc&&value.ltv>=value.mc) errors.ltv='Initial LTV must be below margin call LTV.';
+    if (!errors.mm&&!errors.leverage&&value.mm/100>=1/value.leverage) errors.mm='Maintenance margin must be below initial margin (100 ÷ leverage).';
+    return {valid:Object.keys(errors).length===0,value,errors};
+  }
+  function normalCDF(z) {
+    if (z===Infinity) return 1;
+    if (z===-Infinity) return 0;
+    if (!Number.isFinite(z)) return NaN;
+    if (z===0) return 0.5;
+    const x=Math.abs(z)/Math.SQRT2, t=1/(1+0.3275911*x);
+    const erfc=t*(0.254829592+t*(-0.284496736+t*(1.421413741+t*(-1.453152027+t*1.061405429))))*Math.exp(-x*x);
+    return clamp(z<0?erfc/2:1-erfc/2,0,1);
+  }
+  // Reflection principle for log(Pt/P0) = sigma * Wt: fixed barrier, zero log drift.
+  function barrierProbability(price,barrier,vol,days) {
+    if (![price,barrier,vol,days].every(Number.isFinite)||price<=0||barrier<0||vol<0||days<0) return NaN;
+    if (barrier>=price) return 1;
+    if (barrier===0||days===0||vol===0) return 0;
+    return clamp(2*normalCDF(Math.log(barrier/price)/(vol*Math.sqrt(days/365))),0,1);
+  }
+  function normalizeWeights(raw=WEIGHTS) {
+    const out={};
+    for (const key of Object.keys(WEIGHTS)) {
+      const v=Number(raw[key]);
+      out[key]=Number.isFinite(v)&&v>=0?v:WEIGHTS[key];
+    }
+    const sum=Object.values(out).reduce((a,b)=>a+b,0);
+    for (const key of Object.keys(out)) out[key]=sum?out[key]/sum:WEIGHTS[key]/100;
+    return {weights:out,usedDefaults:sum===0};
+  }
+  function scoreSignals(data,raw) {
+    const {weights,usedDefaults}=normalizeWeights(raw);
+    const scores={
+      mvrv:clamp(10*(1-data.mvrv/(data.histMeanMvrv*2)),0,10),
+      zscore:clamp(10*(1-(data.zscore+2)/5),0,10),
+      ma:/bull/i.test(data.maStack)?8:/bear/i.test(data.maStack)?3:5,
+      roc:data.roc30>10?9:data.roc30>0?6:data.roc30>-10?4:2,
+      cycle:data.cyclePos<35?9:data.cyclePos<65?7:4
+    };
+    return {scores,weights,usedDefaults,composite:Object.keys(weights).reduce((s,k)=>s+weights[k]*scores[k],0)};
+  }
+  function kellyIllustration(score,up,down,liq) {
+    if (![score,up,down,liq].every(Number.isFinite)||up<=0||down<=0) return 0;
+    const p=0.4+score/10*0.3,odds=up/down;
+    return clamp((p-(1-p)/odds)*0.5,0,Math.max(0,liq-0.05));
+  }
+  function calculate(input,data,weights) {
+    const validation=validate(input);
+    if (!validation.valid) throw Object.assign(new Error(Object.values(validation.errors)[0]),{errors:validation.errors});
+    const p=validation.value;
+    const btc=p.btc,price=p.price,ltv=p.ltv/100,apr=p.apr/100,mcLtv=p.mc/100,liqLtv=p.liq/100;
+    const collateral=btc*price,loan=collateral*ltv,years=p.months/12;
+    const interest=loan*apr,interestCost=interest*years,debtOwed=loan+interestCost;
+    const deployPrice=p.deployPrice||price,deployedUsd=loan*p.deploy/100,undeployedUsd=loan-deployedUsd;
+    const newBtc=deployedUsd/deployPrice,totalBtc=btc+newBtc;
+    const mcPrice=loan/(btc*mcLtv),liqPrice=loan/(btc*liqLtv);
+    const mcPriceH=debtOwed/(btc*mcLtv),liqPriceH=debtOwed/(btc*liqLtv);
+    const grossProfit=btc*(p.target-price)+newBtc*(p.target-deployPrice);
+    const netProfit=grossProfit-interestCost,unlevProfit=btc*(p.target-price);
+    const breakevenPrice=(collateral+debtOwed-undeployedUsd)/totalBtc;
+    const signals=scoreSignals(data,weights),score=signals.composite;
+    const rrRatio=p.entry>liqPrice&&data.ceilPrice>p.entry?(data.ceilPrice-p.entry)/(p.entry-liqPrice):null;
+    const d={...p,btc,price,ltv,ltvPct:p.ltv,apr,mcLtv,liqLtv,vol:p.vol/100,collateral,loan,years,interest,interestCost,
+      debtOwed,deployPct:p.deploy/100,deployPrice,deployedUsd,undeployedUsd,newBtc,totalBtc,mcPrice,liqPrice,mcPriceH,liqPriceH,
+      buffer:price-mcPrice,bufferPct:(1-mcPrice/price)*100,liqDropPct:(liqPrice/price-1)*100,
+      targetPrice:p.target,grossProfit,netProfit,unlevProfit,unlevReturnPct:unlevProfit/collateral*100,levReturnPct:netProfit/collateral*100,
+      leverageEdge:netProfit-unlevProfit,breakevenPrice,breakevenGross:(collateral+loan-undeployedUsd)/totalBtc,
+      totalValue:totalBtc*p.target+undeployedUsd,equity:totalBtc*p.target+undeployedUsd-debtOwed,
+      costBasisProfit:p.entry>0?btc*(p.target-p.entry)+newBtc*(p.target-deployPrice)-interestCost:null,
+      borrowedProfit:newBtc*(p.target-deployPrice)-interestCost,
+      borrowedBreakeven:newBtc>0?deployPrice+interestCost/newBtc:null,
+      pLiq90:barrierProbability(price,liqPrice,p.vol/100,90),score,signals,rrRatio,
+      kellyLtv:kellyIllustration(score,(data.ceilPrice-price)/price,(price-liqPrice)/price,liqLtv),
+      athDropPct:data.c4Ath>0?(price/data.c4Ath-1)*100:null,
+      netGain:btc*(data.ceilPrice-price)+newBtc*(data.ceilPrice-deployPrice)-interestCost
+    };
+    d.targetStatus=scenario(d,p.target).status;
+    return d;
+  }
+  function scenario(d,price) {
+    const ltv=d.debtOwed/(d.btc*price),equity=d.totalBtc*price+d.undeployedUsd-d.debtOwed;
+    return {price,ltv,change:(price/d.price-1)*100,equity,pnl:equity-d.collateral,
+      hold:d.btc*(price-d.price),borrowed:d.newBtc*(price-d.deployPrice)-d.interestCost,
+      cost:d.entry>0?d.btc*(price-d.entry)+d.newBtc*(price-d.deployPrice)-d.interestCost:null,
+      status:d.loan===0?'No debt':ltv>=d.liqLtv-1e-10?'Liquidation':ltv>=d.mcLtv-1e-10?'Margin call':'Active'};
+  }
+  function futures(d) {
+    const notionalUsd=d.deployedUsd,notionalBtc=d.newBtc,margin=notionalUsd/d.leverage;
+    const mmRate=d.mm/100,fundingApr=d.funding/100,fundingCost=notionalUsd*fundingApr*d.years;
+    const liqPrice=notionalUsd>0?d.deployPrice*(1-1/d.leverage)/(1-mmRate):null;
+    const pnlFutAdj=d.grossProfit-fundingCost,legPnl=d.newBtc*(d.targetPrice-d.deployPrice)-fundingCost;
+    const capital=d.collateral+margin;
+    return {notionalUsd,notionalBtc,margin,mmRate,fundingApr,fundingCost,liqPrice,capital,legPnl,
+      liqDropPct:liqPrice!==null?(liqPrice/d.price-1)*100:null,
+      pnlLoanAdj:d.netProfit,pnlFutAdj,returnLoanPct:d.netProfit/d.collateral*100,returnFutPct:pnlFutAdj/capital*100,
+      legReturnPct:margin>0?legPnl/margin*100:null,
+      breakevenSimple:(d.collateral+d.deployedUsd)/d.totalBtc,
+      breakevenAdj:(d.collateral+d.deployedUsd+fundingCost)/d.totalBtc,
+      targetLiquidated:liqPrice!==null&&(d.targetPrice<=liqPrice||d.price<=liqPrice),
+      costDifference:fundingCost-d.interestCost};
+  }
+  function twoPots(d) {
+    const debtBtc=d.debtOwed/d.price;
+    const residualBtc=d.btc-debtBtc,walletBtc=residualBtc+d.newBtc;
+    const cash=d.undeployedUsd,netAssets=walletBtc*d.price+cash;
+    return {debtBtc,residualBtc,walletBtc,cash,netAssets,newValue:d.newBtc*d.price,residualValue:residualBtc*d.price,
+      available:scenario(d,d.price).status!=='Liquidation'};
+  }
+  function dateValid(s) {
+    return typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(s)&&Number.isFinite(Date.parse(s+'T00:00:00Z'))&&new Date(s+'T00:00:00Z').toISOString().slice(0,10)===s;
+  }
+  function ageHours(date,now=Date.now()) {return dateValid(date)?Math.max(0,(now-Date.parse(date+'T00:00:00Z'))/36e5):Infinity;}
+  function parseSummary(text) {
+    if (typeof text!=='string'||text.length>2e6) throw new Error('Invalid MVRV report.');
+    const lines=text.split(/\r?\n/).map(s=>s.trim());
+    const map=new Map();
+    for(const line of lines){const i=line.indexOf(':');if(i>0&&!map.has(line.slice(0,i).toLowerCase()))map.set(line.slice(0,i).toLowerCase(),line.slice(i+1).trim());}
+    const str=k=>map.get(k.toLowerCase());
+    const num=k=>{const raw=str(k);if(raw==null)return null;const clean=raw.replace(/[$,%]/g,'').replace(/−/g,'-');const m=clean.match(/^[-+]?\d+(?:\.\d+)?/);return m?Number(m[0]):null;};
+    const data={date:str('Date'),signal:str('Signal')||'Unclassified',maStack:str('MA stack')||'Unknown',cycleName:str('Current cycle')||'Unknown'};
+    const mapping={mvrv:'MVRV',zscore:'Z-score',ma20:'MA20',ma50:'MA50',ma200:'MA200',roc30:'ROC 30d',roc90:'ROC 90d',btcPrice:'BTC Price',histMeanMvrv:'Historical mean MVRV',cyclePos:'Cycle position',ceilPrice:'Ceiling consensus midpoint',floorPrice:'Floor consensus midpoint',cycleDrawdown:'Current drawdown from cycle peak',mvrvVsCyclePeak:'Current MVRV vs cycle peak'};
+    for(const [key,label]of Object.entries(mapping))data[key]=num(label);
+    const required=['mvrv','zscore','btcPrice','histMeanMvrv','cyclePos','ceilPrice','floorPrice','roc30'];
+    if(!dateValid(data.date)||required.some(k=>!Number.isFinite(data[k]))||['mvrv','btcPrice','histMeanMvrv','ceilPrice','floorPrice'].some(k=>data[k]<=0)||data.cyclePos<0||data.cyclePos>100||data.maStack==='Unknown')throw new Error('Incomplete or invalid MVRV report; previous data retained.');
+    data.totalPoints=str('Total data points')||null;data.dataRange=str('Data range')||null;
+    const peak=str('Cycle peak so far')?.match(/([\d.]+)\s+on\s+(\d{4}-\d{2}-\d{2})/);
+    data.cyclePeakMvrv=peak?Number(peak[1]):null;data.cyclePeakDate=peak?peak[2]:null;
+    const range=str('Ceiling consensus range')?.match(/\$([\d,]+)\s*[–—-]\s*\$([\d,]+)/);
+    data.ceilLow=range?Number(range[1].replaceAll(',','')):null;data.ceilHigh=range?Number(range[2].replaceAll(',','')):null;
+    const cycleNumber=data.cycleName.match(/C(?:ycle)?\s*(\d+)/i)?.[1];let currentCycle=null,worst=0;
+    for(const line of lines){
+      const cycle=line.match(/^Cycle\s+(\d+):/i);if(cycle)currentCycle=cycle[1];
+      const ath=line.match(/BTC ATH:\s*\$([\d,]+)\s+on\s+(\d{4}-\d{2}-\d{2})/i);
+      if(ath&&currentCycle===cycleNumber){data.c4Ath=Number(ath[1].replaceAll(',',''));data.c4AthDate=ath[2];}
+      const dd=line.match(/Max drawdown:\s*(-[\d.]+)%/i);if(dd&&Number(dd[1])<worst){worst=Number(dd[1]);data.worstCycleTag='C'+currentCycle;}
+      for(const [key,label]of [['mvrvUpside','Upside'],['mvrvDownside','Downside']]){const m=line.match(new RegExp('MVRV '+label+':\\s*\\$([\\d,]+)','i'));if(m)data[key]=Number(m[1].replaceAll(',',''));}
+      const halving=line.match(/C\d+ halving:\s*(\d{4}-\d{2}-\d{2}).*\[upcoming/i);
+      if(halving&&dateValid(halving[1])&&halving[1]>data.date&&(!data.nextHalving||halving[1]<data.nextHalving))data.nextHalving=halving[1];
+    }
+    data.worstCycleDrawdown=worst||null;
+    return data;
+  }
+  function priceSeries(raw) {
+    if (!raw||typeof raw!=='object'||Array.isArray(raw)) throw new Error('Invalid daily price series.');
+    const result={};
+    for(const [date,value]of Object.entries(raw))if(dateValid(date)&&typeof value!=='boolean'&&value!==null&&Number.isFinite(Number(value))&&Number(value)>0)result[date]=Number(value);
+    if(!Object.keys(result).length)throw new Error('No valid daily prices.');return result;
+  }
+  function nearestPrice(series,date) {
+    if(!dateValid(date))return null;
+    const start=Date.parse(date+'T00:00:00Z');
+    for(let i=0;i<=7;i++){const probe=new Date(start-i*864e5).toISOString().slice(0,10);if(Number.isFinite(series[probe])&&series[probe]>0)return {date:probe,price:series[probe],exact:i===0};}return null;
+  }
+  return {DEFAULTS,SAVED_POSITION,WEIGHTS,FIELDS,clamp,validate,normalCDF,barrierProbability,normalizeWeights,scoreSignals,kellyIllustration,calculate,scenario,futures,twoPots,dateValid,ageHours,parseSummary,priceSeries,nearestPrice};
+});
+
+</script>
+<script>
+window.BUNDLED_SNAPSHOT = {
+  "date": "2026-09-06",
+  "signal": "Accumulate",
+  "maStack": "Bullish (MA20>MA50>MA200)",
+  "cycleName": "C4 (2024-27)",
+  "mvrv": 1.501,
+  "zscore": -0.007,
+  "ma20": 1.448,
+  "ma50": 1.309,
+  "ma200": 1.297,
+  "roc30": 22.5,
+  "roc90": 27.9,
+  "btcPrice": 79946,
+  "histMeanMvrv": 1.853,
+  "cyclePos": 60.5,
+  "ceilPrice": 111822,
+  "floorPrice": 35122,
+  "cycleDrawdown": -45,
+  "mvrvVsCyclePeak": 55,
+  "totalPoints": "5,812",
+  "dataRange": "2010-10-09 to 2026-09-06",
+  "cyclePeakMvrv": 2.73,
+  "cyclePeakDate": "2024-11-22",
+  "ceilLow": 97717,
+  "ceilHigh": 125927,
+  "worstCycleTag": "C1",
+  "c4Ath": 124728,
+  "c4AthDate": "2025-10-06",
+  "mvrvUpside": 125927,
+  "mvrvDownside": 10184,
+  "nextHalving": "2028-03-26",
+  "worstCycleDrawdown": -90.6
+};
+
+</script>
+<script>
+(function(root,factory){const api=factory(typeof module==='object'&&module.exports?require('./engine.js'):root.LoanEngine);if(typeof module==='object'&&module.exports)module.exports=api;else root.MarketClient=api;})(typeof window!=='undefined'?window:this,function(M){
+  'use strict';
+  const BASE='https://raw.githubusercontent.com/0xtrvkc/dynamic-btc-analytics-dashboard/main/';
+  const PRICE_URL=BASE+'btc_daily_price.json';
+  async function request(url,options={},asText=false){
+    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),7000);
+    try{const response=await fetch(url,{...options,signal:controller.signal,cache:'no-store'});if(!response.ok)throw new Error('Source returned HTTP '+response.status);return asText?await response.text():await response.json();}finally{clearTimeout(timer);}
+  }
+  async function dailySeries(){return M.priceSeries(await request(PRICE_URL));}
+  async function quote(now=Date.now()){
+    try{const mids=await request('https://api.hyperliquid.xyz/info',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'allMids'})});
+      const price=Number(mids?.BTC);if(!Number.isFinite(price)||price<=0)throw new Error('Invalid BTC quote');
+      return {price,date:new Date(now).toISOString().slice(0,10),fetchedAt:new Date().toISOString(),live:true,source:'Hyperliquid mid'};
+    }catch{
+      const series=await dailySeries(),today=new Date(now).toISOString().slice(0,10);
+      const dates=Object.keys(series).filter(d=>d<=today).sort();if(!dates.length)throw new Error('No current or historical daily quote');const date=dates.at(-1);
+      return {price:series[date],date,fetchedAt:new Date().toISOString(),live:false,source:'Daily snapshot'};
+    }
+  }
+  async function summary(now=Date.now()){
+    const dates=[0,1,2,3].map(i=>new Date(now-i*864e5).toISOString().slice(0,10));
+    const reports=await Promise.allSettled(dates.map(async date=>{const raw=await request(BASE+'exports/mvrv_summary_'+date+'.txt',{},true);const data=M.parseSummary(raw);if(data.date!==date)throw new Error('Report date mismatch');return data;}));
+    const valid=reports.find(r=>r.status==='fulfilled');if(!valid)throw new Error('No valid on-chain report in the last four days');return valid.value;
+  }
+  async function refresh(now=Date.now()){
+    const [onchain,market]=await Promise.allSettled([summary(now),quote(now)]);
+    return {data:onchain.status==='fulfilled'?onchain.value:null,quote:market.status==='fulfilled'?market.value:null,
+      reportError:onchain.status==='rejected'?onchain.reason.message:null,quoteError:market.status==='rejected'?market.reason.message:null};
+  }
+  return {refresh,dailySeries,BASE,PRICE_URL};
+});
+
+</script>
+<script>
+(function(root,factory){const api=factory(typeof module==='object'&&module.exports?require('./engine.js'):root.LoanEngine);if(typeof module==='object'&&module.exports)module.exports=api;else root.LoanReport=api;})(typeof window!=='undefined'?window:this,function(M){
+  'use strict';
+  const num=(x,n=2)=>Number.isFinite(x)?x.toLocaleString('en-US',{maximumFractionDigits:n}):'n/a';
+  const usd=x=>Number.isFinite(x)?'$'+num(x):'n/a';
+  function build({input,data,weights,quote,source='Bundled snapshot',history=[],generatedAt=new Date().toISOString()}){
+    const d=M.calculate(input,data,weights),f=M.futures(d);
+    const lines=['BTC LOAN TERMINAL — POSITION ANALYSIS',`Generated: ${generatedAt}`,'',
+      'DATA PROVENANCE',`On-chain report: ${data.date} (${source})`,
+      `Quote: ${quote?.source||'Report snapshot'}; date ${quote?.date||data.date}; fetched ${quote?.fetchedAt||'not live-fetched'}`,
+      `Market quote: ${usd(quote?.price||data.btcPrice)}; reference price used for loan sizing: ${usd(d.price)}`,
+      'A new loan is sized at the reference price. This is not a fixed-debt position tracker.',
+      M.ageHours(data.date,Date.parse(generatedAt))>48?'ON-CHAIN DATA IS STALE (older than 48h).':'On-chain date is within 48 hours of report generation.',
+      '', 'POSITION & FINANCING',...Object.entries({
+        'BTC collateral':num(d.btc,8),'Reference BTC price':usd(d.price),'Collateral value':usd(d.collateral),'Initial LTV':num(d.ltvPct)+'%',
+        'Loan principal':usd(d.loan),'APR assumption':num(d.apr*100)+'%','Horizon':num(d.months)+' months',
+        'Simple interest over horizon':usd(d.interestCost),'Debt at horizon':usd(d.debtOwed),'Deployment':num(d.deployPct*100)+'%',
+        'Deployment BTC price':usd(d.deployPrice),'Loan cash held':usd(d.undeployedUsd),'Additional BTC':num(d.newBtc,8),'Total BTC exposure':num(d.totalBtc,8),
+        'Original collateral cost basis':d.entry?usd(d.entry):'unset'
+      }).map(([k,v])=>k+': '+v),'','TARGET SCENARIO',`Target BTC price: ${usd(d.targetPrice)}`,`Target status: ${d.targetStatus}`,
+      `Net equity: ${d.targetStatus==='Liquidation'?'n/a — liquidation threshold crossed':usd(d.equity)}`,
+      `Net P/L after interest: ${d.targetStatus==='Liquidation'?'n/a — open-position model no longer applies':usd(d.netProfit)}`,
+      `Return on pledged collateral: ${d.targetStatus==='Liquidation'?'n/a':num(d.levReturnPct)+'%'}`,
+      `Spot-only P/L: ${usd(d.unlevProfit)}`,`Leverage edge: ${d.targetStatus==='Liquidation'?'n/a':usd(d.leverageEdge)}`,
+      `Breakeven including interest: ${usd(d.breakevenPrice)}`,`P/L vs actual cost basis: ${d.targetStatus==='Liquidation'?'n/a':usd(d.costBasisProfit)}`,
+      '', 'LIQUIDATION & RISK',`Margin call LTV: ${num(d.mcLtv*100)}%; liquidation LTV: ${num(d.liqLtv*100)}%`,
+      `Current margin call price (principal only): ${d.loan?usd(d.mcPrice):'n/a — no debt'}`,
+      `Current liquidation price (principal only): ${d.loan?usd(d.liqPrice):'n/a — no debt'}`,
+      `Horizon margin call price (interest included): ${d.loan?usd(d.mcPriceH):'n/a — no debt'}`,
+      `Horizon liquidation price (interest included): ${d.loan?usd(d.liqPriceH):'n/a — no debt'}`,
+      `90d fixed-barrier touch probability: ${num(d.pLiq90*100,4)}%`,
+      'Probability assumes constant annual volatility, zero log drift, no jumps, and no barrier changes due to interest.',
+      `Annualized volatility assumption: ${num(d.vol*100)}%`,
+      `Reward/risk from cost basis: ${num(d.rrRatio)}`,
+      `Illustrative half-Kelly output: ${num(d.kellyLtv*100)}% (uncalibrated heuristic; not an optimal LTV)`,
+      '', 'ON-CHAIN SIGNALS',`Heuristic score: ${num(d.score)}/10 (not a lending recommendation)`,
+      ...Object.entries(d.signals.scores).map(([k,v])=>`${k}: score ${num(v)}/10; weight ${num(d.signals.weights[k]*100)}%`),
+      ...Object.entries(data).map(([k,v])=>`${k}: ${v??'unavailable'}`),
+      '', 'MATCHED-EXPOSURE FUTURES COMPARISON',
+      `Additional BTC exposure on both sides: ${num(f.notionalBtc,8)}`,
+      `Futures entry notional: ${usd(f.notionalUsd)}; isolated leverage: ${d.leverage}x`,
+      `Additional cash margin: ${usd(f.margin)}; spot plus margin capital: ${usd(f.capital)}`,
+      `Futures liquidation price (approximate): ${usd(f.liqPrice)}`,
+      `Loan interest: ${usd(d.interestCost)}; futures funding assumption: ${usd(f.fundingCost)}`,
+      `Loan net P/L at target: ${d.targetStatus==='Liquidation'?'n/a — liquidation threshold crossed':usd(f.pnlLoanAdj)}`,
+      `Spot + futures net P/L at target: ${f.targetLiquidated?'n/a — liquidation threshold crossed':usd(f.pnlFutAdj)}`,
+      `Futures portfolio return on spot + margin: ${f.targetLiquidated?'n/a':num(f.returnFutPct)+'%'}`,
+      `Futures leg return on margin: ${f.targetLiquidated?'n/a':num(f.legReturnPct)+'%'}`,
+      `Futures portfolio breakeven: ${usd(f.breakevenAdj)}`,
+      '', 'PRICE LADDER (interest included)',
+      'Exit USD | LTV | Status | Net equity | Net P/L | Borrowed P/L | Cost basis P/L'];
+    const prices=[d.liqPriceH,d.mcPriceH,data.floorPrice,d.price*.8,d.price,d.targetPrice,d.price*1.2,d.breakevenPrice,data.ceilPrice,data.c4Ath];
+    for(const price of [...new Set(prices.filter(p=>Number.isFinite(p)&&p>0))].sort((a,b)=>a-b)){
+      const s=M.scenario(d,price),alive=s.status!=='Liquidation';
+      lines.push([usd(price),num(s.ltv*100)+'%',s.status,alive?usd(s.equity):'n/a',alive?usd(s.pnl):'n/a',alive?usd(s.borrowed):'n/a',alive?usd(s.cost):'n/a'].join(' | '));
+    }
+    lines.push('','RECENT ON-CHAIN SNAPSHOTS',...history.map(h=>`${h.date} | MVRV ${h.mvrv} | Z ${h.zscore} | Report BTC ${usd(h.btcPrice)}`),
+      '','MODEL LIMITS','Open-position scenario values are conditional on no earlier liquidation. A later rebound does not restore a liquidated position.',
+      'Interest is simple, APR and funding are flat assumptions; fees, taxes, slippage, and compounding are excluded.',
+      'On-chain model targets and heuristic scores are uncertain. Original and borrowed BTC keep separate cost bases.',
+      'Futures margin is extra cash. Futures liquidation excludes funding deductions and exchange-specific tiers.',
+      'Normal CDF: https://www.itl.nist.gov/div898/handbook/eda/section3/eda3661.htm',
+      'Reflection principle: https://almostsuremath.com/2023/04/18/the-maximum-of-brownian-motion-and-the-reflection-principle/',
+      'Source: https://github.com/0xtrvkc/btcLoanAnalyzer','');
+    return lines.join('\n');
+  }
+  return {build};
+});
+
+</script>
+<script>
+(function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.PresetShortcuts=api;})(typeof window!=='undefined'?window:this,function(){
+  'use strict';
+  function keyHandler(activate,now=Date.now){
+    let count=0,last=0;
+    return event=>{
+      const target=event.target;
+      if(event.ctrlKey||event.metaKey||event.altKey||event.isComposing||event.repeat||target?.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(target?.tagName||'')||target?.closest?.('[contenteditable="true"],[role="textbox"]')){count=0;return;}
+      const time=now();
+      if(event.key?.toLowerCase()!=='i'){count=0;return;}
+      count=time-last>1500?1:count+1;last=time;
+      if(count===3){count=0;activate();}
+    };
+  }
+  function holdHandlers({activate,charge,focus,blur,schedule=setTimeout,cancel=clearTimeout}){
+    let press=null;
+    function stop(){if(press)cancel(press.timer);press=null;charge(false);}
+    return {
+      down(event){
+        if(event.isPrimary===false||event.button>0)return;
+        stop();
+        // Pointer cancellation does not disable native pan/zoom; touch-action does.
+        if(event.pointerType==='touch')event.preventDefault();
+        const state={id:event.pointerId,x:event.clientX,y:event.clientY,touch:event.pointerType==='touch',done:false,timer:null};press=state;charge(true);
+        state.timer=schedule(()=>{if(press!==state)return;state.done=true;charge(false);blur();activate();},800);
+      },
+      move(event){if(press&&event.pointerId===press.id&&(Math.abs(event.clientX-press.x)>12||Math.abs(event.clientY-press.y)>12))stop();},
+      up(event){if(!press||event.pointerId!==press.id)return;const tap=press.touch&&!press.done;stop();if(tap)focus();},
+      cancel:stop,
+      context(event){if(press)event.preventDefault();}
+    };
+  }
+  return {keyHandler,holdHandlers};
+});
+
+</script>
+<script>
+/* Interface orchestration. Calculation and data parsing live in the shared engine. */
+'use strict';
+const M=window.LoanEngine, $=id=>document.getElementById(id);
+const escapeHTML=value=>String(value??'—').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=(n,dp=0)=>Number.isFinite(n)?n.toLocaleString('en-US',{minimumFractionDigits:dp,maximumFractionDigits:dp}):'—';
+const usd=(n,dp=0)=>Number.isFinite(n)?(n<0?'−':'')+'$'+fmt(Math.abs(n),dp):'—';
+const signed=n=>Number.isFinite(n)?(n>0?'+':'')+usd(n):'—';
+const pct=(n,dp=1)=>Number.isFinite(n)?fmt(n,dp)+'%':'—';
+const signedPct=n=>Number.isFinite(n)?(n>0?'+':'')+pct(n):'—';
+const compact=n=>Math.abs(n)>=1e6?(n<0?'−':'')+'$'+fmt(Math.abs(n)/1e6,1)+'m':Math.abs(n)>=1000?(n<0?'−':'')+'$'+fmt(Math.abs(n)/1000,0)+'k':usd(n);
+const tone=n=>n>0?'good':n<0?'bad':'muted';
+const set=(id,text)=>{const node=$(id);if(node&&node.textContent!==String(text))node.textContent=text;};
+const badge=(label,kind='')=>`<span class="badge ${kind}">${escapeHTML(label)}</span>`;
+const row=(label,value,cls='')=>`<div class="key-row ${cls}"><span>${escapeHTML(label)}</span><strong>${value}</strong></div>`;
+const STORAGE={position:'btc_terminal_position_v2',data:'btc_terminal_data_v2',history:'btc_loan_snapshots_v2',weights:'btc_terminal_weights_v2'};
+function getStored(key,fallback){try{const raw=localStorage.getItem(key);return raw===null?fallback:JSON.parse(raw);}catch{return fallback;}}
+function putStored(key,value){try{localStorage.setItem(key,JSON.stringify(value));return true;}catch{return false;}}
+function validData(x){return x&&M.dateValid(x.date)&&['mvrv','zscore','btcPrice','histMeanMvrv','cyclePos','ceilPrice','floorPrice','roc30'].every(k=>Number.isFinite(x[k]))&&['mvrv','btcPrice','histMeanMvrv','ceilPrice','floorPrice'].every(k=>x[k]>0)&&x.cyclePos>=0&&x.cyclePos<=100&&typeof x.maStack==='string';}
+let D=window.BUNDLED_SNAPSHOT;
+const cached=getStored(STORAGE.data,null);
+let dataSource='Bundled snapshot';
+if(validData(cached)&&cached.date>=D.date){D=cached;dataSource='Cached report';}
+let quote={price:D.btcPrice,date:D.date,source:'Report snapshot',live:false,fetchedAt:null};
+let history=getStored(STORAGE.history,[]);
+if(!Array.isArray(history))history=[];
+history=history.filter(h=>h&&M.dateValid(h.date)&&['mvrv','zscore','btcPrice'].every(k=>Number.isFinite(h[k]))).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,14);
+let rawWeights=getStored(STORAGE.weights,{...M.WEIGHTS});
+if(!rawWeights||typeof rawWeights!=='object'||Array.isArray(rawWeights))rawWeights={...M.WEIGHTS};
+for(const k of Object.keys(M.WEIGHTS)){const n=Number(rawWeights[k]);rawWeights[k]=Number.isFinite(n)?M.clamp(n,0,100):M.WEIGHTS[k];}
+let currentView='overview',currentResult=null,validInput=null,refreshRunning=false,priceEdited=false,editRevision=0,quoteError=null,reportError=null,renderFrame=null,toastTimer=null;
+let chartScale=null,chartPrice=null,chartAnimate=true;
+const fields=[...document.querySelectorAll('[data-field]')];
+function readInputs(){return Object.fromEntries(fields.map(n=>[n.dataset.field,n.value]));}
+function weights(){return {...rawWeights};}
+function calc(){return M.calculate(readInputs(),D,weights());}
+function calcFutures(d){return M.futures(d);}
+function toast(message){set('toast',message);$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),3500);}
+function applyInput(input,{markPrice=true}={}){for(const [key,value]of Object.entries(input)){const node=$('inp-'+key);if(node&&value!=null)node.value=value===0&&(key==='entry'||key==='deployPrice')?'':value;}if(markPrice&&Object.hasOwn(input,'price'))priceEdited=true;editRevision++;render();}
+function saveHistory(data){history=history.filter(h=>h.date!==data.date);history.push({date:data.date,mvrv:data.mvrv,zscore:data.zscore,btcPrice:data.btcPrice});history.sort((a,b)=>b.date.localeCompare(a.date));history=history.slice(0,14);putStored(STORAGE.history,history);}
+function dateLabel(s){return M.dateValid(s)?new Date(s+'T00:00:00Z').toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'}):'Unavailable';}
+function updateMarket(){
+  set('market-price',usd(quote.price));set('ticker-mvrv',fmt(D.mvrv,3));set('ticker-zscore',fmt(D.zscore,3));
+  $('ticker-zscore').className='ticker-val '+(D.zscore<0?'good':'');
+  set('ticker-trend',/bull/i.test(D.maStack)?'Bullish':/bear/i.test(D.maStack)?'Bearish':'Mixed');
+  $('ticker-trend').className='ticker-val '+(/bull/i.test(D.maStack)?'good':'amber');
+  set('ticker-cycle',pct(D.cyclePos));set('data-date',dateLabel(D.date));
+  const quoteAge=quote.fetchedAt?(Date.now()-Date.parse(quote.fetchedAt))/6e4:Infinity;
+  set('quote-source',quote.live?(quoteAge<5?'MID · ':'CACHED · ')+new Date(quote.fetchedAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'})+' UTC':quote.source);
+  const notes=[];
+  if(M.ageHours(D.date)>48)notes.push(`On-chain data is stale (${dateLabel(D.date)}).`);
+  else if(dataSource==='Bundled snapshot'||dataSource==='Cached report')notes.push(`${dataSource} · ${dateLabel(D.date)}.`);
+  if(reportError)notes.push('On-chain refresh unavailable; previous valid report retained.');
+  if(quoteError)notes.push('Quote unavailable; previous price retained.');
+  else if(!quote.live)notes.push(`BTC quote uses ${quote.date} report data.`);
+  else if(quoteAge>=5)notes.push('Market quote is over five minutes old. Refresh to update.');
+  $('data-notice').hidden=!notes.length;set('data-notice-text',notes.join(' '));
+  set('data-provenance',`${dataSource} · on-chain ${dateLabel(D.date)} · quote ${quote.source}, ${quote.date}${quote.fetchedAt?' at '+new Date(quote.fetchedAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'})+' UTC':''}`);
+}
+function validateAndRead(){
+  const validation=M.validate(readInputs());
+  fields.forEach(node=>{const message=validation.errors[node.dataset.field]||'';node.setAttribute('aria-invalid',String(Boolean(message)));set('error-'+node.dataset.field,message);});
+  $('validation-banner').hidden=validation.valid;
+  $('workspace').classList.toggle('invalid-results',!validation.valid);
+  if(!validation.valid){
+    const message=Object.values(validation.errors)[0];set('validation-message',`${message} Results show the last valid inputs; export and save are paused.`);
+    set('update-status','Check inputs');$('export-btn').disabled=true;$('save-position').disabled=true;
+    if(Object.keys(validation.errors).some(k=>['leverage','mm','funding'].includes(k))&&currentView!=='futures')switchView('futures',false);
+    return null;
+  }
+  $('export-btn').disabled=false;$('save-position').disabled=false;
+  return validation.value;
+}
+function render(){
+  const input=validateAndRead();if(!input)return;
+  validInput=input;const d=M.calculate(input,D,weights());currentResult=d;
+  const ltvMax=Math.max(0,Math.ceil(d.mcLtv*100)-1);$('ltv-range').max=ltvMax;$('ltv-range').value=d.ltvPct;set('ltv-max-label',ltvMax+'%');
+  set('horizon-label',`${fmt(d.months)} month horizon · USD`);
+  set('kpi-loan',usd(d.loan));set('kpi-loan-sub',`${pct(d.ltvPct,0)} initial LTV`);
+  set('kpi-collateral',usd(d.collateral));set('kpi-collateral-sub',`${fmt(d.btc,Math.max(3,d.btc<0.001?8:3))} BTC pledged`);
+  set('kpi-liq',d.loan?usd(d.liqPrice):'No debt');set('kpi-liq-sub',d.loan?`${pct(-d.liqDropPct)} drop from reference`:'No liquidation threshold');
+  set('kpi-cost',usd(d.interestCost));set('kpi-cost-sub',`${pct(d.apr*100)} APR · ${fmt(d.months)} months`);
+  document.querySelectorAll('[data-target]').forEach(button=>{const match=targetFor(button.dataset.target,d);button.setAttribute('aria-pressed',String(match>0&&Math.abs(d.targetPrice-Math.round(match))<1));});
+  renderOverview(d);renderActive(d);
+  set('update-status',refreshRunning?'Refreshing data…':'Inputs applied');
+  window.__terminalReady=true;
+}
+function scheduleRender(){if(renderFrame!==null)cancelAnimationFrame(renderFrame);renderFrame=requestAnimationFrame(()=>{renderFrame=null;render();});}
+function renderOverview(d){
+  const liquidated=d.targetStatus==='Liquidation',profit=d.netProfit;
+  set('target-pnl',liquidated?'Unavailable':signed(profit));$('target-pnl').className='chart-result num '+(liquidated?'bad':tone(profit));
+  set('target-return',liquidated?'Target crosses the liquidation threshold':`${signedPct(d.levReturnPct)} return on collateral`);
+  set('target-value',usd(d.targetPrice));set('target-status',d.targetStatus.toUpperCase());
+  $('target-status').className='badge '+(liquidated?'bad':d.targetStatus==='Margin call'?'amber':'good');
+  set('overview-breakeven',usd(d.breakevenPrice));set('overview-edge',liquidated?'—':signed(d.leverageEdge));
+  $('overview-edge').className='num '+(liquidated?'muted':tone(d.leverageEdge));
+  set('score-number',fmt(d.score,1));set('score-date',D.date);
+  const stale=M.ageHours(D.date)>48;set('score-badge',stale?'STALE MODEL':'HEURISTIC');
+  set('score-title',d.score>=7?'Supportive cycle signals':d.score>=5?'Mixed cycle signals':'Cautious cycle signals');
+  const delta=(D.mvrv/D.histMeanMvrv-1)*100;
+  set('score-context',`MVRV sits ${pct(Math.abs(delta),0)} ${delta<0?'below':'above'} its historical mean. This score measures cycle context, not loan safety.`);
+  $('score-track').innerHTML=Array.from({length:10},(_,i)=>`<i class="score-seg ${i<Math.round(d.score)?'on':''}"></i>`).join('');
+  $('allocation-fill').style.width=d.deployPct*100+'%';
+  set('allocation-deployed',usd(d.deployedUsd));set('allocation-cash',usd(d.undeployedUsd));set('allocation-btc','+'+fmt(d.newBtc,5));set('allocation-total',fmt(d.totalBtc,5)+' BTC');
+  set('level-liq',d.loan?usd(d.liqPriceH):'No debt');set('level-liq-sub',d.loan?`${signedPct((d.liqPriceH/d.price-1)*100)} from reference`:'No liquidation');
+  set('level-mc',d.loan?usd(d.mcPriceH):'No debt');set('level-mc-sub',d.loan?`${signedPct((d.mcPriceH/d.price-1)*100)} from reference`:'No margin call');
+  set('level-floor',usd(D.floorPrice));set('level-ceiling',usd(D.ceilPrice));
+  const title=liquidated?'Target crosses liquidation':d.mcPriceH>=d.price?'Interest pushes the horizon into margin call':d.leverageEdge>=0?'Added exposure improves this target outcome':'Borrowing reduces this target outcome';
+  set('overview-insight-title',title);
+  set('overview-insight',liquidated?`At ${usd(d.targetPrice)}, the model reaches your ${pct(d.liqLtv*100,0)} liquidation LTV. Open-position P/L is unavailable; sale execution, fees, and any residual balance determine the outcome.`:`At ${usd(d.targetPrice)}, the loan strategy produces ${signed(d.netProfit)} after ${usd(d.interestCost)} of interest, versus ${signed(d.unlevProfit)} from holding ${fmt(d.btc,3)} BTC. The extra ${fmt(d.newBtc,5)} BTC also increases downside exposure. Results require the position to survive the path to target.`);
+  renderTwoPots(d);
+  if(currentView==='overview')renderPayoff(d);
+}
+function renderTwoPots(d){
+  const p=M.twoPots(d),btc=n=>fmt(n,6)+' BTC';
+  $('pots-warning').hidden=p.available;
+  set('pots-warning','The reference price falls in the horizon liquidation zone. Repayment and wallet totals are unavailable.');
+  $('pot-original-details').innerHTML=row('Original collateral',btc(d.btc))+row('Sell to repay debt',btc(p.debtBtc))+row('Principal + interest',usd(d.debtOwed));
+  set('pot-original-btc',p.available?btc(p.residualBtc):'Unavailable');set('pot-original-value',p.available?usd(p.residualValue):'Liquidation threshold crossed');
+  set('pot-new-btc',btc(d.newBtc));set('pot-new-value',usd(p.newValue)+' at reference price');
+  set('pots-total-btc',p.available?btc(p.walletBtc):'Unavailable');set('pots-total-note',p.available?usd(p.walletBtc*d.price)+' in BTC after repayment':'Liquidation settlement is not modeled.');
+  set('pots-cash',usd(p.cash));set('pots-net-value',p.available?'BTC + cash = '+usd(p.netAssets):'Net assets unavailable');
+  $('pots-quant-rows').innerHTML=row('Reference BTC price',usd(d.price))+row('Pledged BTC',btc(d.btc))+row('Principal + horizon interest',usd(d.debtOwed))+row('Debt in BTC at reference',btc(p.debtBtc))+row('Residual collateral BTC',p.available?btc(p.residualBtc):'Unavailable','total')+row('Loan-funded BTC',btc(d.newBtc))+row('BTC after repayment',p.available?btc(p.walletBtc):'Unavailable','total')+row('Unused loan cash',usd(p.cash))+row('Net assets, BTC + cash',p.available?usd(p.netAssets):'Unavailable');
+}
+function setTwoPotsMode(mode){
+  if(!['simple','quant'].includes(mode))return;
+  $('pots-simple').hidden=mode!=='simple';$('pots-quant').hidden=mode!=='quant';
+  $('pots-simple-btn').setAttribute('aria-pressed',String(mode==='simple'));
+  $('pots-quant-btn').setAttribute('aria-pressed',String(mode==='quant'));
+}
+function renderActive(d){if(currentView==='scenarios')renderScenarios(d);if(currentView==='risk')renderRisk(d);if(currentView==='signals')renderSignals(d);if(currentView==='futures')renderFutures(d);}
+function domain(d){const points=[d.price,d.targetPrice,d.breakevenPrice,D.floorPrice,D.ceilPrice,d.liqPriceH,d.mcPriceH].filter(n=>Number.isFinite(n)&&n>0);let min=Math.max(1,Math.min(d.price*.4,...points)*.8),max=Math.max(...points,d.price*1.3)*1.08;return [min,max];}
+function renderPayoff(d){
+  const node=$('payoff-chart');if(!node||currentView!=='overview')return;
+  const width=Math.max(310,node.clientWidth||600),height=width<400?265:285,L=58,R=20,T=25,B=38,W=width-L-R,H=height-T-B;
+  const [min,max]=domain(d),sMin=M.scenario(d,min),sMax=M.scenario(d,max);
+  const vals=[sMin.pnl,sMax.pnl,sMin.hold,sMax.hold,0],yMin=Math.min(...vals),yMax=Math.max(...vals),pad=Math.max(1,(yMax-yMin)*.08);
+  const lo=yMin-pad,hi=yMax+pad,x=p=>L+(p-min)/(max-min)*W,y=p=>T+(hi-p)/(hi-lo)*H;
+  const grid=Array.from({length:5},(_,i)=>{const value=lo+(hi-lo)*i/4;return `<line class="gridline" x1="${L}" x2="${width-R}" y1="${y(value)}" y2="${y(value)}"/><text x="${L-9}" y="${y(value)+4}" text-anchor="end">${compact(value)}</text>`;}).join('');
+  const tickCount=width<450?4:5;
+  const ticks=Array.from({length:tickCount},(_,i)=>{const value=min+(max-min)*i/(tickCount-1);return `<text x="${x(value)}" y="${height-12}" text-anchor="middle">${compact(value)}</text>`;}).join('');
+  const liqX=x(M.clamp(d.liqPriceH,min,max)),mcX=x(M.clamp(d.mcPriceH,min,max));
+  const solidMin=Math.max(min,d.liqPriceH),solidS=M.scenario(d,solidMin);
+  const alive=solidMin<=max;
+  const curve=alive?`M ${x(solidMin)} ${y(solidS.pnl)} L ${x(max)} ${y(sMax.pnl)}`:'';
+  const region=alive?`M ${x(solidMin)} ${y(0)} L ${x(solidMin)} ${y(solidS.pnl)} L ${x(max)} ${y(sMax.pnl)} L ${x(max)} ${y(0)} Z`:'';
+  const target=M.scenario(d,d.targetPrice),targetAlive=target.status!=='Liquidation';
+  const animated=chartAnimate?'':' style="animation:none"';
+  node.innerHTML=`<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Scenario payoff. Breakeven ${escapeHTML(usd(d.breakevenPrice))}. Loan payoff is unavailable below ${escapeHTML(usd(d.liqPriceH))} liquidation at the selected horizon."><defs><linearGradient id="payoff-fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".13"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient><clipPath id="plot-clip"><rect x="${L}" y="${T}" width="${W}" height="${H}"/></clipPath></defs>${grid}${ticks}<g clip-path="url(#plot-clip)"><rect x="${L}" y="${T}" width="${Math.max(0,liqX-L)}" height="${H}" fill="var(--red)" opacity=".055"/><rect x="${liqX}" y="${T}" width="${Math.max(0,mcX-liqX)}" height="${H}" fill="var(--accent)" opacity=".06"/><line class="zero" x1="${L}" x2="${width-R}" y1="${y(0)}" y2="${y(0)}"/><path d="M ${x(min)} ${y(sMin.hold)} L ${x(max)} ${y(sMax.hold)}" class="hold-line"/><path d="${region}" fill="url(#payoff-fill)"/><path d="${curve}" class="curve"${animated}/><line x1="${x(d.breakevenPrice)}" x2="${x(d.breakevenPrice)}" y1="${T}" y2="${height-B}" stroke="var(--accent)" opacity=".28" stroke-dasharray="3 4"/><line x1="${x(d.targetPrice)}" x2="${x(d.targetPrice)}" y1="${T}" y2="${height-B}" stroke="var(--muted)" opacity=".4" stroke-dasharray="3 5"/>${targetAlive?`<circle cx="${x(d.targetPrice)}" cy="${y(target.pnl)}" r="4" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>`:''}<line id="inspect-line" x1="0" x2="0" y1="${T}" y2="${height-B}" stroke="var(--cyan)" stroke-width="1" opacity="0"/><circle id="inspect-point" cx="0" cy="0" r="3" fill="var(--cyan)" opacity="0"/></g><text x="${L}" y="14">NET P/L · USD</text>${d.liqPriceH>min?`<text class="red" x="${L+6}" y="${T+17}" style="font-size:12px">LIQ.</text>`:''}</svg><div class="chart-tooltip" id="payoff-tooltip" hidden></div>`;
+  chartScale={x,y,min,max,L,R,width,height};chartAnimate=false;
+  $('chart-scrub').min=Math.ceil(min);$('chart-scrub').max=Math.floor(max);$('chart-scrub').step=Math.max(1,Math.round((max-min)/200));
+  const inspect=chartPrice===null?d.targetPrice:M.clamp(chartPrice,min,max);$('chart-scrub').value=inspect;set('scrub-output',usd(inspect));
+}
+function inspectChart(price,pointerX=null){
+  if(!chartScale||!currentResult)return;
+  const d=currentResult,s=chartScale,p=M.clamp(price,s.min,s.max),out=M.scenario(d,p);chartPrice=p;
+  $('chart-scrub').value=p;set('scrub-output',usd(p));
+  const line=$('inspect-line'),point=$('inspect-point'),tip=$('payoff-tooltip');if(!line||!tip)return;
+  line.setAttribute('x1',s.x(p));line.setAttribute('x2',s.x(p));line.setAttribute('opacity','.6');
+  point.setAttribute('cx',s.x(p));point.setAttribute('cy',s.y(out.pnl));point.setAttribute('opacity',out.status==='Liquidation'?'0':'1');
+  tip.innerHTML=`<span class="muted">BTC ${usd(p)}</span><strong class="${out.status==='Liquidation'?'bad':tone(out.pnl)}">${out.status==='Liquidation'?'Liquidation zone':signed(out.pnl)}</strong><span class="dim">LTV ${pct(out.ltv*100)} · ${out.status}</span>`;
+  tip.hidden=false;tip.style.top='35px';tip.style.left=M.clamp((pointerX??s.x(p))+12,8,Math.max(8,s.width-205))+'px';
+}
+function hideInspect(){const tip=$('payoff-tooltip');if(tip)tip.hidden=true;for(const id of ['inspect-line','inspect-point'])$(id)?.setAttribute('opacity','0');}
+function ladder(d){
+  const anchors=[{price:d.liqPriceH,label:'Liquidation'},{price:d.mcPriceH,label:'Margin call'},{price:D.floorPrice,label:'Model floor'},{price:d.price,label:'Reference'},{price:d.targetPrice,label:'Target'},{price:d.breakevenPrice,label:'Breakeven'},{price:D.ceilPrice,label:'Model ceiling'},{price:D.c4Ath,label:'Cycle ATH'}];
+  const values=[.4,.6,.8,1.2,1.5,2].map(v=>({price:d.price*v,label:''}));
+  const sorted=[...values,...anchors].filter(r=>Number.isFinite(r.price)&&r.price>0).sort((a,b)=>a.price-b.price);
+  const merged=[];
+  for(const r of sorted){const prev=merged.at(-1);if(prev&&Math.abs(prev.price-r.price)<.01){prev.labels.push(r.label);if(r.label)prev.price=r.price;}else merged.push({price:r.price,labels:[r.label]});}
+  return merged.map(r=>({...M.scenario(d,r.price),labels:r.labels.filter(Boolean)}));
+}
+function renderScenarios(d){
+  const basis=$('pnl-basis').value,rows=ladder(d),hasCost=d.entry>0;
+  set('ladder-pnl-label',basis==='pnl'?'Net P/L':basis==='borrowed'?'Borrowed P/L':'Cost basis P/L');
+  $('ladder-rows').innerHTML=rows.map(s=>{const dead=s.status==='Liquidation',value=s[basis];return `<tr class="${s.labels.includes('Target')?'target-row':''}"><td><span class="row-price">${usd(s.price)}</span>${s.labels.length?`<span class="row-label">${escapeHTML(s.labels.join(' · '))}</span>`:''}</td><td>${signedPct(s.change)}</td><td class="${dead?'bad':s.status==='Margin call'?'amber':''}">${pct(s.ltv*100)}</td><td>${badge(s.status,dead?'bad':s.status==='Margin call'?'amber':'')}</td><td>${dead?'—':usd(s.equity)}</td><td class="${dead?'muted':tone(value)}">${dead?'—':signed(value)}</td></tr>`;}).join('');
+  set('ladder-note',basis==='cost'&&!hasCost?'Set your original BTC cost basis in Risk & cost basis to see this view. Loan-funded BTC uses its deployment price.':`All values include ${usd(d.interestCost)} of interest over ${fmt(d.months)} months. ${basis==='borrowed'?'Borrowed P/L isolates loan-funded BTC and subtracts the full loan interest.':basis==='cost'?'Cost-basis P/L uses each BTC holding’s actual purchase price.':'Net P/L is measured against the original collateral’s reference value.'} Values below liquidation are unavailable; an earlier barrier crossing can also invalidate a higher exit price.`);
+  const dead=d.targetStatus==='Liquidation';
+  $('decomposition').innerHTML=row('Original BTC at target',usd(d.btc*d.targetPrice))+row('Loan-funded BTC at target',usd(d.newBtc*d.targetPrice))+row('Undeployed loan cash',usd(d.undeployedUsd))+row('Principal + interest','−'+usd(d.debtOwed))+row('Net equity at target',dead?'Unavailable':usd(d.equity),'total')+row('Initial collateral value',usd(d.collateral))+row('Net P/L',dead?'Unavailable':signed(d.netProfit),'total')+`<p class="hint" style="margin-top:12px">${dead?'Liquidation threshold crossed. Net values require an execution and residual-balance model.':'Cash and loan-funded BTC are matched by debt. Borrowing itself creates no profit.'}</p>`;
+  renderLadderChart(d,rows,basis);
+}
+function renderLadderChart(d,rows,basis){
+  const node=$('ladder-chart'),width=Math.max(310,node.clientWidth||800),height=285,L=57,R=46,T=30,B=43,W=width-L-R,H=height-T-B;
+  const values=rows.filter(r=>r.status!=='Liquidation').map(r=>r[basis]).filter(Number.isFinite),max=Math.max(1,...values.map(Math.abs))*1.15;
+  const y=v=>T+H/2-v/max*H/2,x=i=>L+(i+.5)*W/rows.length,bw=Math.min(35,W/rows.length*.53);
+  const ltvMax=Math.max(100,...rows.map(r=>r.ltv*100))*1.1,ly=v=>T+H-v/ltvMax*H;
+  const grid=[-1,-.5,0,.5,1].map(k=>`<line class="gridline" x1="${L}" x2="${width-R}" y1="${y(max*k)}" y2="${y(max*k)}"/><text x="${L-8}" y="${y(max*k)+4}" text-anchor="end">${compact(max*k)}</text>`).join('');
+  const bars=rows.map((r,i)=>{const dead=r.status==='Liquidation',v=r[basis],nullValue=!Number.isFinite(v);return `<g><title>${escapeHTML(usd(r.price)+' · '+r.status+' · '+(dead?'P/L unavailable':signed(v))+' · LTV '+pct(r.ltv*100))}</title>${dead?`<rect x="${x(i)-bw/2}" y="${T}" width="${bw}" height="${H}" fill="var(--red)" opacity=".06"/>`:nullValue?'':`<rect x="${x(i)-bw/2}" y="${Math.min(y(0),y(v))}" width="${bw}" height="${Math.max(1,Math.abs(y(v)-y(0)))}" fill="${v>=0?'var(--green)':'var(--red)'}" opacity=".7" rx="1"/>`}${i%Math.ceil(rows.length/(width<450?4:7))===0?`<text x="${x(i)}" y="${height-15}" text-anchor="middle">${compact(r.price)}</text>`:''}</g>`;}).join('');
+  const line=rows.map((r,i)=>(i?'L':'M')+' '+x(i)+' '+ly(r.ltv*100)).join(' ');
+  const ltvTicks=[0,.5,1].map(v=>`<text x="${width-R+8}" y="${ly(ltvMax*v)+4}" text-anchor="start">${fmt(ltvMax*v)}%</text>`).join('');
+  node.innerHTML=`<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Price ladder. Bars show selected P/L basis; line shows horizon LTV. Exact values are available in the table below.">${grid}${bars}<path d="${line}" fill="none" stroke="var(--accent)" stroke-width="1.5"/>${rows.map((r,i)=>`<circle cx="${x(i)}" cy="${ly(r.ltv*100)}" r="2.3" fill="${r.status==='Liquidation'?'var(--red)':'var(--accent)'}"/>`).join('')}${ltvTicks}<text x="${L}" y="15">P/L · USD</text><text class="accent" x="${width-R}" y="15" text-anchor="end">LTV · %</text></svg>`;
+}
+function renderRisk(d){
+  set('risk-buffer',d.loan?pct(d.bufferPct):'No debt');set('risk-buffer-note',d.loan?`${usd(d.buffer)} price buffer before ${usd(d.mcPrice)} margin call.`:'No margin call or liquidation threshold.');
+  set('risk-probability',d.pLiq90>0&&d.pLiq90<.0001?'<0.01%':pct(d.pLiq90*100,2));$('risk-probability').className='big-metric '+(d.pLiq90<.05?'good':d.pLiq90<.15?'amber':'bad');
+  set('risk-rr',Number.isFinite(d.rrRatio)?fmt(d.rrRatio,2)+' : 1':d.entry>0?'Undefined':'Set cost basis');
+  set('risk-kelly',pct(d.kellyLtv*100,1));
+  const callRepayLtv=Math.min(.7,d.mcLtv*.8),atCallCollateral=d.btc*d.mcPrice,topup=d.loan?Math.max(0,d.loan/callRepayLtv-atCallCollateral):0,repay=d.loan?Math.max(0,d.loan-callRepayLtv*atCallCollateral):0;
+  $('risk-mechanics').innerHTML=row('Current LTV',pct(d.ltvPct))+row('Margin call LTV',pct(d.mcLtv*100))+row('Liquidation LTV',pct(d.liqLtv*100))+row('Current liquidation price',d.loan?usd(d.liqPrice):'No debt','total')+row('Horizon liquidation price',d.loan?usd(d.liqPriceH):'No debt')+row('Horizon LTV at reference',pct(d.debtOwed/d.collateral*100))+`<div class="risk-track" aria-hidden="true"><span style="width:${d.ltvPct}%;background:var(--accent)"></span><span style="width:${Math.max(0,d.mcLtv*100-d.ltvPct)}%;background:var(--surface3)"></span><span style="width:${(d.liqLtv-d.mcLtv)*100}%;background:var(--red);opacity:.45"></span><span style="flex:1;background:var(--red);opacity:.8"></span></div><p class="hint">Liquidation price = debt ÷ (collateral BTC × liquidation LTV). Unpledged BTC bought with the loan does not lower this threshold.</p>`;
+  $('stress-test').innerHTML=row('Start at current margin call',d.loan?usd(d.mcPrice):'No debt')+row('After another −2% (24h)',d.loan?usd(d.mcPrice*.98):'—')+row('After −5%/day for 48h',d.loan?usd(d.mcPrice*.95**2):'—')+row('Collateral top-up at margin call',usd(topup),'total')+row('Or repay debt',usd(repay))+`<p class="hint" style="margin-top:12px">The two alternatives above restore LTV to ${pct(callRepayLtv*100,0)} at the principal-only margin-call price. A top-up adds collateral value; repayment reduces debt. No warning or grace period is assumed.</p>`;
+}
+function renderSignals(d){
+  const cards=[['MVRV ratio',fmt(D.mvrv,3),D.mvrv<1?'Below realized value':D.mvrv<D.histMeanMvrv?'Below historical mean':'Above historical mean',`Historical mean ${fmt(D.histMeanMvrv,3)}`,D.mvrv<D.histMeanMvrv?'good':'amber'],['Z-score',fmt(D.zscore,3),D.zscore<0?'Below mean':'Above mean','From the source MVRV dataset',D.zscore<0?'good':'amber'],['MVRV moving averages',/bull/i.test(D.maStack)?'Bullish':/bear/i.test(D.maStack)?'Bearish':'Mixed','20 / 50 / 200',`${fmt(D.ma20,3)} / ${fmt(D.ma50,3)} / ${fmt(D.ma200,3)}`,/bull/i.test(D.maStack)?'good':'amber'],['30d MVRV momentum',signedPct(D.roc30),D.roc30>=0?'Positive momentum':'Negative momentum',`90d change ${signedPct(D.roc90)}`,D.roc30>=0?'good':'bad'],['Cycle position',pct(D.cyclePos),D.cyclePos<35?'Early cycle':D.cyclePos<65?'Mid cycle':'Later cycle',D.cycleName,'cyan'],['Price vs. cycle ATH',pct(d.athDropPct),'Price drawdown',`${usd(D.c4Ath)} · ${D.c4AthDate||'date unavailable'}`,'amber']];
+  $('signal-cards').innerHTML=cards.map(([label,value,tag,note,color])=>`<div class="panel signal-card"><div class="panel-body"><div class="overline">${escapeHTML(label)}</div><div class="big-metric ${color}">${escapeHTML(value)}</div>${badge(tag,color)}<p class="hint">${escapeHTML(note)}</p></div></div>`).join('');
+  for(const k of Object.keys(M.WEIGHTS)){set('weight-value-'+k,pct(d.signals.weights[k]*100,0));}
+  set('weight-note',d.signals.usedDefaults?'All weights are zero: the default mix is used.':'Normalized to 100% · Composite score '+fmt(d.score,2)+' / 10');
+  set('cycle-title',D.cycleName+' · context');
+  $('cycle-context').innerHTML=`<div class="key-row"><span>Elapsed cycle</span><strong>${pct(D.cyclePos)}</strong></div><div class="cycle-track"><div class="cycle-fill" style="width:${M.clamp(D.cyclePos,0,100)}%"></div></div>`+row('MVRV cycle peak',fmt(D.cyclePeakMvrv,3))+row('MVRV drawdown from peak',pct(D.cycleDrawdown))+row('Model floor',usd(D.floorPrice))+row('Model ceiling',usd(D.ceilPrice))+row('Ceiling range',usd(D.ceilLow)+' – '+usd(D.ceilHigh))+row('Next estimated halving',escapeHTML(D.nextHalving||'Unavailable'))+`<p class="hint" style="margin-top:12px">MVRV drawdown is a ratio change, not BTC price drawdown. Model ranges are estimates.</p>`;
+  const maBull=/bull/i.test(D.maStack),mvrvBelow=D.mvrv<D.histMeanMvrv;
+  $('signal-reading').innerHTML=`<p><strong>Valuation:</strong> MVRV is ${mvrvBelow?'below':'above'} its historical mean by ${pct(Math.abs((D.mvrv/D.histMeanMvrv-1)*100))}. That ${mvrvBelow?'supports the lower-valuation component':'reduces the valuation component'} of the composite score.</p><p><strong>Trend:</strong> the MVRV moving-average stack is ${maBull?'bullish':'not bullish'}, while 30-day MVRV momentum is ${signedPct(D.roc30)}. These measures describe on-chain valuation, not a guarantee of BTC price direction.</p><p><strong>Risk context:</strong> current model floor ${usd(D.floorPrice)} and ceiling ${usd(D.ceilPrice)} are uncertain. Loan liquidation depends on your own LTV and terms, independently of the score. The worst reported historical MVRV drawdown is ${pct(D.worstCycleDrawdown)} (${escapeHTML(D.worstCycleTag||'unavailable')}).</p>`;
+  $('history-rows').innerHTML=history.length?history.map(h=>`<tr><td>${escapeHTML(h.date)}</td><td>${fmt(h.mvrv,3)}</td><td>${fmt(h.zscore,3)}</td><td>${usd(h.btcPrice)}</td></tr>`).join(''):'<tr><td colspan="4" style="text-align:left">No refreshed snapshots yet. Refresh data to save a valid report on this device.</td></tr>';
+  updateMarket();
+}
+function renderFutures(d){
+  const f=M.futures(d),loanDead=d.targetStatus==='Liquidation',futDead=f.targetLiquidated,none=f.notionalUsd===0;
+  const cell=(value,sub='')=>escapeHTML(value)+(sub?`<small>${escapeHTML(sub)}</small>`:'');
+  const data=[
+    ['Additional BTC',cell('+'+fmt(d.newBtc,5)),cell('+'+fmt(f.notionalBtc,5),'Matched deployed exposure')],
+    ['Financed / traded notional',cell(usd(d.loan),'Full loan principal'),cell(usd(f.notionalUsd),'Only deployed capital')],
+    ['Capital committed',cell(usd(d.collateral),'Pledged BTC'),cell(usd(f.capital),'Spot BTC + cash margin')],
+    ['Collateral / margin exposed',cell(usd(d.collateral),'Original collateral subject to liquidation'),cell(usd(f.margin),'Isolated margin; spot BTC kept separate')],
+    ['Liquidation price · now',cell(d.loan?usd(d.liqPrice):'No debt',d.loan?signedPct(d.liqDropPct)+' from reference':''),cell(none?'No position':usd(f.liqPrice),none?'':signedPct(f.liqDropPct)+' from reference')],
+    ['Carry cost over '+fmt(d.months)+' months',cell(usd(d.interestCost),pct(d.apr*100)+' fixed APR'),cell(usd(f.fundingCost),pct(f.fundingApr*100)+' funding assumption')],
+    ['Breakeven before carry',cell(usd(d.breakevenGross)),cell(usd(f.breakevenSimple))],
+    ['Breakeven after carry',cell(usd(d.breakevenPrice)),cell(usd(f.breakevenAdj))],
+    ['Net portfolio P/L at target',cell(loanDead?'Unavailable':signed(d.netProfit),loanDead?'Liquidation threshold crossed':'After loan interest'),cell(futDead?'Unavailable':signed(f.pnlFutAdj),futDead?'Liquidation threshold crossed':'After estimated funding')],
+    ['Portfolio return',cell(loanDead?'—':signedPct(d.levReturnPct),'Denominator: pledged BTC value'),cell(futDead?'—':signedPct(f.returnFutPct),'Denominator: spot BTC + margin')],
+    ['Futures leg return on margin',cell('—'),cell(futDead?'—':signedPct(f.legReturnPct),none?'No futures position':'Futures-leg P/L only')]
+  ];
+  $('comparison-rows').innerHTML=data.map(([label,a,b])=>`<tr><td>${escapeHTML(label)}</td><td>${a}</td><td>${b}</td></tr>`).join('');
+  let insight=none?`At 0% deployment there is no futures leg. The loan still carries ${usd(d.interestCost)} interest on the cash you borrow. `:`Both add ${fmt(d.newBtc,5)} BTC. ${Math.abs(f.costDifference)<.005?'Carry costs are equal.':f.costDifference>0?'The loan costs '+usd(f.costDifference)+' less over this horizon.':'Futures cost '+usd(-f.costDifference)+' less over this horizon.'} `;
+  if(d.loan&&!none){const loanBuffer=1-d.liqPrice/d.price,futBuffer=1-f.liqPrice/d.price;insight+=`${loanBuffer>futBuffer?'The loan':'Futures'} has the wider principal-only liquidation buffer at the reference price. Futures requires ${usd(f.margin)} in additional cash margin. `;}
+  if(loanDead||futDead)insight+='At least one target crosses liquidation; a surviving-position P/L comparison is unavailable.';else insight+='These target payoffs assume neither position is liquidated along the way.';
+  set('futures-insight',insight);
+}
+const VIEWS={overview:'Position overview',scenarios:'Scenario analysis',risk:'Risk & liquidation',signals:'On-chain signals',futures:'Loan vs. futures'};
+function switchView(view,focus=false){
+  if(!Object.hasOwn(VIEWS,view))return;
+  currentView=view;chartAnimate=true;
+  document.querySelectorAll('[role=tab]').forEach(button=>{const active=button.dataset.view===view;button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;});
+  document.querySelectorAll('[role=tabpanel]').forEach(pane=>pane.hidden=pane.id!=='pane-'+view);
+  set('page-title',VIEWS[view]);set('breadcrumb',view[0].toUpperCase()+view.slice(1));
+  if(currentResult){if(view==='overview')renderOverview(currentResult);else renderActive(currentResult);}
+  if(focus)$('tab-'+view).focus();
+}
+function targetFor(which,d){return which==='current'?d.price:which==='floor'?D.floorPrice:which==='ceiling'?D.ceilPrice:d.loan?d.liqPriceH:0;}
+async function fetchLatestData(){
+  if(refreshRunning)return;
+  refreshRunning=true;$('refresh-btn').disabled=true;$('refresh-btn').classList.add('spin');$('refresh-btn').setAttribute('aria-busy','true');set('update-status','Refreshing data…');
+  const revision=editRevision;
+  try{
+    const result=await window.MarketClient.refresh();reportError=result.reportError;quoteError=result.quoteError;
+    if(result.data&&result.data.date>=D.date){D=result.data;dataSource='GitHub report';putStored(STORAGE.data,D);saveHistory(D);}
+    else if(result.data){reportError='Older report returned';}
+    if(result.quote){quote=result.quote;if(!priceEdited&&editRevision===revision)$('inp-price').value=quote.price;}
+    updateMarket();render();
+    const message=result.data&&result.quote?'Market and on-chain data refreshed':result.quote?'Market quote refreshed; previous on-chain report retained':result.data?'On-chain report refreshed; previous quote retained':'Sources unavailable; previous data retained';
+    toast(message);
+  }catch{reportError='Network request failed';quoteError='Network request failed';updateMarket();toast('Refresh failed. Previous data and inputs are preserved.');}
+  finally{refreshRunning=false;$('refresh-btn').disabled=false;$('refresh-btn').classList.remove('spin');$('refresh-btn').setAttribute('aria-busy','false');set('update-status',reportError||quoteError?'Refresh incomplete':'Data refreshed');window.__refreshComplete=true;}
+}
+async function lookupEntryPrice(){
+  const date=$('entry-date').value,button=$('lookup-entry');
+  if(!M.dateValid(date)||date>new Date().toISOString().slice(0,10)){set('entry-lookup-status','Choose a valid date on or before today.');return;}
+  const originalEntry=$('inp-entry').value;button.disabled=true;set('entry-lookup-status','Looking up daily BTC price…');
+  try{const series=await window.MarketClient.dailySeries();const result=M.nearestPrice(series,date);if(!result)throw new Error('No daily price found within the preceding seven days.');
+    if($('entry-date').value!==date||$('inp-entry').value!==originalEntry){set('entry-lookup-status','Inputs changed while loading; the lookup did not overwrite them.');return;}
+    applyInput({entry:Math.round(result.price)});set('entry-lookup-status',`${usd(result.price)} · ${result.date}${result.exact?'':' (nearest earlier date)'}`);
+  }catch(error){set('entry-lookup-status',error.message||'Price lookup unavailable.');}finally{button.disabled=false;}
+}
+function exportSnapshot(){
+  const input=validateAndRead();if(!input)return;
+  const report=window.LoanReport.build({input,data:D,weights:weights(),quote,source:dataSource,history});
+  const blob=new Blob([report],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='btc-loan-analysis-'+new Date().toISOString().slice(0,10)+'.txt';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);toast('Full analysis exported.');
+}
+function setupWeights(){
+  const labels={mvrv:'MVRV',zscore:'Z-score',ma:'MA stack',roc:'Momentum',cycle:'Cycle'};
+  $('weight-controls').innerHTML=Object.keys(M.WEIGHTS).map(key=>`<div class="weight-row"><label for="weight-${key}">${labels[key]}</label><input id="weight-${key}" class="range" type="range" min="0" max="100" step="1" value="${rawWeights[key]}" data-weight="${key}"><output for="weight-${key}" id="weight-value-${key}">—</output></div>`).join('');
+  document.querySelectorAll('[data-weight]').forEach(input=>input.addEventListener('input',()=>{rawWeights[input.dataset.weight]=Number(input.value);putStored(STORAGE.weights,rawWeights);scheduleRender();}));
+}
+function setTheme(theme){document.documentElement.dataset.theme=theme;$('theme-toggle').setAttribute('aria-label','Switch to '+(theme==='dark'?'light':'dark')+' theme');document.querySelector('meta[name=theme-color]').content=theme==='dark'?'#090c11':'#eaf0f5';try{localStorage.setItem('theme',theme);}catch{}if(currentResult){chartAnimate=false;renderActive(currentResult);if(currentView==='overview')renderPayoff(currentResult);}}
+function restorePosition(){const stored=getStored(STORAGE.position,null);if(stored){const v=M.validate(stored);if(v.valid){applyInput(v.value);toast('Saved position restored from this device.');return;}toast('Saved inputs were invalid. The repository preset was loaded instead.');}else toast('Repository position preset loaded.');applyInput(M.SAVED_POSITION);}
+let presetNoticeTimer=null;
+function dismissPresetNotice(){clearTimeout(presetNoticeTimer);$('preset-notice').hidden=true;}
+function runHiddenCommand(){
+  applyInput(M.SAVED_POSITION);
+  $('preset-values').innerHTML=[`BTC AMOUNT → ${fmt(M.SAVED_POSITION.btc,3)}`,`LTV → ${pct(M.SAVED_POSITION.ltv,0)}`,`ENTRY / DEPLOY → ${usd(M.SAVED_POSITION.entry)}`,`APR → ${pct(M.SAVED_POSITION.apr)}`,`TARGET (2× ENTRY) → ${usd(M.SAVED_POSITION.target)}`].map(line=>'<div>'+escapeHTML(line)+'</div>').join('');
+  $('preset-notice').hidden=false;clearTimeout(presetNoticeTimer);presetNoticeTimer=setTimeout(dismissPresetNotice,4000);
+}
+function setupPresetShortcuts(){
+  const keys=window.PresetShortcuts.keyHandler(runHiddenCommand);
+  document.addEventListener('keydown',event=>{if(event.key==='Escape')dismissPresetNotice();keys(event);});
+  const input=$('inp-btc'),wrap=$('btc-amount-wrap');
+  const hold=window.PresetShortcuts.holdHandlers({activate:runHiddenCommand,charge:on=>wrap.classList.toggle('hold-charging',on),focus:()=>input.focus(),blur:()=>input.blur()});
+  input.addEventListener('pointerdown',hold.down);
+  window.addEventListener('pointermove',hold.move,{passive:true});
+  window.addEventListener('pointerup',hold.up);
+  window.addEventListener('pointercancel',hold.cancel);
+  window.addEventListener('blur',hold.cancel);
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)hold.cancel();});
+  input.addEventListener('contextmenu',hold.context);
+  $('preset-dismiss').addEventListener('click',dismissPresetNotice);
+}
+function updateClock(){set('utc-clock',new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'})+' UTC');}
+$('inp-price').value=D.btcPrice;
+$('entry-date').max=new Date().toISOString().slice(0,10);
+fields.forEach(node=>node.addEventListener('input',()=>{if(node.dataset.field==='price')priceEdited=true;editRevision++;chartAnimate=false;chartPrice=null;scheduleRender();}));
+$('ltv-range').addEventListener('input',event=>{applyInput({ltv:event.target.value});});
+$('chart-scrub').addEventListener('input',event=>inspectChart(Number(event.target.value)));
+$('chart-scrub').addEventListener('blur',hideInspect);
+$('payoff-chart').addEventListener('pointermove',event=>{if(!chartScale)return;const rect=$('payoff-chart').getBoundingClientRect(),px=event.clientX-rect.left,scale=rect.width/chartScale.width;const x=px/scale;const price=chartScale.min+(x-chartScale.L)/(chartScale.width-chartScale.L-chartScale.R)*(chartScale.max-chartScale.min);inspectChart(price,x);});
+$('payoff-chart').addEventListener('pointerleave',hideInspect);
+document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>switchView(button.dataset.view,button.getAttribute('role')!=='tab')));
+document.querySelector('[role=tablist]').addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const keys=Object.keys(VIEWS),index=keys.indexOf(currentView);switchView(keys[event.key==='Home'?0:event.key==='End'?keys.length-1:(index+(event.key==='ArrowRight'?1:-1)+keys.length)%keys.length],true);});
+document.querySelectorAll('[data-target]').forEach(button=>button.addEventListener('click',()=>{if(!currentResult)return;const target=targetFor(button.dataset.target,currentResult);if(target>0)applyInput({target:button.dataset.target==='liq'?Math.floor(target):Math.round(target)});else toast('No liquidation price when there is no debt.');}));
+$('pnl-basis').addEventListener('change',()=>currentResult&&renderScenarios(currentResult));
+$('refresh-btn').addEventListener('click',fetchLatestData);
+$('export-btn').addEventListener('click',exportSnapshot);
+$('theme-toggle').addEventListener('click',()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark'));
+$('lookup-entry').addEventListener('click',lookupEntryPrice);
+$('reset-weights').addEventListener('click',()=>{rawWeights={...M.WEIGHTS};putStored(STORAGE.weights,rawWeights);setupWeights();render();toast('Default signal weights restored.');});
+$('save-position').addEventListener('click',()=>{const input=validateAndRead();if(!input)return;if(putStored(STORAGE.position,input)){set('restore-position','Load saved position');set('position-status','Saved on this device');toast('Position saved on this device.');}else toast('This browser blocked saving. Export your analysis instead.');});
+$('restore-position').addEventListener('click',restorePosition);
+set('restore-position',getStored(STORAGE.position,null)?'Load saved position':'Load repository position preset');
+const quoteButton=document.createElement('button');quoteButton.className='button ghost small';quoteButton.type='button';quoteButton.textContent='Use market quote';quoteButton.style.marginTop='5px';quoteButton.addEventListener('click',()=>{priceEdited=false;applyInput({price:quote.price},{markPrice:false});toast('Reference price set to the displayed market quote.');});$('inp-price').closest('.field').appendChild(quoteButton);
+setupWeights();
+setupPresetShortcuts();
+document.querySelectorAll('[data-pots-mode]').forEach(button=>button.addEventListener('click',()=>setTwoPotsMode(button.dataset.potsMode)));
+try{setTheme(localStorage.getItem('theme')==='light'?'light':'dark');}catch{setTheme('dark');}
+if(window.matchMedia('(max-width: 760px)').matches)$('position-panel').open=false;
+updateClock();updateMarket();render();
+setInterval(()=>{updateClock();updateMarket();},60000);
+if(typeof ResizeObserver==='function'){let resizeFrame;const observer=new ResizeObserver(()=>{cancelAnimationFrame(resizeFrame);resizeFrame=requestAnimationFrame(()=>{if(!currentResult)return;chartAnimate=false;if(currentView==='overview')renderPayoff(currentResult);if(currentView==='scenarios')renderScenarios(currentResult);});});observer.observe($('payoff-chart'));observer.observe($('ladder-chart'));}
+// Explicit promise lets integrations wait for the complete refresh transaction.
+window.terminalRefreshPromise=fetchLatestData();
+
+</script>
+</body>
+</html>

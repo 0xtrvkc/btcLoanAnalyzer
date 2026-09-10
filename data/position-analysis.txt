@@ -1,80 +1,80 @@
 BTC LOAN TERMINAL — POSITION ANALYSIS
-Generated: 2026-09-09T05:50:20.874Z
+Generated: 2026-09-10T05:44:53.557Z
 
 DATA PROVENANCE
-On-chain report: 2026-09-08 (GitHub report)
-Quote: Hyperliquid mid; date 2026-09-09; fetched 2026-09-09T05:50:20.800Z
-Market quote: $78,826.5; reference price used for loan sizing: $78,826.5
+On-chain report: 2026-09-09 (GitHub report)
+Quote: Hyperliquid mid; date 2026-09-10; fetched 2026-09-10T05:44:53.557Z
+Market quote: $78,389.5; reference price used for loan sizing: $78,389.5
 A new loan is sized at the reference price. This is not a fixed-debt position tracker.
 On-chain date is within 48 hours of report generation.
 
 POSITION & FINANCING
 BTC collateral: 0.035
-Reference BTC price: $78,826.5
-Collateral value: $2,758.93
+Reference BTC price: $78,389.5
+Collateral value: $2,743.63
 Initial LTV: 36%
-Loan principal: $993.21
+Loan principal: $987.71
 APR assumption: 6%
 Horizon: 12 months
-Simple interest over horizon: $59.59
-Debt at horizon: $1,052.81
+Simple interest over horizon: $59.26
+Debt at horizon: $1,046.97
 Deployment: 100%
 Deployment BTC price: $79,422
-Loan cash held: $-0
-Additional BTC: 0.01250553
-Total BTC exposure: 0.04750553
+Loan cash held: $0
+Additional BTC: 0.0124362
+Total BTC exposure: 0.0474362
 Original collateral cost basis: $79,422
 
 TARGET SCENARIO
 Target BTC price: $158,844
 Target status: Active
-Net equity: $6,493.16
-Net P/L after interest: $3,734.23
-Return on pledged collateral: 135.35%
-Spot-only P/L: $2,800.61
-Leverage edge: $933.62
-Breakeven including interest: $80,237.7
-P/L vs actual cost basis: $3,713.39
+Net equity: $6,487.99
+Net P/L after interest: $3,744.35
+Return on pledged collateral: 136.47%
+Spot-only P/L: $2,815.91
+Leverage edge: $928.45
+Breakeven including interest: $79,909.5
+P/L vs actual cost basis: $3,708.22
 
 LIQUIDATION & RISK
 Margin call LTV: 85%; liquidation LTV: 90%
-Current margin call price (principal only): $33,385.34
-Current liquidation price (principal only): $31,530.6
-Horizon margin call price (interest included): $35,388.46
-Horizon liquidation price (interest included): $33,422.44
+Current margin call price (principal only): $33,200.26
+Current liquidation price (principal only): $31,355.8
+Horizon margin call price (interest included): $35,192.27
+Horizon liquidation price (interest included): $33,237.15
 90d fixed-barrier touch probability: 0.4528%
 Probability assumes constant annual volatility, zero log drift, no jumps, and no barrier changes due to interest.
 Annualized volatility assumption: 65%
-Reward/risk from cost basis: 0.68
-Illustrative half-Kelly output: 1.99% (uncalibrated heuristic; not an optimal LTV)
+Reward/risk from cost basis: 0.67
+Illustrative half-Kelly output: 2.63% (uncalibrated heuristic; not an optimal LTV)
 
 ON-CHAIN SIGNALS
-Heuristic score: 6.85/10 (not a lending recommendation)
-mvrv: score 5.97/10; weight 30%
-zscore: score 6.03/10; weight 25%
+Heuristic score: 6.88/10 (not a lending recommendation)
+mvrv: score 6/10; weight 30%
+zscore: score 6.11/10; weight 25%
 ma: score 8/10; weight 20%
 roc: score 9/10; weight 10%
 cycle: score 7/10; weight 15%
-date: 2026-09-08
+date: 2026-09-09
 signal: Accumulate
 maStack: Bullish (MA20>MA50>MA200)
 cycleName: C4 (2024-27)
-mvrv: 1.495
-zscore: -0.015
-ma20: 1.474
-ma50: 1.32
-ma200: 1.3
-roc30: 21.4
-roc90: 29.8
-btcPrice: 78449
-histMeanMvrv: 1.853
+mvrv: 1.481
+zscore: -0.056
+ma20: 1.481
+ma50: 1.324
+ma200: 1.301
+roc30: 20.5
+roc90: 26.9
+btcPrice: 78895
+histMeanMvrv: 1.852
 cyclePos: 60.7
 ceilPrice: 111822
 floorPrice: 35122
-cycleDrawdown: -45.2
-mvrvVsCyclePeak: 55
-totalPoints: 5,814
-dataRange: 2010-10-09 to 2026-09-08
+cycleDrawdown: -45.8
+mvrvVsCyclePeak: 54
+totalPoints: 5,815
+dataRange: 2010-10-09 to 2026-09-09
 cyclePeakMvrv: 2.73
 cyclePeakDate: 2024-11-22
 ceilLow: 97717
@@ -88,29 +88,29 @@ nextHalving: 2028-03-26
 worstCycleDrawdown: -90.6
 
 MATCHED-EXPOSURE FUTURES COMPARISON
-Additional BTC exposure on both sides: 0.01250553
-Futures entry notional: $993.21; isolated leverage: 5x
-Additional cash margin: $198.64; spot plus margin capital: $2,957.57
+Additional BTC exposure on both sides: 0.0124362
+Futures entry notional: $987.71; isolated leverage: 5x
+Additional cash margin: $197.54; spot plus margin capital: $2,941.17
 Futures liquidation price (approximate): $63,856.88
-Loan interest: $59.59; futures funding assumption: $99.32
-Loan net P/L at target: $3,734.23
-Spot + futures net P/L at target: $3,694.51
-Futures portfolio return on spot + margin: 124.92%
+Loan interest: $59.26; futures funding assumption: $98.77
+Loan net P/L at target: $3,744.35
+Spot + futures net P/L at target: $3,704.84
+Futures portfolio return on spot + margin: 125.96%
 Futures leg return on margin: 450%
-Futures portfolio breakeven: $81,073.99
+Futures portfolio breakeven: $80,742.37
 
 PRICE LADDER (interest included)
 Exit USD | LTV | Status | Net equity | Net P/L | Borrowed P/L | Cost basis P/L
-$33,422.44 | 90% | Liquidation | n/a | n/a | n/a | n/a
-$35,122 | 85.64% | Margin call | $615.68 | $-2,143.25 | $-613.59 | $-2,164.09
-$35,388.46 | 85% | Margin call | $628.34 | $-2,130.59 | $-610.26 | $-2,151.43
-$63,061.2 | 47.7% | Active | $1,942.95 | $-815.98 | $-264.19 | $-836.82
-$78,826.5 | 38.16% | Active | $2,691.89 | $-67.04 | $-67.04 | $-87.88
-$80,237.7 | 37.49% | Active | $2,758.93 | $0 | $-49.39 | $-20.84
-$94,591.8 | 31.8% | Active | $3,440.83 | $681.9 | $130.11 | $661.06
-$111,822 | 26.9% | Active | $4,259.36 | $1,500.43 | $345.59 | $1,479.59
-$124,728 | 24.12% | Active | $4,872.46 | $2,113.54 | $506.98 | $2,092.69
-$158,844 | 18.94% | Active | $6,493.16 | $3,734.23 | $933.62 | $3,713.39
+$33,237.15 | 90% | Liquidation | n/a | n/a | n/a | n/a
+$35,122 | 85.17% | Margin call | $619.08 | $-2,124.55 | $-610.19 | $-2,160.69
+$35,192.27 | 85% | Margin call | $622.42 | $-2,121.21 | $-609.31 | $-2,157.35
+$62,711.6 | 47.7% | Active | $1,927.83 | $-815.8 | $-267.08 | $-851.94
+$78,389.5 | 38.16% | Active | $2,671.53 | $-72.1 | $-72.1 | $-108.24
+$79,909.5 | 37.43% | Active | $2,743.63 | $-0 | $-53.2 | $-36.14
+$94,067.4 | 31.8% | Active | $3,415.23 | $671.6 | $122.87 | $635.46
+$111,822 | 26.75% | Active | $4,257.44 | $1,513.81 | $343.67 | $1,477.67
+$124,728 | 23.98% | Active | $4,869.65 | $2,126.02 | $504.17 | $2,089.88
+$158,844 | 18.83% | Active | $6,487.99 | $3,744.35 | $928.45 | $3,708.22
 
 RECENT ON-CHAIN SNAPSHOTS
 

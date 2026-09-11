@@ -46,3 +46,15 @@ test('iii restores the original fixed preset and both pots modes render',()=>{
  assert.equal(Number(app.nodes.get('inp-btc').value),.035);assert.equal(Number(app.nodes.get('inp-ltv').value),36);assert.equal(Number(app.nodes.get('inp-apr').value),6);assert.equal(Number(app.nodes.get('inp-target').value),158844);
  app.run('dismissPresetNotice()');app.run("setTwoPotsMode('quant')");assert.equal(app.nodes.get('pots-simple').hidden,true);assert.equal(app.nodes.get('pots-quant').hidden,false);assert.match(app.nodes.get('pots-quant-rows').innerHTML,/Unused loan cash/);
 });
+
+
+test('collateral repayment renders recovery, partial deployment and unavailable states',()=>{
+ const app=harness(320);app.run('render()');
+ assert.match(app.nodes.get('repay-benchmark').textContent,/1.00000000 BTC/);
+ assert.match(app.nodes.get('repay-wallet').textContent,/BTC/);
+ app.nodes.get('inp-deploy').value='0';app.run('render()');
+ assert.equal(app.nodes.get('repay-recovery-price').textContent,'No finite price');assert.equal(app.nodes.get('repay-use-price').disabled,true);
+ app.nodes.get('inp-ltv').value='0';app.run('render()');assert.equal(app.nodes.get('repay-recovery-price').textContent,'Already matched');
+ app.nodes.get('inp-ltv').value='40';app.nodes.get('inp-target').value='100';app.run('render()');
+ assert.equal(app.nodes.get('repay-wallet').textContent,'Unavailable');assert.doesNotMatch(app.nodes.get('repay-pnl').innerHTML,/NaN|Infinity/);
+});

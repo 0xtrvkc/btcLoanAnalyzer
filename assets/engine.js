@@ -134,6 +134,24 @@
     return {debtBtc,residualBtc,walletBtc,cash,netAssets,newValue:d.newBtc*d.price,residualValue:residualBtc*d.price,
       available:scenario(d,d.price).status!=='Liquidation'};
   }
+  // Repay the full horizon debt from original collateral; leave loan cash untouched.
+  // The recovery benchmark excludes BTC purchased with borrowed money.
+  function collateralRepayment(d,price=d.targetPrice) {
+    if (!Number.isFinite(price)||price<=0) throw new RangeError('Repayment price must be positive and finite.');
+    const status=scenario(d,price).status;
+    const soldBtc=d.debtOwed/price,residualBtc=d.btc-soldBtc;
+    const walletBtc=residualBtc+d.newBtc,btcChange=d.newBtc-soldBtc;
+    const netAssets=walletBtc*price+d.undeployedUsd;
+    const recoveryPrice=d.newBtc>0?d.debtOwed/d.newBtc:null;
+    const recoveryStatus=d.debtOwed===0?'No debt':recoveryPrice===null?'No finite price':scenario(d,recoveryPrice).status;
+    return {price,status,available:status!=='Liquidation'&&residualBtc>=0,soldBtc,residualBtc,walletBtc,
+      btcChange,btcChangePct:btcChange/d.btc*100,netAssets,pnl:netAssets-d.collateral,
+      pnlPct:(netAssets-d.collateral)/d.collateral*100,
+      edgeVsHold:netAssets-d.btc*price,recoveryPrice,recoveryStatus,
+      recoveryAvailable:recoveryPrice!==null&&recoveryStatus!=='Liquidation',
+      recoveryChangePct:recoveryPrice===null?null:(recoveryPrice/d.price-1)*100,
+      valueRecoveryPrice:(d.collateral+d.debtOwed)/d.totalBtc};
+  }
   function dateValid(s) {
     return typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(s)&&Number.isFinite(Date.parse(s+'T00:00:00Z'))&&new Date(s+'T00:00:00Z').toISOString().slice(0,10)===s;
   }
@@ -179,5 +197,5 @@
     const start=Date.parse(date+'T00:00:00Z');
     for(let i=0;i<=7;i++){const probe=new Date(start-i*864e5).toISOString().slice(0,10);if(Number.isFinite(series[probe])&&series[probe]>0)return {date:probe,price:series[probe],exact:i===0};}return null;
   }
-  return {DEFAULTS,SAVED_POSITION,WEIGHTS,FIELDS,clamp,validate,normalCDF,barrierProbability,normalizeWeights,scoreSignals,kellyIllustration,calculate,scenario,futures,twoPots,dateValid,ageHours,parseSummary,priceSeries,nearestPrice};
+  return {DEFAULTS,SAVED_POSITION,WEIGHTS,FIELDS,clamp,validate,normalCDF,barrierProbability,normalizeWeights,scoreSignals,kellyIllustration,calculate,scenario,futures,twoPots,collateralRepayment,dateValid,ageHours,parseSummary,priceSeries,nearestPrice};
 });

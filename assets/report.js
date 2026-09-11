@@ -3,7 +3,7 @@
   const num=(x,n=2)=>Number.isFinite(x)?x.toLocaleString('en-US',{maximumFractionDigits:n}):'n/a';
   const usd=x=>Number.isFinite(x)?'$'+num(x):'n/a';
   function build({input,data,weights,quote,source='Bundled snapshot',history=[],generatedAt=new Date().toISOString()}){
-    const d=M.calculate(input,data,weights),f=M.futures(d);
+    const d=M.calculate(input,data,weights),f=M.futures(d),r=M.collateralRepayment(d);
     const lines=['BTC LOAN TERMINAL — POSITION ANALYSIS',`Generated: ${generatedAt}`,'',
       'DATA PROVENANCE',`On-chain report: ${data.date} (${source})`,
       `Quote: ${quote?.source||'Report snapshot'}; date ${quote?.date||data.date}; fetched ${quote?.fetchedAt||'not live-fetched'}`,
@@ -22,6 +22,25 @@
       `Return on pledged collateral: ${d.targetStatus==='Liquidation'?'n/a':num(d.levReturnPct)+'%'}`,
       `Spot-only P/L: ${usd(d.unlevProfit)}`,`Leverage edge: ${d.targetStatus==='Liquidation'?'n/a':usd(d.leverageEdge)}`,
       `Breakeven including interest: ${usd(d.breakevenPrice)}`,`P/L vs actual cost basis: ${d.targetStatus==='Liquidation'?'n/a':usd(d.costBasisProfit)}`,
+      '', 'REPAY WITH COLLATERAL (AT TARGET)',
+      `Original BTC benchmark (loan-funded BTC excluded): ${num(d.btc,8)} BTC`,
+      `BTC recovery price: ${d.debtOwed===0?'already matched; no debt':r.recoveryPrice===null?'no finite price; no loan-funded BTC':usd(r.recoveryPrice)}`,
+      `Recovery threshold status: ${r.recoveryStatus}`,
+      `Repayment target status: ${r.status}`,
+      `BTC sold for principal + interest: ${r.available?num(r.soldBtc,8):'n/a'}`,
+      `Original collateral remaining: ${r.available?num(r.residualBtc,8):'n/a'} BTC`,
+      `Loan-funded BTC retained separately: ${num(d.newBtc,8)} BTC`,
+      `Final wallet after repayment: ${r.available?num(r.walletBtc,8):'n/a'} BTC`,
+      `BTC change vs original amount: ${r.available?num(r.btcChange,8)+' BTC ('+num(r.btcChangePct)+'%)':'n/a'}`,
+      `Unused cash (not applied to repayment): ${usd(d.undeployedUsd)}`,
+      `Debt-free net assets, BTC + cash: ${r.available?usd(r.netAssets):'n/a'}`,
+      `Net P/L vs borrowing-date collateral value: ${r.available?usd(r.pnl):'n/a'}`,
+      `P/L % on original collateral value: ${r.available?num(r.pnlPct)+'%':'n/a'}`,
+      `Dollar edge vs holding original BTC: ${r.available?usd(r.edgeVsHold):'n/a'}`,
+      `Remaining BTC dollar-value recovery price (cash excluded): ${usd(r.valueRecoveryPrice)}`,
+      'BTC recovery includes loan-funded BTC in the final wallet, but not in the starting benchmark.',
+      'With positive debt, the original collateral pot alone cannot recover its original BTC quantity at any finite sale price.',
+      'Full debt is paid from collateral; unused cash stays separate. Requires lender support and no earlier liquidation; fees excluded.',
       '', 'LIQUIDATION & RISK',`Margin call LTV: ${num(d.mcLtv*100)}%; liquidation LTV: ${num(d.liqLtv*100)}%`,
       `Current margin call price (principal only): ${d.loan?usd(d.mcPrice):'n/a — no debt'}`,
       `Current liquidation price (principal only): ${d.loan?usd(d.liqPrice):'n/a — no debt'}`,

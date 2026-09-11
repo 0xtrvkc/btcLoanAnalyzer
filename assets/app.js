@@ -108,6 +108,7 @@ function renderOverview(d){
   set('overview-insight-title',title);
   set('overview-insight',liquidated?`At ${usd(d.targetPrice)}, the model reaches your ${pct(d.liqLtv*100,0)} liquidation LTV. Open-position P/L is unavailable; sale execution, fees, and any residual balance determine the outcome.`:`At ${usd(d.targetPrice)}, the loan strategy produces ${signed(d.netProfit)} after ${usd(d.interestCost)} of interest, versus ${signed(d.unlevProfit)} from holding ${fmt(d.btc,3)} BTC. The extra ${fmt(d.newBtc,5)} BTC also increases downside exposure. Results require the position to survive the path to target.`);
   renderTwoPots(d);
+  renderCollateralRepayment(d);
   if(currentView==='overview')renderPayoff(d);
 }
 function renderTwoPots(d){
@@ -120,6 +121,24 @@ function renderTwoPots(d){
   set('pots-total-btc',p.available?btc(p.walletBtc):'Unavailable');set('pots-total-note',p.available?usd(p.walletBtc*d.price)+' in BTC after repayment':'Liquidation settlement is not modeled.');
   set('pots-cash',usd(p.cash));set('pots-net-value',p.available?'BTC + cash = '+usd(p.netAssets):'Net assets unavailable');
   $('pots-quant-rows').innerHTML=row('Reference BTC price',usd(d.price))+row('Pledged BTC',btc(d.btc))+row('Principal + horizon interest',usd(d.debtOwed))+row('Debt in BTC at reference',btc(p.debtBtc))+row('Residual collateral BTC',p.available?btc(p.residualBtc):'Unavailable','total')+row('Loan-funded BTC',btc(d.newBtc))+row('BTC after repayment',p.available?btc(p.walletBtc):'Unavailable','total')+row('Unused loan cash',usd(p.cash))+row('Net assets, BTC + cash',p.available?usd(p.netAssets):'Unavailable');
+}
+function renderCollateralRepayment(d){
+  const r=M.collateralRepayment(d),btc=n=>fmt(n,8)+' BTC';
+  const change=(n,dp=8)=>(n>0?'+':'')+fmt(n,dp);
+  set('repay-benchmark',`Starting benchmark: ${btc(d.btc)} — your original collateral only. Loan-funded ${btc(d.newBtc)} is excluded from this benchmark.`);
+  set('repay-status',r.status.toUpperCase());$('repay-status').className='badge '+(r.available?r.status==='Margin call'?'amber':'good':'bad');
+  set('repay-recovery-price',d.debtOwed===0?'Already matched':r.recoveryPrice===null?'No finite price':usd(r.recoveryPrice,2));
+  set('repay-recovery-note',d.debtOwed===0?'There is no debt to repay. Your wallet already holds your original BTC amount.':r.recoveryPrice===null?'No loan-funded BTC was bought. Selling collateral leaves fewer BTC at every finite price; unused cash stays separate.':`${signedPct(r.recoveryChangePct)} from the reference price. Final wallet = ${btc(d.btc)} at this price.${r.recoveryAvailable?r.recoveryStatus==='Margin call'?' This price is in the horizon margin-call zone.':' Assumes the loan survives until repayment.':' This is only an algebraic threshold: it lies in the horizon liquidation zone, so the modeled repayment is unavailable.'}`);
+  $('repay-use-price').disabled=!r.recoveryAvailable||r.recoveryPrice<1||r.recoveryPrice>1e9;
+  set('repay-target-label','At BTC '+usd(r.price,2));
+  set('repay-wallet',r.available?btc(r.walletBtc):'Unavailable');
+  $('repay-wallet').className='repayment-value num '+(r.available?tone(Math.abs(r.btcChange)<1e-12?0:r.btcChange):'bad');
+  set('repay-btc-change',r.available?`${change(Math.abs(r.btcChange)<1e-12?0:r.btcChange)} BTC (${signedPct(r.btcChangePct)}) vs. your original amount.`:'Repayment totals are not shown beyond the liquidation threshold.');
+  set('repay-warning',!r.available?'Liquidation settlement is not modeled.':r.status==='Margin call'?'Target is in the margin-call zone; lender intervention may occur.':'Debt fully repaid; unused loan cash remains separate.');
+  const value=n=>r.available?usd(n,2):'Unavailable';
+  $('repay-breakdown').innerHTML=row('Principal + horizon interest',usd(d.debtOwed,2))+row('Collateral sold to repay',r.available?btc(r.soldBtc):'Unavailable')+row('Original collateral remaining',r.available?btc(r.residualBtc):'Unavailable')+row('Loan-funded BTC retained',btc(d.newBtc))+row('Unused loan cash',usd(d.undeployedUsd,2));
+  $('repay-pnl').innerHTML=row('Debt-free BTC value',value(r.walletBtc*r.price))+row('Net assets · BTC + cash',value(r.netAssets),'total')+row('Net P/L vs. borrowing date',r.available?signed(r.pnl):'Unavailable')+row('P/L % on original collateral',r.available?signedPct(r.pnlPct):'Unavailable')+row('Dollar edge vs. holding original BTC',r.available?signed(r.edgeVsHold):'Unavailable');
+  set('repay-value-recovery',`If you mean the same dollar value instead of the same BTC quantity: remaining BTC alone matches the original ${usd(d.collateral,2)} collateral value at ${usd(r.valueRecoveryPrice,2)} per BTC (cash excluded). Including unused cash, dollar P/L breaks even at ${usd(d.breakevenPrice,2)}. Both thresholds assume the position survives liquidation.`);
 }
 function setTwoPotsMode(mode){
   if(!['simple','quant'].includes(mode))return;
@@ -313,6 +332,7 @@ $('payoff-chart').addEventListener('pointerleave',hideInspect);
 document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>switchView(button.dataset.view,button.getAttribute('role')!=='tab')));
 document.querySelector('[role=tablist]').addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const keys=Object.keys(VIEWS),index=keys.indexOf(currentView);switchView(keys[event.key==='Home'?0:event.key==='End'?keys.length-1:(index+(event.key==='ArrowRight'?1:-1)+keys.length)%keys.length],true);});
 document.querySelectorAll('[data-target]').forEach(button=>button.addEventListener('click',()=>{if(!currentResult)return;const target=targetFor(button.dataset.target,currentResult);if(target>0)applyInput({target:button.dataset.target==='liq'?Math.floor(target):Math.round(target)});else toast('No liquidation price when there is no debt.');}));
+$('repay-use-price').addEventListener('click',()=>{if(!currentResult)return;const r=M.collateralRepayment(currentResult);if(r.recoveryAvailable&&r.recoveryPrice>=1&&r.recoveryPrice<=1e9)applyInput({target:r.recoveryPrice});});
 $('pnl-basis').addEventListener('change',()=>currentResult&&renderScenarios(currentResult));
 $('refresh-btn').addEventListener('click',fetchLatestData);
 $('export-btn').addEventListener('click',exportSnapshot);

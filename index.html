@@ -457,6 +457,23 @@
 </div><div class="pots-combined"><div><div class="overline">POT 01 + POT 02</div><div class="num" id="pots-total-btc">—</div><p class="hint" id="pots-total-note">—</p></div><div class="pots-cash"><span class="hint">Unused loan cash</span><strong class="num" id="pots-cash">—</strong><span class="hint" id="pots-net-value">—</span></div></div></div>
 <div id="pots-quant" hidden><div id="pots-quant-rows"></div><div class="formula">Residual BTC = pledged BTC − (principal + interest) ÷ reference price<br>Wallet BTC = residual BTC + loan-funded BTC<br>Net assets = wallet BTC × reference price + unused cash</div></div>
 <p class="hint" style="margin-top:14px">Illustrative repayment by selling collateral at the reference price. Fees are excluded, and the position must survive liquidation. Unused cash is shown separately; borrowing itself creates no profit.</p></div></section>
+<section class="panel wide-panel" id="collateral-repayment" aria-labelledby="repay-title">
+<div class="panel-head flexible"><div><h2 id="repay-title">What if I pay with collateral?</h2><p class="hint">Sell original collateral to repay principal + interest at your target BTC price.</p></div><span class="badge" id="repay-status">AT TARGET</span></div>
+<div class="panel-body">
+<p class="hint" id="repay-benchmark"></p>
+<div class="pots-grid repayment-grid">
+<article class="pot-card"><div class="overline">SAME BTC AMOUNT · DEBT FREE</div><h3>BTC recovery price</h3><div class="repayment-value num amber" id="repay-recovery-price">—</div><p class="hint" id="repay-recovery-note"></p><button type="button" class="button small" id="repay-use-price">Use recovery price as target</button></article>
+<article class="pot-card"><div class="overline">WALLET AFTER REPAYMENT</div><h3 id="repay-target-label">At target price</h3><div class="repayment-value num" id="repay-wallet">—</div><p class="hint" id="repay-btc-change"></p><p class="hint" id="repay-warning"></p></article>
+</div>
+<div class="pots-grid repayment-grid"><div id="repay-breakdown"></div><div id="repay-pnl"></div></div>
+<details class="advanced"><summary>BTC quantity vs. dollar value</summary><div class="advanced-body notes">
+<p>Selling collateral always reduces the original pot when debt is positive. No finite price lets that pot alone keep its original BTC quantity. The recovery price above includes the BTC bought with your loan in the final wallet, but excludes it from the starting benchmark.</p>
+<div class="formula">BTC sold = (principal + interest) ÷ target price<br>Final BTC = original BTC − BTC sold + loan-funded BTC<br>BTC recovery price = (principal + interest) ÷ loan-funded BTC</div>
+<p id="repay-value-recovery"></p>
+<p>Net P/L = remaining BTC value + unused cash − original collateral value at borrowing. P/L % uses that original collateral value. Unused loan cash is counted once in net assets; it is neither spent on repayment nor converted into BTC.</p>
+</div></details>
+<p class="hint" style="margin-top:14px">Conditional on no earlier liquidation and a lender allowing collateral sale for repayment. Simple interest follows your APR and holding period. Fees, slippage and tax are excluded. Change Target BTC price to explore repayment without resizing the loan.</p>
+</div></section>
 <div class="panel wide-panel">
 <div class="panel-head">
 <div>

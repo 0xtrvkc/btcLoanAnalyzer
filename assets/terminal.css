@@ -30,3 +30,6 @@
 @keyframes hold-charge{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 @media(max-width:760px){.pots-grid{grid-template-columns:1fr}.pots-combined{flex-direction:column}.pots-cash{text-align:left}.position input{font-size:1rem}.preset-notice{right:16px;bottom:16px}}
 @media(prefers-reduced-motion:reduce){.preset-notice,#btc-amount-wrap.hold-charging::after{animation:none}}
+
+/* Collateral repayment follows the two-pot layout on desktop and mobile. */
+.repayment-grid{margin:18px 0}.repayment-value{font-size:clamp(1.15rem,2.5vw,1.75rem);line-height:1.4;margin:12px 0;overflow-wrap:anywhere}.repayment-grid .button{margin-top:12px}.repayment-grid .key-row{gap:16px}.repayment-grid .key-row strong{overflow-wrap:anywhere;min-width:0;text-align:right}.repayment-grid .key-row>span{min-width:0}.repayment-grid .hint{margin-top:8px}

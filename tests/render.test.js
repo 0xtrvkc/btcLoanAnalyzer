@@ -71,7 +71,9 @@ test('current-price summary and glance chart separate holding, loan, and combine
  assert.match(app.nodes.get('repay-wallet-flow').innerHTML,/Original BTC/);
  assert.match(app.nodes.get('repay-wallet-flow').innerHTML,/Sold for debt/);
  assert.match(app.nodes.get('repay-wallet-flow').innerHTML,/Final debt-free wallet/);
+ assert.match(app.nodes.get('repay-wallet-flow').innerHTML,/\$[\d,]+\.\d{2} now/);
  assert.match(app.nodes.get('wallet-compose-track').innerHTML,/compose-benchmark/);
+ assert.match(app.nodes.get('wallet-compose-total').textContent,/BTC · \$/);
  assert.match(app.nodes.get('wallet-flow-verdict').textContent,/HOLDING/);
  assert.doesNotMatch(app.nodes.get('repay-be-total').innerHTML,/NaN|Infinity/);
 });

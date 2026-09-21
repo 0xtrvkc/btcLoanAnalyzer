@@ -123,14 +123,15 @@ function renderTwoPots(d){
   $('pots-quant-rows').innerHTML=row('Reference BTC price',usd(d.price))+row('Pledged BTC',btc(d.btc))+row('Principal + horizon interest',usd(d.debtOwed))+row('Debt in BTC at reference',btc(p.debtBtc))+row('Residual collateral BTC',p.available?btc(p.residualBtc):'Unavailable','total')+row('Loan-funded BTC',btc(d.newBtc))+row('BTC after repayment',p.available?btc(p.walletBtc):'Unavailable','total')+row('Unused loan cash',usd(p.cash))+row('Net assets, BTC + cash',p.available?usd(p.netAssets):'Unavailable');
 }
 function renderCollateralRepayment(d){
-  const r=M.collateralRepayment(d),btc=n=>fmt(n,8)+' BTC';
+  const currentPrice=Number.isFinite(quote.price)&&quote.price>0?quote.price:d.price;
+  const r=M.collateralRepayment(d,currentPrice),btc=n=>fmt(n,8)+' BTC';
   const change=(n,dp=8)=>(n>0?'+':'')+fmt(n,dp);
   set('repay-benchmark',`Holding benchmark: ${btc(d.btc)}. Repay-today debt: ${usd(d.currentDebt,2)} = ${usd(d.loan,2)} principal + ${usd(d.accruedInterest,2)} accrued interest.`);
   set('repay-status',r.status.toUpperCase());$('repay-status').className='badge '+(r.available?r.status==='Margin call'?'amber':'good':'bad');
-  set('repay-recovery-price',d.currentDebt===0?'Already matched':r.recoveryPrice===null?'No finite price':usd(r.recoveryPrice,2));
-  set('repay-recovery-note',d.currentDebt===0?'There is no debt to repay.':r.recoveryPrice===null?'No loan-funded BTC was bought, so selling collateral cannot restore the original BTC quantity.':`At this price, loan-funded BTC exactly replaces the BTC sold for today’s debt. Final wallet = holding benchmark ${btc(d.btc)}. Above it you beat holding; below it you trail holding.${r.recoveryAvailable?'':' This threshold lies in the liquidation zone.'}`);
-  $('repay-use-price').disabled=!r.recoveryAvailable||r.recoveryPrice<1||r.recoveryPrice>1e9;
-  set('repay-target-label','At BTC '+usd(r.price,2));
+  set('repay-recovery-price',usd(currentPrice,2));
+  set('repay-recovery-note',r.recoveryPrice===null?`Current repay-now result shown below. No finite BTC quantity break-even exists because no loan-funded BTC was purchased.`:`Quantity break-even: ${usd(r.recoveryPrice,2)}. Now is ${signedPct((currentPrice/r.recoveryPrice-1)*100)} from that threshold, so you are ${r.btcChange>=0?'ahead of':'behind'} holding after repayment.`);
+  $('repay-use-price').disabled=!Number.isFinite(currentPrice)||currentPrice<1||currentPrice>1e9;
+  set('repay-target-label','If repaid now at '+usd(r.price,2));
   set('repay-wallet',r.available?btc(r.walletBtc):'Unavailable');
   $('repay-wallet').className='repayment-value num '+(r.available?tone(Math.abs(r.btcChange)<1e-12?0:r.btcChange):'bad');
   set('repay-btc-change',r.available?`${change(Math.abs(r.btcChange)<1e-12?0:r.btcChange)} BTC (${signedPct(r.btcChangePct)}) vs. your original amount.`:'Repayment totals are not shown beyond the liquidation threshold.');
@@ -365,7 +366,7 @@ $('payoff-chart').addEventListener('pointerleave',hideInspect);
 document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>switchView(button.dataset.view,button.getAttribute('role')!=='tab')));
 document.querySelector('[role=tablist]').addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const keys=Object.keys(VIEWS),index=keys.indexOf(currentView);switchView(keys[event.key==='Home'?0:event.key==='End'?keys.length-1:(index+(event.key==='ArrowRight'?1:-1)+keys.length)%keys.length],true);});
 document.querySelectorAll('[data-target]').forEach(button=>button.addEventListener('click',()=>{if(!currentResult)return;const target=targetFor(button.dataset.target,currentResult);if(target>0)applyInput({target:button.dataset.target==='liq'?Math.floor(target):Math.round(target)});else toast('No liquidation price when there is no debt.');}));
-$('repay-use-price').addEventListener('click',()=>{if(!currentResult)return;const r=M.collateralRepayment(currentResult);if(r.recoveryAvailable&&r.recoveryPrice>=1&&r.recoveryPrice<=1e9)applyInput({target:r.recoveryPrice});});
+$('repay-use-price').addEventListener('click',()=>{if(!currentResult)return;const currentPrice=Number.isFinite(quote.price)&&quote.price>0?quote.price:currentResult.price;if(currentPrice>=1&&currentPrice<=1e9)applyInput({target:currentPrice});});
 $('pnl-basis').addEventListener('change',()=>currentResult&&renderScenarios(currentResult));
 $('refresh-btn').addEventListener('click',fetchLatestData);
 $('export-btn').addEventListener('click',exportSnapshot);

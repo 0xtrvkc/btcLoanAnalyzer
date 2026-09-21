@@ -53,9 +53,9 @@ test('collateral repayment renders recovery, partial deployment and unavailable 
  assert.match(app.nodes.get('repay-benchmark').textContent,/1.00000000 BTC/);
  assert.match(app.nodes.get('repay-wallet').textContent,/BTC/);
  app.nodes.get('inp-deploy').value='0';app.run('render()');
- assert.equal(app.nodes.get('repay-recovery-price').textContent,'No finite price');assert.equal(app.nodes.get('repay-use-price').disabled,true);
- app.nodes.get('inp-ltv').value='0';app.run('render()');assert.equal(app.nodes.get('repay-recovery-price').textContent,'Already matched');
- app.nodes.get('inp-ltv').value='40';app.nodes.get('inp-target').value='100';app.run('render()');
+ assert.match(app.nodes.get('repay-recovery-price').textContent,/\$/);assert.match(app.nodes.get('repay-recovery-note').textContent,/No finite BTC quantity break-even/);assert.equal(app.nodes.get('repay-use-price').disabled,false);
+ app.nodes.get('inp-ltv').value='0';app.run('render()');assert.match(app.nodes.get('repay-recovery-price').textContent,/\$/);
+ app.nodes.get('inp-ltv').value='40';app.run('quote.price=100;render()');
  assert.equal(app.nodes.get('repay-wallet').textContent,'Unavailable');assert.doesNotMatch(app.nodes.get('repay-pnl').innerHTML,/NaN|Infinity/);
 });
 

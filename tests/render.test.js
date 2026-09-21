@@ -45,6 +45,7 @@ test('iii restores the original fixed preset and both pots modes render',()=>{
  const app=harness(600);app.run('render()');app.run('runHiddenCommand()');
  assert.equal(Number(app.nodes.get('inp-btc').value),.035);assert.equal(Number(app.nodes.get('inp-loanPrincipal').value),1000);assert.equal(Number(app.nodes.get('inp-accruedInterest').value),4);assert.equal(Number(app.nodes.get('inp-apr').value),6);assert.equal(Number(app.nodes.get('inp-target').value),158844);
  app.run('dismissPresetNotice()');app.run("setTwoPotsMode('quant')");assert.equal(app.nodes.get('pots-simple').hidden,true);assert.equal(app.nodes.get('pots-quant').hidden,false);assert.match(app.nodes.get('pots-quant-rows').innerHTML,/Unused loan cash/);
+ assert.match(app.nodes.get('pots-quant-rows').innerHTML,/Pot 01 price P\/L/);assert.match(app.nodes.get('pots-quant-rows').innerHTML,/Pot 02 price P\/L/);assert.match(app.nodes.get('pot-new-details').innerHTML,/Bought at/);
 });
 
 

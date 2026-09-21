@@ -113,14 +113,22 @@ function renderOverview(d){
 }
 function renderTwoPots(d){
   const p=M.twoPots(d),btc=n=>fmt(n,6)+' BTC';
+  const currentPrice=Number.isFinite(quote.price)&&quote.price>0?quote.price:d.price;
+  const purchasePrice=d.deployPrice||d.price;
+  const priceMovePct=(currentPrice/purchasePrice-1)*100;
+  const originalPotBtc=p.available?p.residualBtc:0;
+  const originalPotPnl=originalPotBtc*(currentPrice-purchasePrice);
+  const fundedPotPnl=d.newBtc*(currentPrice-purchasePrice);
+  const pricePnlLabel=`Price P/L vs ${usd(purchasePrice)}`;
   $('pots-warning').hidden=p.available;
   set('pots-warning','The reference price falls in the horizon liquidation zone. Repayment and wallet totals are unavailable.');
-  $('pot-original-details').innerHTML=row('Original collateral',btc(d.btc))+row('Sell to repay debt',btc(p.debtBtc))+row('Principal + interest',usd(d.debtOwed));
-  set('pot-original-btc',p.available?btc(p.residualBtc):'Unavailable');set('pot-original-value',p.available?usd(p.residualValue):'Liquidation threshold crossed');
-  set('pot-new-btc',btc(d.newBtc));set('pot-new-value',usd(p.newValue)+' at reference price');
+  $('pot-original-details').innerHTML=row('Original collateral',btc(d.btc))+row('Sell to repay debt',btc(p.debtBtc))+row('Principal + interest',usd(d.debtOwed))+row('Current BTC price',usd(currentPrice))+row(pricePnlLabel,p.available?signed(originalPotPnl):'Unavailable',p.available?'total':'');
+  $('pot-new-details').innerHTML=row('Bought at',usd(purchasePrice))+row('Current BTC price',usd(currentPrice))+row('BTC price move',signedPct(priceMovePct))+row(pricePnlLabel,signed(fundedPotPnl),'total');
+  set('pot-original-btc',p.available?btc(p.residualBtc):'Unavailable');set('pot-original-value',p.available?usd(originalPotBtc*currentPrice)+' now':'Liquidation threshold crossed');
+  set('pot-new-btc',btc(d.newBtc));set('pot-new-value',usd(d.newBtc*currentPrice)+' now');
   set('pots-total-btc',p.available?btc(p.walletBtc):'Unavailable');set('pots-total-note',p.available?usd(p.walletBtc*d.price)+' in BTC after repayment':'Liquidation settlement is not modeled.');
   set('pots-cash',usd(p.cash));set('pots-net-value',p.available?'BTC + cash = '+usd(p.netAssets):'Net assets unavailable');
-  $('pots-quant-rows').innerHTML=row('Reference BTC price',usd(d.price))+row('Pledged BTC',btc(d.btc))+row('Principal + horizon interest',usd(d.debtOwed))+row('Debt in BTC at reference',btc(p.debtBtc))+row('Residual collateral BTC',p.available?btc(p.residualBtc):'Unavailable','total')+row('Loan-funded BTC',btc(d.newBtc))+row('BTC after repayment',p.available?btc(p.walletBtc):'Unavailable','total')+row('Unused loan cash',usd(p.cash))+row('Net assets, BTC + cash',p.available?usd(p.netAssets):'Unavailable');
+  $('pots-quant-rows').innerHTML=row('Reference BTC price',usd(d.price))+row('Current BTC price',usd(currentPrice))+row('Loan-funded BTC purchase price',usd(purchasePrice))+row('BTC price move',signedPct(priceMovePct))+row('Pledged BTC',btc(d.btc))+row('Principal + horizon interest',usd(d.debtOwed))+row('Debt in BTC at reference',btc(p.debtBtc))+row('Residual collateral BTC',p.available?btc(p.residualBtc):'Unavailable','total')+row('Pot 01 price P/L',p.available?signed(originalPotPnl):'Unavailable')+row('Loan-funded BTC',btc(d.newBtc))+row('Pot 02 price P/L',signed(fundedPotPnl))+row('BTC after repayment',p.available?btc(p.walletBtc):'Unavailable','total')+row('Unused loan cash',usd(p.cash))+row('Net assets, BTC + cash',p.available?usd(p.netAssets):'Unavailable')+row('P/L scope','Price movement only; debt and interest shown separately');
 }
 function renderCollateralRepayment(d){
   const currentPrice=Number.isFinite(quote.price)&&quote.price>0?quote.price:d.price;

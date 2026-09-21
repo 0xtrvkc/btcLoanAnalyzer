@@ -143,7 +143,7 @@ test('collateral repayment reconciles across fractional sizes and accrued costs'
   if(r.recoveryPrice!==null)near(M.collateralRepayment(d,r.recoveryPrice).walletBtc,btc);
  }
  const report=Report.build({input:{...base,accruedInterest:4},data});assert.match(report,/REPAY WITH COLLATERAL/);assert.match(report,/BTC quantity break-even price: \$60,010/);
- assert.match(report,/AT BTC QUANTITY BREAK-EVEN — SEPARATE & TOTAL/);assert.match(report,/Holding leg/);assert.match(report,/Loan leg/);assert.match(report,/Combined/);
+ assert.match(report,/AT CURRENT BTC PRICE — SEPARATE & TOTAL/);assert.match(report,/Holding leg/);assert.match(report,/Loan leg/);assert.match(report,/Combined/);
 });
 
 test('fixed principal and four dollars interest match the saved real position',()=>{

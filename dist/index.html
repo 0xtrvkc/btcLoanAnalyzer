@@ -44,7 +44,8 @@
 
 /* Collateral repayment follows the two-pot layout on desktop and mobile. */
 .repayment-grid{margin:18px 0}.repayment-value{font-size:clamp(1.15rem,2.5vw,1.75rem);line-height:1.4;margin:12px 0;overflow-wrap:anywhere}.repayment-grid .button{margin-top:12px}.repayment-grid .key-row{gap:16px}.repayment-grid .key-row strong{overflow-wrap:anywhere;min-width:0;text-align:right}.repayment-grid .key-row>span{min-width:0}.repayment-grid .hint{margin-top:8px}
-.break-even-summary{margin:24px 0;padding-top:22px;border-top:1px solid var(--border)}.break-even-summary>h3{margin:6px 0}.break-even-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:16px}.break-even-grid .pot-card{min-width:0}.break-even-grid .key-row{gap:12px}.break-even-grid .key-row strong{text-align:right;overflow-wrap:anywhere}@media(max-width:900px){.break-even-grid{grid-template-columns:1fr}}
+.break-even-summary{margin:24px 0;padding-top:22px;border-top:1px solid var(--line)}.break-even-summary>h3{margin:6px 0}.break-even-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:16px}.break-even-grid .pot-card{min-width:0}.break-even-grid .key-row{gap:12px}.break-even-grid .key-row strong{text-align:right;overflow-wrap:anywhere}@media(max-width:900px){.break-even-grid{grid-template-columns:1fr}}
+.repay-insight{margin-top:18px;padding:18px;border:1px solid var(--line);background:linear-gradient(135deg,var(--surface2),transparent);border-radius:var(--radius)}.insight-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.insight-head h3{margin:4px 0 0}.repay-insight-chart{display:grid;gap:14px;margin-top:18px}.insight-row{display:grid;grid-template-columns:92px minmax(120px,1fr) minmax(145px,auto);gap:12px;align-items:center}.insight-label strong,.insight-label span{display:block}.insight-label span,.insight-value span{font-size:.72rem;color:var(--muted)}.insight-value{text-align:right}.insight-value strong{display:block}.insight-track{position:relative;height:12px;border-radius:999px;background:var(--surface3);overflow:hidden}.insight-track:after{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--muted);opacity:.5}.insight-bar{position:absolute;top:2px;height:8px;min-width:2px;border-radius:999px}.insight-bar.good{left:50%;background:var(--green)}.insight-bar.bad{right:50%;background:var(--red)}.insight-dot{position:absolute;left:calc(50% - 3px);top:3px;width:6px;height:6px;border-radius:50%;background:var(--accent);z-index:1}@media(max-width:620px){.insight-row{grid-template-columns:76px 1fr}.insight-value{grid-column:1/-1;text-align:left;display:flex;gap:8px;align-items:baseline}.insight-value strong,.insight-value span{display:inline}}
 </style>
 </head>
 <body>
@@ -515,11 +516,12 @@
 </div>
 <div class="pots-grid repayment-grid"><div id="repay-breakdown"></div><div id="repay-pnl"></div></div>
 <div class="break-even-summary">
-<div class="overline">AT BTC QUANTITY BREAK-EVEN</div>
+<div class="overline">AT CURRENT BTC PRICE</div>
 <h3 id="repay-be-title">Separate legs and combined result</h3>
-<p class="hint" id="repay-be-note">Shows where the dollars and BTC come from without mixing the holding return with the loan trade.</p>
+<p class="hint" id="repay-be-note">If you repay now: where every dollar and BTC comes from.</p>
+<div class="repay-insight"><div class="insight-head"><div><div class="overline">GLANCE VIEW</div><h3>BTC advantage vs. simply holding</h3></div><span class="badge" id="repay-insight-badge">—</span></div><div id="repay-insight-chart" class="repay-insight-chart" role="img" aria-label="BTC advantage at break-even, current, and target prices"></div><p class="hint">Bars show BTC gained or lost versus keeping your original collateral untouched. Final wallet and dollar advantage appear beside each scenario.</p></div>
 <div class="break-even-grid">
-<article class="pot-card"><div class="overline">01 · ORIGINAL HOLDING</div><h3>Holding leg</h3><div id="repay-be-hold"></div></article>
+<article class="pot-card"><div class="overline">01 · ORIGINAL HOLDING</div><h3>Holding benchmark</h3><div id="repay-be-hold"></div></article>
 <article class="pot-card"><div class="overline">02 · LOAN-FUNDED BTC</div><h3>Loan leg</h3><div id="repay-be-loan"></div></article>
 <article class="pot-card"><div class="overline">03 · DEBT-FREE TOTAL</div><h3>Combined wallet</h3><div id="repay-be-total"></div></article>
 </div>
@@ -1175,8 +1177,8 @@ window.BUNDLED_SNAPSHOT = {
   const usd=x=>Number.isFinite(x)?'$'+num(x):'n/a';
   function build({input,data,weights,quote,source='Bundled snapshot',history=[],generatedAt=new Date().toISOString()}){
     const d=M.calculate(input,data,weights),f=M.futures(d),r=M.collateralRepayment(d);
-    const b=r.recoveryPrice!==null&&r.recoveryAvailable?M.collateralRepayment(d,r.recoveryPrice):null;
-    const costBasis=d.entry||d.price,holdPnlAtBreakEven=b?d.btc*(b.price-costBasis):null,totalPnlAtBreakEven=b?b.netAssets-d.btc*costBasis:null;
+    const currentPrice=quote?.price||d.price,b=M.collateralRepayment(d,currentPrice);
+    const costBasis=d.entry||d.price,holdPnlNow=b.available?d.btc*(b.price-costBasis):null,totalPnlNow=b.available?b.netAssets-d.btc*costBasis:null;
     const lines=['BTC LOAN TERMINAL — POSITION ANALYSIS',`Generated: ${generatedAt}`,'',
       'DATA PROVENANCE',`On-chain report: ${data.date} (${source})`,
       `Quote: ${quote?.source||'Report snapshot'}; date ${quote?.date||data.date}; fetched ${quote?.fetchedAt||'not live-fetched'}`,
@@ -1218,13 +1220,13 @@ window.BUNDLED_SNAPSHOT = {
       'Final wallet = original collateral remaining after repayment + loan-funded BTC retained.',
       'Repay-today calculations use fixed principal plus accrued interest today. Horizon projections remain separate.',
       'Requires lender support and no earlier liquidation; fees, slippage, and tax excluded.',
-      '', 'AT BTC QUANTITY BREAK-EVEN — SEPARATE & TOTAL',
-      `Break-even BTC price: ${b?usd(b.price):'n/a'}`,
-      `Holding leg — original BTC: ${num(d.btc,8)} BTC; value: ${b?usd(d.btc*b.price):'n/a'}; P/L vs ${d.entry?'cost basis':'reference'}: ${b?usd(holdPnlAtBreakEven):'n/a'}`,
-      `Loan leg — funded BTC: ${num(d.newBtc,8)} BTC; gross price profit: ${b?usd(b.grossLoanProfit):'n/a'}; accrued interest: ${usd(d.accruedInterest)}; net profit: ${b?usd(b.netLoanProfit):'n/a'}`,
-      `Combined — original BTC remaining: ${b?num(b.residualBtc,8):'n/a'} BTC; loan-funded BTC retained: ${num(d.newBtc,8)} BTC`,
-      `Combined — final debt-free wallet: ${b?num(b.walletBtc,8):'n/a'} BTC; value plus cash: ${b?usd(b.netAssets):'n/a'}; total P/L vs cost: ${b?usd(totalPnlAtBreakEven):'n/a'}`,
-      `Combined — BTC advantage vs holding: ${b?num(b.btcChange,8):'n/a'} BTC; dollar advantage vs holding: ${b?usd(b.edgeVsHold):'n/a'}`,
+      '', 'AT CURRENT BTC PRICE — SEPARATE & TOTAL',
+      `Current BTC price used: ${usd(currentPrice)}`,
+      `Holding leg — original BTC: ${num(d.btc,8)} BTC; value: ${b.available?usd(d.btc*b.price):'n/a'}; P/L vs ${d.entry?'cost basis':'reference'}: ${b.available?usd(holdPnlNow):'n/a'}`,
+      `Loan leg — funded BTC: ${num(d.newBtc,8)} BTC; gross price profit: ${b.available?usd(b.grossLoanProfit):'n/a'}; accrued interest: ${usd(d.accruedInterest)}; net profit: ${b.available?usd(b.netLoanProfit):'n/a'}`,
+      `Combined — original BTC remaining: ${b.available?num(b.residualBtc,8):'n/a'} BTC; loan-funded BTC retained: ${num(d.newBtc,8)} BTC`,
+      `Combined — final debt-free wallet: ${b.available?num(b.walletBtc,8):'n/a'} BTC; value plus cash: ${b.available?usd(b.netAssets):'n/a'}; total P/L vs cost: ${b.available?usd(totalPnlNow):'n/a'}`,
+      `Combined — BTC advantage vs holding: ${b.available?num(b.btcChange,8):'n/a'} BTC; dollar advantage vs holding: ${b.available?usd(b.edgeVsHold):'n/a'}`,
       '', 'LIQUIDATION & RISK',`Margin call LTV: ${num(d.mcLtv*100)}%; liquidation LTV: ${num(d.liqLtv*100)}%`,
       `Current margin call price (principal only): ${d.loan?usd(d.mcPrice):'n/a — no debt'}`,
       `Current liquidation price (principal only): ${d.loan?usd(d.liqPrice):'n/a — no debt'}`,
@@ -1448,26 +1450,39 @@ function renderCollateralRepayment(d){
   $('repay-breakdown').innerHTML=row('Fixed loan principal',usd(d.loan,2))+row('Accrued interest today',usd(d.accruedInterest,2))+row('Total debt repaid today',usd(d.currentDebt,2),'total')+row('Collateral sold to repay',r.available?btc(r.soldBtc):'Unavailable')+row('Original collateral remaining',r.available?btc(r.residualBtc):'Unavailable')+row('Loan-funded BTC retained',btc(d.newBtc))+row('Final wallet · both sources',r.available?btc(r.walletBtc):'Unavailable','total');
   $('repay-pnl').innerHTML=row('Gross profit · loan-bought BTC',r.available?signed(r.grossLoanProfit):'Unavailable')+row('Accrued financing cost','−'+usd(d.accruedInterest,2))+row('Net loan-trade profit',r.available?signed(r.netLoanProfit):'Unavailable','total')+row('BTC advantage vs. holding',r.available?`${change(r.btcChange)} BTC`:'Unavailable')+row('Dollar advantage vs. holding',r.available?signed(r.edgeVsHold):'Unavailable','total')+row('Debt-free BTC value',value(r.walletBtc*r.price));
   set('repay-value-recovery',`BTC quantity break-even compares your final debt-free wallet with simply holding ${btc(d.btc)}; it is not a zero-dollar-profit claim. Dollar break-even versus the collateral value at the borrowing reference is ${usd(r.valueRecoveryPrice,2)}. The separate horizon model uses ${usd(d.interestCost,2)} projected interest over ${fmt(d.months)} months.`);
-  renderBreakEvenSummary(d,r,btc);
+  renderCurrentRepaymentSummary(d,r,btc);
 }
-function renderBreakEvenSummary(d,r,btc){
-  const unavailable=r.recoveryPrice===null||!r.recoveryAvailable;
-  if(unavailable){
-    set('repay-be-title','No usable BTC quantity break-even');
-    set('repay-be-note',r.recoveryPrice===null?'No loan-funded BTC exists to replace collateral sold for repayment.':'The algebraic threshold is inside the liquidation zone.');
-    for(const id of ['repay-be-hold','repay-be-loan','repay-be-total'])$(id).innerHTML=row('Status','Unavailable');
-    return;
-  }
-  const b=M.collateralRepayment(d,r.recoveryPrice);
+function renderCurrentRepaymentSummary(d,r,btc){
+  const currentPrice=Number.isFinite(quote.price)&&quote.price>0?quote.price:d.price;
+  const b=M.collateralRepayment(d,currentPrice);
   const costBasis=d.entry||d.price;
   const holdPnl=d.btc*(b.price-costBasis);
   const totalPnl=b.netAssets-d.btc*costBasis;
   const source=d.entry?'actual BTC cost basis':'borrowing reference price';
-  set('repay-be-title',`At BTC ${usd(b.price,2)}`);
-  set('repay-be-note',`At this threshold your final BTC equals ${btc(d.btc)}. Total dollar P/L still reflects movement in your original BTC versus its ${source}.`);
-  $('repay-be-hold').innerHTML=row('Original benchmark',btc(d.btc))+row('Value at break-even',usd(d.btc*b.price,2))+row(`P/L vs. ${d.entry?'cost basis':'reference'}`,signed(holdPnl),'total');
+  set('repay-be-title',`At current BTC ${usd(b.price,2)}`);
+  set('repay-be-note',`Repay today using ${usd(d.currentDebt,2)} total debt. Results use the latest displayed quote${quote.live?'':' fallback'} and keep the ${usd(r.recoveryPrice,2)} quantity break-even as a reference.`);
+  $('repay-be-hold').innerHTML=row('BTC if you just hold',btc(d.btc))+row('Current holding value',usd(d.btc*b.price,2))+row(`Holding P/L vs. ${d.entry?'cost basis':'reference'}`,signed(holdPnl),'total');
   $('repay-be-loan').innerHTML=row('BTC bought with loan',btc(d.newBtc))+row('Gross price profit',signed(b.grossLoanProfit))+row('Accrued interest','−'+usd(d.accruedInterest,2))+row('Net loan-trade profit',signed(b.netLoanProfit),'total')+row('Net BTC vs. holding',`${b.btcChange>0?'+':''}${fmt(b.btcChange,8)} BTC`);
   $('repay-be-total').innerHTML=row('Original BTC remaining',btc(b.residualBtc))+row('Loan-funded BTC retained',btc(d.newBtc))+row('Final debt-free wallet',btc(b.walletBtc),'total')+row('Wallet value + cash',usd(b.netAssets,2))+row('Total P/L vs. cost',signed(totalPnl),'total')+row('Advantage vs. holding',signed(b.edgeVsHold));
+  renderRepaymentInsight(d,r,currentPrice,btc);
+}
+function renderRepaymentInsight(d,r,currentPrice,btc){
+  const cases=[];
+  if(r.recoveryPrice!==null&&r.recoveryAvailable)cases.push({label:'Break-even',price:r.recoveryPrice});
+  cases.push({label:'Now',price:currentPrice});
+  if(Math.abs(d.targetPrice-currentPrice)>.01)cases.push({label:'Target',price:d.targetPrice});
+  const results=cases.map(item=>({...item,result:M.collateralRepayment(d,item.price)}));
+  const max=Math.max(1e-12,...results.map(x=>Math.abs(x.result.btcChange)));
+  $('repay-insight-chart').innerHTML=results.map(({label,price,result})=>{
+    const change=result.available?result.btcChange:0,width=Math.min(50,Math.abs(change)/max*50),kind=change>1e-12?'good':change<-1e-12?'bad':'zero';
+    const bar=kind==='zero'?'<i class="insight-dot"></i>':`<i class="insight-bar ${kind}" style="width:${width}%"></i>`;
+    const status=result.available?`${change>0?'+':''}${fmt(change,8)} BTC`:'Unavailable';
+    const dollar=result.available?`${signed(result.edgeVsHold)} vs hold`:'Liquidation zone';
+    return `<div class="insight-row"><div class="insight-label"><strong>${escapeHTML(label)}</strong><span>${escapeHTML(usd(price,0))}</span></div><div class="insight-track">${bar}</div><div class="insight-value"><strong class="${result.available?tone(change):'bad'}">${escapeHTML(status)}</strong><span>${escapeHTML(result.available?btc(result.walletBtc)+' final · '+dollar:dollar)}</span></div></div>`;
+  }).join('');
+  const now=M.collateralRepayment(d,currentPrice),ahead=now.available?now.btcChange:NaN;
+  set('repay-insight-badge',!now.available?'UNAVAILABLE':Math.abs(ahead)<1e-12?'EVEN WITH HOLDING':ahead>0?'AHEAD OF HOLDING':'BEHIND HOLDING');
+  $('repay-insight-badge').className='badge '+(!now.available||ahead<0?'bad':ahead>0?'good':'amber');
 }
 function setTwoPotsMode(mode){
   if(!['simple','quant'].includes(mode))return;

@@ -51,7 +51,7 @@ Automatic loan principal = collateral BTC × reference price × initial LTV; an 
 
 The repay-now section labels its threshold **BTC quantity break-even**: the BTC price where the final debt-free wallet equals the original collateral BTC quantity. Above it the loan trade beats holding in BTC quantity; below it the loan trade trails holding. Final BTC always equals original collateral remaining after repayment plus loan-funded BTC retained.
 
-The break-even summary separates the original holding leg, the loan-funded leg, and the combined debt-free wallet. At BTC quantity break-even, the loan leg's net BTC advantage is zero by definition; total dollar P/L can still be positive or negative because the original BTC moved relative to its cost basis.
+The repay-now summary defaults to the latest displayed BTC quote and separates the original holding leg, loan-funded leg, and combined debt-free wallet. A glance chart compares BTC advantage versus holding at quantity break-even, now, and target. The quantity break-even remains visible as a reference threshold rather than being the primary result.
 
 Borrowed-capital P/L measures the newly purchased BTC's change from its own purchase price, less all loan interest. Actual-cost-basis P/L applies the user's original purchase price only to the original collateral.
 

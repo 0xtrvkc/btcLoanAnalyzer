@@ -45,9 +45,11 @@ The hidden **`iii`** shortcut restores the original repository preset when typed
 
 ## Financial model
 
-This is a **new-loan scenario planner**, not a fixed-debt loan tracker. Changing the reference BTC price re-sizes the loan at the chosen initial LTV. It must not be used to infer outstanding debt for an existing position.
+The calculator supports both modes. Leave **Actual loan principal** blank to size a new loan from reference price × LTV. For an existing loan, enter its fixed principal so market-price changes cannot silently resize the debt. **Accrued interest today** drives the repay-now card; APR × holding period remains a separate forward projection.
 
-Loan principal = collateral BTC × reference price × initial LTV. Simple interest = principal × APR × months / 12. Horizon debt includes that interest. Newly purchased BTC = deployed principal / deployment price. Net P/L = total BTC × exit price + unused loan cash − horizon debt − initial collateral value.
+Automatic loan principal = collateral BTC × reference price × initial LTV; an entered actual principal overrides it. Simple projected interest = principal × APR × months / 12. Horizon debt includes projected interest. Repay-today debt = fixed principal + accrued interest today. Newly purchased BTC = deployed principal / deployment price.
+
+The repay-now section labels its threshold **BTC quantity break-even**: the BTC price where the final debt-free wallet equals the original collateral BTC quantity. Above it the loan trade beats holding in BTC quantity; below it the loan trade trails holding. Final BTC always equals original collateral remaining after repayment plus loan-funded BTC retained.
 
 Borrowed-capital P/L measures the newly purchased BTC's change from its own purchase price, less all loan interest. Actual-cost-basis P/L applies the user's original purchase price only to the original collateral.
 

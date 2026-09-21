@@ -243,7 +243,19 @@
 </p>
 </div>
 </div>
-<p class="hint">All scenario P/L includes simple interest for this holding period.</p>
+<p class="hint">Forward scenarios use APR × holding period. The repay-today card uses the separate accrued-interest amount below.</p>
+<div class="split-fields">
+<div class="field">
+<div class="field-label"><label for="inp-loanPrincipal">Actual loan principal</label><span class="unit">USD</span></div>
+<div class="input-shell"><input id="inp-loanPrincipal" data-field="loanPrincipal" type="number" inputmode="decimal" value="" step="1" min="0" max="1000000000" placeholder="Auto from LTV" aria-describedby="error-loanPrincipal note-loanPrincipal" autocomplete="off"/><span class="suffix">USD</span></div>
+<p class="field-error" id="error-loanPrincipal"></p><p class="field-note" id="note-loanPrincipal">For an existing loan, enter its original fixed principal. Leave blank only when planning a new LTV-sized loan.</p>
+</div>
+<div class="field">
+<div class="field-label"><label for="inp-accruedInterest">Accrued interest today</label><span class="unit">USD</span></div>
+<div class="input-shell"><input id="inp-accruedInterest" data-field="accruedInterest" type="number" inputmode="decimal" value="0" step="0.01" min="0" max="1000000000" aria-describedby="error-accruedInterest note-accruedInterest" autocomplete="off"/><span class="suffix">USD</span></div>
+<p class="field-error" id="error-accruedInterest"></p><p class="field-note" id="note-accruedInterest">Used only for “repay today.” The APR × holding-period estimate remains separate.</p>
+</div>
+</div>
 <details class="advanced">
 <summary>Risk &amp; cost basis</summary>
 <div class="advanced-body">
@@ -493,21 +505,21 @@
 <div id="pots-quant" hidden><div id="pots-quant-rows"></div><div class="formula">Residual BTC = pledged BTC − (principal + interest) ÷ reference price<br>Wallet BTC = residual BTC + loan-funded BTC<br>Net assets = wallet BTC × reference price + unused cash</div></div>
 <p class="hint" style="margin-top:14px">Illustrative repayment by selling collateral at the reference price. Fees are excluded, and the position must survive liquidation. Unused cash is shown separately; borrowing itself creates no profit.</p></div></section>
 <section class="panel wide-panel" id="collateral-repayment" aria-labelledby="repay-title">
-<div class="panel-head flexible"><div><h2 id="repay-title">What if I pay with collateral?</h2><p class="hint">Sell original collateral to repay principal + interest at your target BTC price.</p></div><span class="badge" id="repay-status">AT TARGET</span></div>
+<div class="panel-head flexible"><div><h2 id="repay-title">What if I repay today with collateral?</h2><p class="hint">Uses fixed principal + accrued interest today—not projected horizon interest.</p></div><span class="badge" id="repay-status">AT TARGET</span></div>
 <div class="panel-body">
 <p class="hint" id="repay-benchmark"></p>
 <div class="pots-grid repayment-grid">
-<article class="pot-card"><div class="overline">SAME BTC AMOUNT · DEBT FREE</div><h3>BTC recovery price</h3><div class="repayment-value num amber" id="repay-recovery-price">—</div><p class="hint" id="repay-recovery-note"></p><button type="button" class="button small" id="repay-use-price">Use recovery price as target</button></article>
+<article class="pot-card"><div class="overline">SAME BTC AS HOLDING · DEBT FREE</div><h3>BTC quantity break-even</h3><div class="repayment-value num amber" id="repay-recovery-price">—</div><p class="hint" id="repay-recovery-note"></p><button type="button" class="button small" id="repay-use-price">Use break-even as target</button></article>
 <article class="pot-card"><div class="overline">WALLET AFTER REPAYMENT</div><h3 id="repay-target-label">At target price</h3><div class="repayment-value num" id="repay-wallet">—</div><p class="hint" id="repay-btc-change"></p><p class="hint" id="repay-warning"></p></article>
 </div>
 <div class="pots-grid repayment-grid"><div id="repay-breakdown"></div><div id="repay-pnl"></div></div>
 <details class="advanced"><summary>BTC quantity vs. dollar value</summary><div class="advanced-body notes">
-<p>Selling collateral always reduces the original pot when debt is positive. No finite price lets that pot alone keep its original BTC quantity. The recovery price above includes the BTC bought with your loan in the final wallet, but excludes it from the starting benchmark.</p>
-<div class="formula">BTC sold = (principal + interest) ÷ target price<br>Final BTC = original BTC − BTC sold + loan-funded BTC<br>BTC recovery price = (principal + interest) ÷ loan-funded BTC</div>
+<p>The final wallet combines two sources: original collateral left after repayment, plus BTC previously bought with the loan. It never treats sold collateral as still owned.</p>
+<div class="formula">Debt today = fixed principal + accrued interest today<br>BTC sold = debt today ÷ target price<br>Final BTC = original BTC − BTC sold + loan-funded BTC<br>BTC quantity break-even = debt today ÷ loan-funded BTC</div>
 <p id="repay-value-recovery"></p>
 <p>Net P/L = remaining BTC value + unused cash − original collateral value at borrowing. P/L % uses that original collateral value. Unused loan cash is counted once in net assets; it is neither spent on repayment nor converted into BTC.</p>
 </div></details>
-<p class="hint" style="margin-top:14px">Conditional on no earlier liquidation and a lender allowing collateral sale for repayment. Simple interest follows your APR and holding period. Fees, slippage and tax are excluded. Change Target BTC price to explore repayment without resizing the loan.</p>
+<p class="hint" style="margin-top:14px">Conditional on no earlier liquidation and a lender allowing collateral sale for repayment. Fees, slippage and tax are excluded. Change Target BTC price to explore repayment; a filled Actual loan principal will not resize with market price.</p>
 </div></section>
 <div class="panel wide-panel">
 <div class="panel-head">
@@ -841,11 +853,12 @@
   else root.LoanEngine = api;
 })(typeof window !== 'undefined' ? window : this, function () {
   'use strict';
-  const DEFAULTS = Object.freeze({btc:1,price:61042,ltv:40,apr:1,mc:85,liq:90,vol:65,entry:0,deployPrice:0,deploy:100,target:100000,months:12,leverage:5,mm:0.5,funding:10});
-  const SAVED_POSITION = Object.freeze({btc:0.035,ltv:36,entry:79422,deployPrice:79422,apr:6,target:158844});
+  const DEFAULTS = Object.freeze({btc:1,price:61042,ltv:40,loanPrincipal:0,accruedInterest:0,apr:1,mc:85,liq:90,vol:65,entry:0,deployPrice:0,deploy:100,target:100000,months:12,leverage:5,mm:0.5,funding:10});
+  const SAVED_POSITION = Object.freeze({btc:0.035,ltv:36,loanPrincipal:1000,accruedInterest:4,entry:79422,deployPrice:79422,apr:6,target:158844});
   const WEIGHTS = Object.freeze({mvrv:30,zscore:25,ma:20,roc:10,cycle:15});
   const FIELDS = {
     btc:[0.00000001,1000000,'BTC collateral'],price:[1,1e9,'Reference price'],ltv:[0,99,'Initial LTV'],
+    loanPrincipal:[0,1e9,'Actual loan principal'],accruedInterest:[0,1e9,'Accrued interest today'],
     apr:[0,100,'Loan APR'],mc:[1,99.9,'Margin call LTV'],liq:[1,99.99,'Liquidation LTV'],
     vol:[0,300,'Annualized volatility'],entry:[0,1e9,'Cost basis'],deployPrice:[0,1e9,'Deployment price'],
     deploy:[0,100,'Deployment'],target:[1,1e9,'Target price'],months:[0,120,'Holding period'],
@@ -856,7 +869,7 @@
     const value={}, errors={};
     for (const [key,[min,max,label]] of Object.entries(FIELDS)) {
       const raw=input[key];
-      const optional=key==='entry'||key==='deployPrice';
+      const optional=key==='entry'||key==='deployPrice'||key==='loanPrincipal';
       const n=(raw===''||raw==null)?(optional?0:NaN):Number(raw);
       if (!Number.isFinite(n)||n<min||n>max) errors[key]=`${label} must be between ${min.toLocaleString('en-US')} and ${max.toLocaleString('en-US')}.`;
       else value[key]=n;
@@ -913,8 +926,9 @@
     if (!validation.valid) throw Object.assign(new Error(Object.values(validation.errors)[0]),{errors:validation.errors});
     const p=validation.value;
     const btc=p.btc,price=p.price,ltv=p.ltv/100,apr=p.apr/100,mcLtv=p.mc/100,liqLtv=p.liq/100;
-    const collateral=btc*price,loan=collateral*ltv,years=p.months/12;
+    const collateral=btc*price,loan=p.loanPrincipal||collateral*ltv,years=p.months/12;
     const interest=loan*apr,interestCost=interest*years,debtOwed=loan+interestCost;
+    const currentDebt=loan>0?loan+p.accruedInterest:0;
     const deployPrice=p.deployPrice||price,deployedUsd=loan*p.deploy/100,undeployedUsd=loan-deployedUsd;
     const newBtc=deployedUsd/deployPrice,totalBtc=btc+newBtc;
     const mcPrice=loan/(btc*mcLtv),liqPrice=loan/(btc*liqLtv);
@@ -924,8 +938,8 @@
     const breakevenPrice=(collateral+debtOwed-undeployedUsd)/totalBtc;
     const signals=scoreSignals(data,weights),score=signals.composite;
     const rrRatio=p.entry>liqPrice&&data.ceilPrice>p.entry?(data.ceilPrice-p.entry)/(p.entry-liqPrice):null;
-    const d={...p,btc,price,ltv,ltvPct:p.ltv,apr,mcLtv,liqLtv,vol:p.vol/100,collateral,loan,years,interest,interestCost,
-      debtOwed,deployPct:p.deploy/100,deployPrice,deployedUsd,undeployedUsd,newBtc,totalBtc,mcPrice,liqPrice,mcPriceH,liqPriceH,
+    const d={...p,btc,price,ltv,ltvPct:collateral?loan/collateral*100:0,apr,mcLtv,liqLtv,vol:p.vol/100,collateral,loan,years,interest,interestCost,
+      currentDebt,debtOwed,deployPct:p.deploy/100,deployPrice,deployedUsd,undeployedUsd,newBtc,totalBtc,mcPrice,liqPrice,mcPriceH,liqPriceH,
       buffer:price-mcPrice,bufferPct:(1-mcPrice/price)*100,liqDropPct:(liqPrice/price-1)*100,
       targetPrice:p.target,grossProfit,netProfit,unlevProfit,unlevReturnPct:unlevProfit/collateral*100,levReturnPct:netProfit/collateral*100,
       leverageEdge:netProfit-unlevProfit,breakevenPrice,breakevenGross:(collateral+loan-undeployedUsd)/totalBtc,
@@ -970,23 +984,26 @@
     return {debtBtc,residualBtc,walletBtc,cash,netAssets,newValue:d.newBtc*d.price,residualValue:residualBtc*d.price,
       available:scenario(d,d.price).status!=='Liquidation'};
   }
-  // Repay the full horizon debt from original collateral; leave loan cash untouched.
+  // Repay today's fixed principal plus interest already accrued; leave unused loan cash untouched.
   // The recovery benchmark excludes BTC purchased with borrowed money.
   function collateralRepayment(d,price=d.targetPrice) {
     if (!Number.isFinite(price)||price<=0) throw new RangeError('Repayment price must be positive and finite.');
-    const status=scenario(d,price).status;
-    const soldBtc=d.debtOwed/price,residualBtc=d.btc-soldBtc;
+    const repaymentLtv=d.currentDebt/(d.btc*price);
+    const status=d.loan===0?'No debt':repaymentLtv>=d.liqLtv-1e-10?'Liquidation':repaymentLtv>=d.mcLtv-1e-10?'Margin call':'Active';
+    const soldBtc=d.currentDebt/price,residualBtc=d.btc-soldBtc;
     const walletBtc=residualBtc+d.newBtc,btcChange=d.newBtc-soldBtc;
     const netAssets=walletBtc*price+d.undeployedUsd;
-    const recoveryPrice=d.newBtc>0?d.debtOwed/d.newBtc:null;
-    const recoveryStatus=d.debtOwed===0?'No debt':recoveryPrice===null?'No finite price':scenario(d,recoveryPrice).status;
+    const recoveryPrice=d.newBtc>0?d.currentDebt/d.newBtc:null;
+    const recoveryLtv=recoveryPrice?d.currentDebt/(d.btc*recoveryPrice):0;
+    const recoveryStatus=d.currentDebt===0?'No debt':recoveryPrice===null?'No finite price':recoveryLtv>=d.liqLtv-1e-10?'Liquidation':recoveryLtv>=d.mcLtv-1e-10?'Margin call':'Active';
+    const grossLoanProfit=d.newBtc*(price-d.deployPrice),netLoanProfit=grossLoanProfit-d.accruedInterest;
     return {price,status,available:status!=='Liquidation'&&residualBtc>=0,soldBtc,residualBtc,walletBtc,
       btcChange,btcChangePct:btcChange/d.btc*100,netAssets,pnl:netAssets-d.collateral,
       pnlPct:(netAssets-d.collateral)/d.collateral*100,
-      edgeVsHold:netAssets-d.btc*price,recoveryPrice,recoveryStatus,
+      edgeVsHold:netAssets-d.btc*price,grossLoanProfit,netLoanProfit,recoveryPrice,recoveryStatus,
       recoveryAvailable:recoveryPrice!==null&&recoveryStatus!=='Liquidation',
       recoveryChangePct:recoveryPrice===null?null:(recoveryPrice/d.price-1)*100,
-      valueRecoveryPrice:(d.collateral+d.debtOwed)/d.totalBtc};
+      valueRecoveryPrice:(d.collateral+d.currentDebt-d.undeployedUsd)/d.totalBtc};
   }
   function dateValid(s) {
     return typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(s)&&Number.isFinite(Date.parse(s+'T00:00:00Z'))&&new Date(s+'T00:00:00Z').toISOString().slice(0,10)===s;
@@ -1120,11 +1137,11 @@ window.BUNDLED_SNAPSHOT = {
       'DATA PROVENANCE',`On-chain report: ${data.date} (${source})`,
       `Quote: ${quote?.source||'Report snapshot'}; date ${quote?.date||data.date}; fetched ${quote?.fetchedAt||'not live-fetched'}`,
       `Market quote: ${usd(quote?.price||data.btcPrice)}; reference price used for loan sizing: ${usd(d.price)}`,
-      'A new loan is sized at the reference price. This is not a fixed-debt position tracker.',
+      d.loanPrincipal?'Fixed principal override is active; market-price changes do not resize the loan.':'No fixed principal entered; this new-loan scenario is sized from reference price × LTV.',
       M.ageHours(data.date,Date.parse(generatedAt))>48?'ON-CHAIN DATA IS STALE (older than 48h).':'On-chain date is within 48 hours of report generation.',
       '', 'POSITION & FINANCING',...Object.entries({
         'BTC collateral':num(d.btc,8),'Reference BTC price':usd(d.price),'Collateral value':usd(d.collateral),'Initial LTV':num(d.ltvPct)+'%',
-        'Loan principal':usd(d.loan),'APR assumption':num(d.apr*100)+'%','Horizon':num(d.months)+' months',
+        'Loan principal':usd(d.loan),'Principal source':d.loanPrincipal?'Fixed actual principal':'Reference price × LTV','Accrued interest today':usd(d.accruedInterest),'Debt if repaid today':usd(d.currentDebt),'APR assumption':num(d.apr*100)+'%','Horizon':num(d.months)+' months',
         'Simple interest over horizon':usd(d.interestCost),'Debt at horizon':usd(d.debtOwed),'Deployment':num(d.deployPct*100)+'%',
         'Deployment BTC price':usd(d.deployPrice),'Loan cash held':usd(d.undeployedUsd),'Additional BTC':num(d.newBtc,8),'Total BTC exposure':num(d.totalBtc,8),
         'Original collateral cost basis':d.entry?usd(d.entry):'unset'
@@ -1136,10 +1153,12 @@ window.BUNDLED_SNAPSHOT = {
       `Breakeven including interest: ${usd(d.breakevenPrice)}`,`P/L vs actual cost basis: ${d.targetStatus==='Liquidation'?'n/a':usd(d.costBasisProfit)}`,
       '', 'REPAY WITH COLLATERAL (AT TARGET)',
       `Original BTC benchmark (loan-funded BTC excluded): ${num(d.btc,8)} BTC`,
-      `BTC recovery price: ${d.debtOwed===0?'already matched; no debt':r.recoveryPrice===null?'no finite price; no loan-funded BTC':usd(r.recoveryPrice)}`,
-      `Recovery threshold status: ${r.recoveryStatus}`,
+      `BTC quantity break-even price: ${d.currentDebt===0?'already matched; no debt':r.recoveryPrice===null?'no finite price; no loan-funded BTC':usd(r.recoveryPrice)}`,
+      `Break-even threshold status: ${r.recoveryStatus}`,
       `Repayment target status: ${r.status}`,
-      `BTC sold for principal + interest: ${r.available?num(r.soldBtc,8):'n/a'}`,
+      `Fixed principal repaid: ${usd(d.loan)}`,
+      `Accrued interest repaid today: ${usd(d.accruedInterest)}`,
+      `BTC sold for today's debt: ${r.available?num(r.soldBtc,8):'n/a'}`,
       `Original collateral remaining: ${r.available?num(r.residualBtc,8):'n/a'} BTC`,
       `Loan-funded BTC retained separately: ${num(d.newBtc,8)} BTC`,
       `Final wallet after repayment: ${r.available?num(r.walletBtc,8):'n/a'} BTC`,
@@ -1149,10 +1168,12 @@ window.BUNDLED_SNAPSHOT = {
       `Net P/L vs borrowing-date collateral value: ${r.available?usd(r.pnl):'n/a'}`,
       `P/L % on original collateral value: ${r.available?num(r.pnlPct)+'%':'n/a'}`,
       `Dollar edge vs holding original BTC: ${r.available?usd(r.edgeVsHold):'n/a'}`,
-      `Remaining BTC dollar-value recovery price (cash excluded): ${usd(r.valueRecoveryPrice)}`,
-      'BTC recovery includes loan-funded BTC in the final wallet, but not in the starting benchmark.',
-      'With positive debt, the original collateral pot alone cannot recover its original BTC quantity at any finite sale price.',
-      'Full debt is paid from collateral; unused cash stays separate. Requires lender support and no earlier liquidation; fees excluded.',
+      `Gross profit on loan-funded BTC: ${r.available?usd(r.grossLoanProfit):'n/a'}`,
+      `Net loan-trade profit after accrued interest: ${r.available?usd(r.netLoanProfit):'n/a'}`,
+      `Dollar-value break-even price: ${usd(r.valueRecoveryPrice)}`,
+      'Final wallet = original collateral remaining after repayment + loan-funded BTC retained.',
+      'Repay-today calculations use fixed principal plus accrued interest today. Horizon projections remain separate.',
+      'Requires lender support and no earlier liquidation; fees, slippage, and tax excluded.',
       '', 'LIQUIDATION & RISK',`Margin call LTV: ${num(d.mcLtv*100)}%; liquidation LTV: ${num(d.liqLtv*100)}%`,
       `Current margin call price (principal only): ${d.loan?usd(d.mcPrice):'n/a — no debt'}`,
       `Current liquidation price (principal only): ${d.loan?usd(d.liqPrice):'n/a — no debt'}`,
@@ -1362,20 +1383,20 @@ function renderTwoPots(d){
 function renderCollateralRepayment(d){
   const r=M.collateralRepayment(d),btc=n=>fmt(n,8)+' BTC';
   const change=(n,dp=8)=>(n>0?'+':'')+fmt(n,dp);
-  set('repay-benchmark',`Starting benchmark: ${btc(d.btc)} — your original collateral only. Loan-funded ${btc(d.newBtc)} is excluded from this benchmark.`);
+  set('repay-benchmark',`Holding benchmark: ${btc(d.btc)}. Repay-today debt: ${usd(d.currentDebt,2)} = ${usd(d.loan,2)} principal + ${usd(d.accruedInterest,2)} accrued interest.`);
   set('repay-status',r.status.toUpperCase());$('repay-status').className='badge '+(r.available?r.status==='Margin call'?'amber':'good':'bad');
-  set('repay-recovery-price',d.debtOwed===0?'Already matched':r.recoveryPrice===null?'No finite price':usd(r.recoveryPrice,2));
-  set('repay-recovery-note',d.debtOwed===0?'There is no debt to repay. Your wallet already holds your original BTC amount.':r.recoveryPrice===null?'No loan-funded BTC was bought. Selling collateral leaves fewer BTC at every finite price; unused cash stays separate.':`${signedPct(r.recoveryChangePct)} from the reference price. Final wallet = ${btc(d.btc)} at this price.${r.recoveryAvailable?r.recoveryStatus==='Margin call'?' This price is in the horizon margin-call zone.':' Assumes the loan survives until repayment.':' This is only an algebraic threshold: it lies in the horizon liquidation zone, so the modeled repayment is unavailable.'}`);
+  set('repay-recovery-price',d.currentDebt===0?'Already matched':r.recoveryPrice===null?'No finite price':usd(r.recoveryPrice,2));
+  set('repay-recovery-note',d.currentDebt===0?'There is no debt to repay.':r.recoveryPrice===null?'No loan-funded BTC was bought, so selling collateral cannot restore the original BTC quantity.':`At this price, loan-funded BTC exactly replaces the BTC sold for today’s debt. Final wallet = holding benchmark ${btc(d.btc)}. Above it you beat holding; below it you trail holding.${r.recoveryAvailable?'':' This threshold lies in the liquidation zone.'}`);
   $('repay-use-price').disabled=!r.recoveryAvailable||r.recoveryPrice<1||r.recoveryPrice>1e9;
   set('repay-target-label','At BTC '+usd(r.price,2));
   set('repay-wallet',r.available?btc(r.walletBtc):'Unavailable');
   $('repay-wallet').className='repayment-value num '+(r.available?tone(Math.abs(r.btcChange)<1e-12?0:r.btcChange):'bad');
   set('repay-btc-change',r.available?`${change(Math.abs(r.btcChange)<1e-12?0:r.btcChange)} BTC (${signedPct(r.btcChangePct)}) vs. your original amount.`:'Repayment totals are not shown beyond the liquidation threshold.');
-  set('repay-warning',!r.available?'Liquidation settlement is not modeled.':r.status==='Margin call'?'Target is in the margin-call zone; lender intervention may occur.':'Debt fully repaid; unused loan cash remains separate.');
+  set('repay-warning',!r.available?'Liquidation settlement is not modeled.':r.status==='Margin call'?'Target is in the margin-call zone; lender intervention may occur.':d.undeployedUsd>0?`Debt fully repaid; ${usd(d.undeployedUsd,2)} unused loan cash remains separate.`:'Debt fully repaid. All borrowed cash was deployed; no unused loan cash remains.');
   const value=n=>r.available?usd(n,2):'Unavailable';
-  $('repay-breakdown').innerHTML=row('Principal + horizon interest',usd(d.debtOwed,2))+row('Collateral sold to repay',r.available?btc(r.soldBtc):'Unavailable')+row('Original collateral remaining',r.available?btc(r.residualBtc):'Unavailable')+row('Loan-funded BTC retained',btc(d.newBtc))+row('Unused loan cash',usd(d.undeployedUsd,2));
-  $('repay-pnl').innerHTML=row('Debt-free BTC value',value(r.walletBtc*r.price))+row('Net assets · BTC + cash',value(r.netAssets),'total')+row('Net P/L vs. borrowing date',r.available?signed(r.pnl):'Unavailable')+row('P/L % on original collateral',r.available?signedPct(r.pnlPct):'Unavailable')+row('Dollar edge vs. holding original BTC',r.available?signed(r.edgeVsHold):'Unavailable');
-  set('repay-value-recovery',`If you mean the same dollar value instead of the same BTC quantity: remaining BTC alone matches the original ${usd(d.collateral,2)} collateral value at ${usd(r.valueRecoveryPrice,2)} per BTC (cash excluded). Including unused cash, dollar P/L breaks even at ${usd(d.breakevenPrice,2)}. Both thresholds assume the position survives liquidation.`);
+  $('repay-breakdown').innerHTML=row('Fixed loan principal',usd(d.loan,2))+row('Accrued interest today',usd(d.accruedInterest,2))+row('Total debt repaid today',usd(d.currentDebt,2),'total')+row('Collateral sold to repay',r.available?btc(r.soldBtc):'Unavailable')+row('Original collateral remaining',r.available?btc(r.residualBtc):'Unavailable')+row('Loan-funded BTC retained',btc(d.newBtc))+row('Final wallet · both sources',r.available?btc(r.walletBtc):'Unavailable','total');
+  $('repay-pnl').innerHTML=row('Gross profit · loan-bought BTC',r.available?signed(r.grossLoanProfit):'Unavailable')+row('Accrued financing cost','−'+usd(d.accruedInterest,2))+row('Net loan-trade profit',r.available?signed(r.netLoanProfit):'Unavailable','total')+row('BTC advantage vs. holding',r.available?`${change(r.btcChange)} BTC`:'Unavailable')+row('Dollar advantage vs. holding',r.available?signed(r.edgeVsHold):'Unavailable','total')+row('Debt-free BTC value',value(r.walletBtc*r.price));
+  set('repay-value-recovery',`BTC quantity break-even compares your final debt-free wallet with simply holding ${btc(d.btc)}; it is not a zero-dollar-profit claim. Dollar break-even versus the collateral value at the borrowing reference is ${usd(r.valueRecoveryPrice,2)}. The separate horizon model uses ${usd(d.interestCost,2)} projected interest over ${fmt(d.months)} months.`);
 }
 function setTwoPotsMode(mode){
   if(!['simple','quant'].includes(mode))return;
@@ -1540,7 +1561,7 @@ let presetNoticeTimer=null;
 function dismissPresetNotice(){clearTimeout(presetNoticeTimer);$('preset-notice').hidden=true;}
 function runHiddenCommand(){
   applyInput(M.SAVED_POSITION);
-  $('preset-values').innerHTML=[`BTC AMOUNT → ${fmt(M.SAVED_POSITION.btc,3)}`,`LTV → ${pct(M.SAVED_POSITION.ltv,0)}`,`ENTRY / DEPLOY → ${usd(M.SAVED_POSITION.entry)}`,`APR → ${pct(M.SAVED_POSITION.apr)}`,`TARGET (2× ENTRY) → ${usd(M.SAVED_POSITION.target)}`].map(line=>'<div>'+escapeHTML(line)+'</div>').join('');
+  $('preset-values').innerHTML=[`BTC AMOUNT → ${fmt(M.SAVED_POSITION.btc,3)}`,`FIXED LOAN → ${usd(M.SAVED_POSITION.loanPrincipal)}`,`INTEREST TODAY → ${usd(M.SAVED_POSITION.accruedInterest,2)}`,`ENTRY / DEPLOY → ${usd(M.SAVED_POSITION.entry)}`,`TARGET (2× ENTRY) → ${usd(M.SAVED_POSITION.target)}`].map(line=>'<div>'+escapeHTML(line)+'</div>').join('');
   $('preset-notice').hidden=false;clearTimeout(presetNoticeTimer);presetNoticeTimer=setTimeout(dismissPresetNotice,4000);
 }
 function setupPresetShortcuts(){

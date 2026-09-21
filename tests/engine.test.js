@@ -115,35 +115,40 @@ test('two separate pots reconcile BTC, unused cash, and debt without inventing e
 });
 
 
-test('collateral repayment restores original BTC at debt divided by additional BTC',()=>{
- const d=calc(),r=M.collateralRepayment(d);
- near(r.recoveryPrice,63600);near(r.soldBtc,25440/90000);near(r.residualBtc,1-25440/90000);
- near(r.walletBtc,1.4-25440/90000);near(r.pnl,40560);near(r.pnlPct,67.6);near(r.edgeVsHold,10560);
+test('repay-today uses accrued interest, not projected horizon interest',()=>{
+ const d=calc({accruedInterest:4}),r=M.collateralRepayment(d);
+ near(r.recoveryPrice,60010);near(r.soldBtc,24004/90000);near(r.residualBtc,1-24004/90000);
+ near(r.walletBtc,1.4-24004/90000);near(r.edgeVsHold,11996);
  const at=M.collateralRepayment(d,r.recoveryPrice);near(at.walletBtc,1);near(at.btcChange,0);
- near(at.pnl,3600); // Same BTC quantity does not mean zero dollar profit.
+ near(at.netLoanProfit,0);
  near(M.collateralRepayment(d,r.valueRecoveryPrice).walletBtc*r.valueRecoveryPrice,d.collateral);
- near(M.collateralRepayment(d,d.breakevenPrice).pnl,0);
 });
 test('partial deployment keeps cash separate and reconciles with scenario net equity',()=>{
  const d=calc({deploy:25,deployPrice:50000}),r=M.collateralRepayment(d);
- near(r.recoveryPrice,212000);near(r.soldBtc,25440/90000);
- near(r.netAssets,M.scenario(d,90000).equity);near(r.pnl,M.scenario(d,90000).pnl);
+ near(r.recoveryPrice,200000);near(r.soldBtc,24000/90000);
  near(M.collateralRepayment(d,r.recoveryPrice).walletBtc,d.btc);
 });
-test('BTC recovery handles zero debt, no purchases, interest and liquidation',()=>{
+test('BTC quantity break-even handles zero debt, no purchases, fixed debt and liquidation',()=>{
  const noPurchases=M.collateralRepayment(calc({deploy:0}));assert.equal(noPurchases.recoveryPrice,null);assert.equal(noPurchases.recoveryStatus,'No finite price');assert.ok(noPurchases.btcChange<0);
  const noDebt=M.collateralRepayment(calc({ltv:0}));assert.equal(noDebt.recoveryStatus,'No debt');near(noDebt.walletBtc,1);near(noDebt.btcChange,0);
- near(M.collateralRepayment(calc({apr:0})).recoveryPrice,60000);
- near(M.collateralRepayment(calc({months:24})).recoveryPrice,67200);
- const d=calc();assert.equal(M.collateralRepayment(d,d.liqPriceH).available,false);
+ near(M.collateralRepayment(calc({accruedInterest:0})).recoveryPrice,60000);
+ near(M.collateralRepayment(calc({accruedInterest:2400})).recoveryPrice,66000);
+ const d=calc();assert.equal(M.collateralRepayment(d,d.liqPrice).available,false);
  const lowPurchase=M.collateralRepayment(calc({deployPrice:1000}));assert.equal(lowPurchase.recoveryStatus,'Liquidation');assert.equal(lowPurchase.recoveryAvailable,false);
  for(const price of [0,-1,NaN,Infinity])assert.throws(()=>M.collateralRepayment(d,price),RangeError);
 });
-test('collateral repayment reconciles across fractional sizes and horizons',()=>{
- for(const btc of [.00000001,.035,1,20])for(const deploy of [0,25,100])for(const months of [0,12,36]){
-  const d=calc({btc,deploy,months}),r=M.collateralRepayment(d);
-  near(r.netAssets,M.scenario(d,d.targetPrice).equity,1e-5);
+test('collateral repayment reconciles across fractional sizes and accrued costs',()=>{
+ for(const btc of [.00000001,.035,1,20])for(const deploy of [0,25,100])for(const accruedInterest of [0,4,100]){
+  const d=calc({btc,deploy,accruedInterest}),r=M.collateralRepayment(d);
   if(r.recoveryPrice!==null)near(M.collateralRepayment(d,r.recoveryPrice).walletBtc,btc);
  }
- const report=Report.build({input:base,data});assert.match(report,/REPAY WITH COLLATERAL/);assert.match(report,/BTC recovery price: \$63,600/);
+ const report=Report.build({input:{...base,accruedInterest:4},data});assert.match(report,/REPAY WITH COLLATERAL/);assert.match(report,/BTC quantity break-even price: \$60,010/);
+});
+
+test('fixed principal and four dollars interest match the saved real position',()=>{
+ const d=calc({...M.SAVED_POSITION,price:80496.5}),r=M.collateralRepayment(d);
+ near(d.loan,1000);near(d.currentDebt,1004);near(d.newBtc,1000/79422);
+ near(r.recoveryPrice,79739.688,1e-3);
+ const atTarget=M.collateralRepayment(d,84187.32);
+ assert.ok(atTarget.walletBtc>.035);near(atTarget.edgeVsHold,56,0.1);
 });

@@ -208,7 +208,19 @@
 </p>
 </div>
 </div>
-<p class="hint">All scenario P/L includes simple interest for this holding period.</p>
+<p class="hint">Forward scenarios use APR × holding period. The repay-today card uses the separate accrued-interest amount below.</p>
+<div class="split-fields">
+<div class="field">
+<div class="field-label"><label for="inp-loanPrincipal">Actual loan principal</label><span class="unit">USD</span></div>
+<div class="input-shell"><input id="inp-loanPrincipal" data-field="loanPrincipal" type="number" inputmode="decimal" value="" step="1" min="0" max="1000000000" placeholder="Auto from LTV" aria-describedby="error-loanPrincipal note-loanPrincipal" autocomplete="off"/><span class="suffix">USD</span></div>
+<p class="field-error" id="error-loanPrincipal"></p><p class="field-note" id="note-loanPrincipal">For an existing loan, enter its original fixed principal. Leave blank only when planning a new LTV-sized loan.</p>
+</div>
+<div class="field">
+<div class="field-label"><label for="inp-accruedInterest">Accrued interest today</label><span class="unit">USD</span></div>
+<div class="input-shell"><input id="inp-accruedInterest" data-field="accruedInterest" type="number" inputmode="decimal" value="0" step="0.01" min="0" max="1000000000" aria-describedby="error-accruedInterest note-accruedInterest" autocomplete="off"/><span class="suffix">USD</span></div>
+<p class="field-error" id="error-accruedInterest"></p><p class="field-note" id="note-accruedInterest">Used only for “repay today.” The APR × holding-period estimate remains separate.</p>
+</div>
+</div>
 <details class="advanced">
 <summary>Risk &amp; cost basis</summary>
 <div class="advanced-body">
@@ -458,21 +470,21 @@
 <div id="pots-quant" hidden><div id="pots-quant-rows"></div><div class="formula">Residual BTC = pledged BTC − (principal + interest) ÷ reference price<br>Wallet BTC = residual BTC + loan-funded BTC<br>Net assets = wallet BTC × reference price + unused cash</div></div>
 <p class="hint" style="margin-top:14px">Illustrative repayment by selling collateral at the reference price. Fees are excluded, and the position must survive liquidation. Unused cash is shown separately; borrowing itself creates no profit.</p></div></section>
 <section class="panel wide-panel" id="collateral-repayment" aria-labelledby="repay-title">
-<div class="panel-head flexible"><div><h2 id="repay-title">What if I pay with collateral?</h2><p class="hint">Sell original collateral to repay principal + interest at your target BTC price.</p></div><span class="badge" id="repay-status">AT TARGET</span></div>
+<div class="panel-head flexible"><div><h2 id="repay-title">What if I repay today with collateral?</h2><p class="hint">Uses fixed principal + accrued interest today—not projected horizon interest.</p></div><span class="badge" id="repay-status">AT TARGET</span></div>
 <div class="panel-body">
 <p class="hint" id="repay-benchmark"></p>
 <div class="pots-grid repayment-grid">
-<article class="pot-card"><div class="overline">SAME BTC AMOUNT · DEBT FREE</div><h3>BTC recovery price</h3><div class="repayment-value num amber" id="repay-recovery-price">—</div><p class="hint" id="repay-recovery-note"></p><button type="button" class="button small" id="repay-use-price">Use recovery price as target</button></article>
+<article class="pot-card"><div class="overline">SAME BTC AS HOLDING · DEBT FREE</div><h3>BTC quantity break-even</h3><div class="repayment-value num amber" id="repay-recovery-price">—</div><p class="hint" id="repay-recovery-note"></p><button type="button" class="button small" id="repay-use-price">Use break-even as target</button></article>
 <article class="pot-card"><div class="overline">WALLET AFTER REPAYMENT</div><h3 id="repay-target-label">At target price</h3><div class="repayment-value num" id="repay-wallet">—</div><p class="hint" id="repay-btc-change"></p><p class="hint" id="repay-warning"></p></article>
 </div>
 <div class="pots-grid repayment-grid"><div id="repay-breakdown"></div><div id="repay-pnl"></div></div>
 <details class="advanced"><summary>BTC quantity vs. dollar value</summary><div class="advanced-body notes">
-<p>Selling collateral always reduces the original pot when debt is positive. No finite price lets that pot alone keep its original BTC quantity. The recovery price above includes the BTC bought with your loan in the final wallet, but excludes it from the starting benchmark.</p>
-<div class="formula">BTC sold = (principal + interest) ÷ target price<br>Final BTC = original BTC − BTC sold + loan-funded BTC<br>BTC recovery price = (principal + interest) ÷ loan-funded BTC</div>
+<p>The final wallet combines two sources: original collateral left after repayment, plus BTC previously bought with the loan. It never treats sold collateral as still owned.</p>
+<div class="formula">Debt today = fixed principal + accrued interest today<br>BTC sold = debt today ÷ target price<br>Final BTC = original BTC − BTC sold + loan-funded BTC<br>BTC quantity break-even = debt today ÷ loan-funded BTC</div>
 <p id="repay-value-recovery"></p>
 <p>Net P/L = remaining BTC value + unused cash − original collateral value at borrowing. P/L % uses that original collateral value. Unused loan cash is counted once in net assets; it is neither spent on repayment nor converted into BTC.</p>
 </div></details>
-<p class="hint" style="margin-top:14px">Conditional on no earlier liquidation and a lender allowing collateral sale for repayment. Simple interest follows your APR and holding period. Fees, slippage and tax are excluded. Change Target BTC price to explore repayment without resizing the loan.</p>
+<p class="hint" style="margin-top:14px">Conditional on no earlier liquidation and a lender allowing collateral sale for repayment. Fees, slippage and tax are excluded. Change Target BTC price to explore repayment; a filled Actual loan principal will not resize with market price.</p>
 </div></section>
 <div class="panel wide-panel">
 <div class="panel-head">

@@ -5,11 +5,12 @@
   else root.LoanEngine = api;
 })(typeof window !== 'undefined' ? window : this, function () {
   'use strict';
-  const DEFAULTS = Object.freeze({btc:1,price:61042,ltv:40,apr:1,mc:85,liq:90,vol:65,entry:0,deployPrice:0,deploy:100,target:100000,months:12,leverage:5,mm:0.5,funding:10});
-  const SAVED_POSITION = Object.freeze({btc:0.035,ltv:36,entry:79422,deployPrice:79422,apr:6,target:158844});
+  const DEFAULTS = Object.freeze({btc:1,price:61042,ltv:40,loanPrincipal:0,accruedInterest:0,apr:1,mc:85,liq:90,vol:65,entry:0,deployPrice:0,deploy:100,target:100000,months:12,leverage:5,mm:0.5,funding:10});
+  const SAVED_POSITION = Object.freeze({btc:0.035,ltv:36,loanPrincipal:1000,accruedInterest:4,entry:79422,deployPrice:79422,apr:6,target:158844});
   const WEIGHTS = Object.freeze({mvrv:30,zscore:25,ma:20,roc:10,cycle:15});
   const FIELDS = {
     btc:[0.00000001,1000000,'BTC collateral'],price:[1,1e9,'Reference price'],ltv:[0,99,'Initial LTV'],
+    loanPrincipal:[0,1e9,'Actual loan principal'],accruedInterest:[0,1e9,'Accrued interest today'],
     apr:[0,100,'Loan APR'],mc:[1,99.9,'Margin call LTV'],liq:[1,99.99,'Liquidation LTV'],
     vol:[0,300,'Annualized volatility'],entry:[0,1e9,'Cost basis'],deployPrice:[0,1e9,'Deployment price'],
     deploy:[0,100,'Deployment'],target:[1,1e9,'Target price'],months:[0,120,'Holding period'],
@@ -20,7 +21,7 @@
     const value={}, errors={};
     for (const [key,[min,max,label]] of Object.entries(FIELDS)) {
       const raw=input[key];
-      const optional=key==='entry'||key==='deployPrice';
+      const optional=key==='entry'||key==='deployPrice'||key==='loanPrincipal';
       const n=(raw===''||raw==null)?(optional?0:NaN):Number(raw);
       if (!Number.isFinite(n)||n<min||n>max) errors[key]=`${label} must be between ${min.toLocaleString('en-US')} and ${max.toLocaleString('en-US')}.`;
       else value[key]=n;
@@ -77,8 +78,9 @@
     if (!validation.valid) throw Object.assign(new Error(Object.values(validation.errors)[0]),{errors:validation.errors});
     const p=validation.value;
     const btc=p.btc,price=p.price,ltv=p.ltv/100,apr=p.apr/100,mcLtv=p.mc/100,liqLtv=p.liq/100;
-    const collateral=btc*price,loan=collateral*ltv,years=p.months/12;
+    const collateral=btc*price,loan=p.loanPrincipal||collateral*ltv,years=p.months/12;
     const interest=loan*apr,interestCost=interest*years,debtOwed=loan+interestCost;
+    const currentDebt=loan>0?loan+p.accruedInterest:0;
     const deployPrice=p.deployPrice||price,deployedUsd=loan*p.deploy/100,undeployedUsd=loan-deployedUsd;
     const newBtc=deployedUsd/deployPrice,totalBtc=btc+newBtc;
     const mcPrice=loan/(btc*mcLtv),liqPrice=loan/(btc*liqLtv);
@@ -88,8 +90,8 @@
     const breakevenPrice=(collateral+debtOwed-undeployedUsd)/totalBtc;
     const signals=scoreSignals(data,weights),score=signals.composite;
     const rrRatio=p.entry>liqPrice&&data.ceilPrice>p.entry?(data.ceilPrice-p.entry)/(p.entry-liqPrice):null;
-    const d={...p,btc,price,ltv,ltvPct:p.ltv,apr,mcLtv,liqLtv,vol:p.vol/100,collateral,loan,years,interest,interestCost,
-      debtOwed,deployPct:p.deploy/100,deployPrice,deployedUsd,undeployedUsd,newBtc,totalBtc,mcPrice,liqPrice,mcPriceH,liqPriceH,
+    const d={...p,btc,price,ltv,ltvPct:collateral?loan/collateral*100:0,apr,mcLtv,liqLtv,vol:p.vol/100,collateral,loan,years,interest,interestCost,
+      currentDebt,debtOwed,deployPct:p.deploy/100,deployPrice,deployedUsd,undeployedUsd,newBtc,totalBtc,mcPrice,liqPrice,mcPriceH,liqPriceH,
       buffer:price-mcPrice,bufferPct:(1-mcPrice/price)*100,liqDropPct:(liqPrice/price-1)*100,
       targetPrice:p.target,grossProfit,netProfit,unlevProfit,unlevReturnPct:unlevProfit/collateral*100,levReturnPct:netProfit/collateral*100,
       leverageEdge:netProfit-unlevProfit,breakevenPrice,breakevenGross:(collateral+loan-undeployedUsd)/totalBtc,
@@ -134,23 +136,26 @@
     return {debtBtc,residualBtc,walletBtc,cash,netAssets,newValue:d.newBtc*d.price,residualValue:residualBtc*d.price,
       available:scenario(d,d.price).status!=='Liquidation'};
   }
-  // Repay the full horizon debt from original collateral; leave loan cash untouched.
+  // Repay today's fixed principal plus interest already accrued; leave unused loan cash untouched.
   // The recovery benchmark excludes BTC purchased with borrowed money.
   function collateralRepayment(d,price=d.targetPrice) {
     if (!Number.isFinite(price)||price<=0) throw new RangeError('Repayment price must be positive and finite.');
-    const status=scenario(d,price).status;
-    const soldBtc=d.debtOwed/price,residualBtc=d.btc-soldBtc;
+    const repaymentLtv=d.currentDebt/(d.btc*price);
+    const status=d.loan===0?'No debt':repaymentLtv>=d.liqLtv-1e-10?'Liquidation':repaymentLtv>=d.mcLtv-1e-10?'Margin call':'Active';
+    const soldBtc=d.currentDebt/price,residualBtc=d.btc-soldBtc;
     const walletBtc=residualBtc+d.newBtc,btcChange=d.newBtc-soldBtc;
     const netAssets=walletBtc*price+d.undeployedUsd;
-    const recoveryPrice=d.newBtc>0?d.debtOwed/d.newBtc:null;
-    const recoveryStatus=d.debtOwed===0?'No debt':recoveryPrice===null?'No finite price':scenario(d,recoveryPrice).status;
+    const recoveryPrice=d.newBtc>0?d.currentDebt/d.newBtc:null;
+    const recoveryLtv=recoveryPrice?d.currentDebt/(d.btc*recoveryPrice):0;
+    const recoveryStatus=d.currentDebt===0?'No debt':recoveryPrice===null?'No finite price':recoveryLtv>=d.liqLtv-1e-10?'Liquidation':recoveryLtv>=d.mcLtv-1e-10?'Margin call':'Active';
+    const grossLoanProfit=d.newBtc*(price-d.deployPrice),netLoanProfit=grossLoanProfit-d.accruedInterest;
     return {price,status,available:status!=='Liquidation'&&residualBtc>=0,soldBtc,residualBtc,walletBtc,
       btcChange,btcChangePct:btcChange/d.btc*100,netAssets,pnl:netAssets-d.collateral,
       pnlPct:(netAssets-d.collateral)/d.collateral*100,
-      edgeVsHold:netAssets-d.btc*price,recoveryPrice,recoveryStatus,
+      edgeVsHold:netAssets-d.btc*price,grossLoanProfit,netLoanProfit,recoveryPrice,recoveryStatus,
       recoveryAvailable:recoveryPrice!==null&&recoveryStatus!=='Liquidation',
       recoveryChangePct:recoveryPrice===null?null:(recoveryPrice/d.price-1)*100,
-      valueRecoveryPrice:(d.collateral+d.debtOwed)/d.totalBtc};
+      valueRecoveryPrice:(d.collateral+d.currentDebt-d.undeployedUsd)/d.totalBtc};
   }
   function dateValid(s) {
     return typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(s)&&Number.isFinite(Date.parse(s+'T00:00:00Z'))&&new Date(s+'T00:00:00Z').toISOString().slice(0,10)===s;

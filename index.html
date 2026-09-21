@@ -651,7 +651,7 @@
 <p>
 <strong>Loan sizing:</strong> a new loan is sized from your reference price and initial LTV. This is a scenario planner; existing loan debt must not be inferred by changing today’s price.</p>
 <p>
-<strong>Interest:</strong> simple APR × months ÷ 12, accrued into the horizon debt. Displayed “now” thresholds use principal only. No trading fees, liquidation fees, tax, slippage, or compounding are included.</p>
+<strong>Interest:</strong> current thresholds use fixed principal + accrued interest today. Future scenarios use simple APR × months ÷ 12 as horizon debt. No trading fees, liquidation fees, tax, slippage, or compounding are included.</p>
 <p>
 <strong>Barrier probability:</strong> 2Φ[ln(liquidation price ÷ reference price) ÷ (σ√(90/365))], assuming constant volatility and zero log-price drift. It estimates touching a fixed principal-only barrier, and excludes jumps and interest-driven barrier changes. It is not a calibrated forecast.</p>
 <p>

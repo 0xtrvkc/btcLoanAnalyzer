@@ -84,14 +84,14 @@
     const currentDebt=loan>0?loan+p.accruedInterest:0;
     const deployPrice=p.deployPrice||price,deployedUsd=loan*p.deploy/100,undeployedUsd=loan-deployedUsd;
     const newBtc=deployedUsd/deployPrice,totalBtc=btc+newBtc;
-    const mcPrice=loan/(btc*mcLtv),liqPrice=loan/(btc*liqLtv);
+    const mcPrice=currentDebt/(btc*mcLtv),liqPrice=currentDebt/(btc*liqLtv);
     const mcPriceH=debtOwed/(btc*mcLtv),liqPriceH=debtOwed/(btc*liqLtv);
     const grossProfit=btc*(p.target-price)+newBtc*(p.target-deployPrice);
     const netProfit=grossProfit-interestCost,unlevProfit=btc*(p.target-price);
     const breakevenPrice=(collateral+debtOwed-undeployedUsd)/totalBtc;
     const signals=scoreSignals(data,weights),score=signals.composite;
     const rrRatio=p.entry>liqPrice&&data.ceilPrice>p.entry?(data.ceilPrice-p.entry)/(p.entry-liqPrice):null;
-    const d={...p,btc,price,ltv,ltvPct:collateral?loan/collateral*100:0,apr,mcLtv,liqLtv,vol:p.vol/100,collateral,loan,years,interest,interestCost,
+    const d={...p,btc,price,ltv,ltvPct:collateral?loan/collateral*100:0,currentLtvPct:collateral?currentDebt/collateral*100:0,apr,mcLtv,liqLtv,vol:p.vol/100,collateral,loan,years,interest,interestCost,
       currentDebt,debtOwed,deployPct:p.deploy/100,deployPrice,deployedUsd,undeployedUsd,newBtc,totalBtc,mcPrice,liqPrice,mcPriceH,liqPriceH,
       buffer:price-mcPrice,bufferPct:(1-mcPrice/price)*100,liqDropPct:(liqPrice/price-1)*100,
       targetPrice:p.target,grossProfit,netProfit,unlevProfit,unlevReturnPct:unlevProfit/collateral*100,levReturnPct:netProfit/collateral*100,

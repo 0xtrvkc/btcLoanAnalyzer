@@ -57,6 +57,8 @@ The repay-now wallet flow visualizes the full BTC reconciliation: original colla
 
 To reduce repetition, the redundant “Use now price as target” action and duplicate repayment tables were removed. The 01/02/03 accounting cards remain available under the collapsed **Detailed repayment numbers** control.
 
+Debt timing is consistent across tabs: Overview and Risk “current” metrics use fixed principal plus accrued interest today; Scenarios, price checkpoints, and forward comparisons use projected APR × holding period. Labels identify which debt clock each result uses.
+
 Borrowed-capital P/L measures the newly purchased BTC's change from its own purchase price, less all loan interest. Actual-cost-basis P/L applies the user's original purchase price only to the original collateral.
 
 Loan-funded BTC is assumed to remain separate from pledged collateral. Futures margin is additional cash; spot BTC is outside the isolated futures position. Funding is a flat entry-notional estimate. Fees, slippage, tax, compounding, margin tiers, and funding-driven liquidation changes are not modeled.

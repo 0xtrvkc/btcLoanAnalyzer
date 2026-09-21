@@ -57,6 +57,11 @@ test('target thresholds are inclusive and higher interest shifts both barriers',
  const d=calc();assert.equal(M.scenario(d,d.liqPriceH).status,'Liquidation');assert.equal(M.scenario(d,d.mcPriceH).status,'Margin call');
  assert.equal(M.scenario(d,d.mcPriceH+1).status,'Active');assert.ok(d.liqPriceH>d.liqPrice);
 });
+test('accrued interest moves current risk thresholds without changing horizon debt',()=>{
+ const baseDebt=calc({accruedInterest:0}),accrued=calc({accruedInterest:400});
+ near(accrued.currentDebt,baseDebt.loan+400);near(accrued.currentLtvPct,accrued.currentDebt/accrued.collateral*100);
+ assert.ok(accrued.mcPrice>baseDebt.mcPrice);assert.ok(accrued.liqPrice>baseDebt.liqPrice);near(accrued.debtOwed,baseDebt.debtOwed);
+});
 test('invalid inputs cannot silently fall back to wrongly scaled thresholds',()=>{
  for(const x of [{mc:''},{liq:Infinity},{btc:0},{price:NaN},{ltv:85},{mc:95,liq:90},{apr:-1},{deploy:101},{deployPrice:-1},{months:''},{mm:20,leverage:5}]){
    const v=M.validate({...base,...x});assert.equal(v.valid,false,JSON.stringify(x));assert.throws(()=>calc(x));

@@ -53,6 +53,8 @@ The repay-now section labels its threshold **BTC quantity break-even**: the BTC 
 
 The entire repay-now section defaults to the latest displayed BTC quote: its headline price, wallet, collateral sold, profit figures, status, and detailed breakdown all describe repayment now. A glance chart compares BTC advantage versus holding at quantity break-even, now, and target. The quantity break-even remains visible only as a smaller comparison reference.
 
+The repay-now wallet flow visualizes the full BTC reconciliation: original collateral minus BTC sold for debt equals original BTC remaining; adding loan-funded BTC produces the final debt-free wallet. A stacked composition bar distinguishes both BTC sources and marks the untouched-holding benchmark.
+
 Borrowed-capital P/L measures the newly purchased BTC's change from its own purchase price, less all loan interest. Actual-cost-basis P/L applies the user's original purchase price only to the original collateral.
 
 Loan-funded BTC is assumed to remain separate from pledged collateral. Futures margin is additional cash; spot BTC is outside the isolated futures position. Funding is a flat entry-notional estimate. Fees, slippage, tax, compounding, margin tiers, and funding-driven liquidation changes are not modeled.

@@ -154,7 +154,21 @@ function renderCurrentRepaymentSummary(d,r,btc){
   $('repay-be-hold').innerHTML=row('BTC if you just hold',btc(d.btc))+row('Current holding value',usd(d.btc*b.price,2))+row(`Holding P/L vs. ${d.entry?'cost basis':'reference'}`,signed(holdPnl),'total');
   $('repay-be-loan').innerHTML=row('BTC bought with loan',btc(d.newBtc))+row('Gross price profit',signed(b.grossLoanProfit))+row('Accrued interest','−'+usd(d.accruedInterest,2))+row('Net loan-trade profit',signed(b.netLoanProfit),'total')+row('Net BTC vs. holding',`${b.btcChange>0?'+':''}${fmt(b.btcChange,8)} BTC`);
   $('repay-be-total').innerHTML=row('Original BTC remaining',btc(b.residualBtc))+row('Loan-funded BTC retained',btc(d.newBtc))+row('Final debt-free wallet',btc(b.walletBtc),'total')+row('Wallet value + cash',usd(b.netAssets,2))+row('Total P/L vs. cost',signed(totalPnl),'total')+row('Advantage vs. holding',signed(b.edgeVsHold));
+  renderWalletFlow(d,b,btc);
   renderRepaymentInsight(d,r,currentPrice,btc);
+}
+function renderWalletFlow(d,r,btc){
+  if(!r.available){
+    $('repay-wallet-flow').innerHTML='<div class="flow-node sold"><span>Status</span><strong>Unavailable</strong></div>';
+    $('wallet-compose-track').innerHTML='';set('wallet-compose-total','Unavailable');set('wallet-flow-badge','LIQUIDATION ZONE');set('wallet-flow-verdict','Repay-now composition is unavailable below the modeled liquidation threshold.');$('wallet-flow-verdict').className='wallet-verdict bad';return;
+  }
+  $('repay-wallet-flow').innerHTML=`<div class="flow-node"><span>Original BTC</span><strong>${escapeHTML(btc(d.btc))}</strong></div><div class="flow-op">−</div><div class="flow-node sold"><span>Sold for debt</span><strong>${escapeHTML(btc(r.soldBtc))}</strong></div><div class="flow-op">=</div><div class="flow-node"><span>Original remaining</span><strong>${escapeHTML(btc(r.residualBtc))}</strong></div><div class="flow-op">+</div><div class="flow-node funded"><span>Loan-funded retained</span><strong>${escapeHTML(btc(d.newBtc))}</strong></div><div class="flow-op">=</div><div class="flow-node final"><span>Final debt-free wallet</span><strong>${escapeHTML(btc(r.walletBtc))}</strong></div>`;
+  const scale=Math.max(d.btc,r.walletBtc)*1.08, walletWidth=r.walletBtc/scale*100, originalShare=r.walletBtc?r.residualBtc/r.walletBtc*100:0, fundedShare=r.walletBtc?d.newBtc/r.walletBtc*100:0, benchmarkLeft=d.btc/scale*100;
+  $('wallet-compose-track').innerHTML=`<div class="compose-wallet" style="width:${walletWidth}%"><i class="compose-original" style="width:${originalShare}%"></i><i class="compose-funded" style="width:${fundedShare}%"></i></div><i class="compose-benchmark" style="left:${benchmarkLeft}%" title="Holding benchmark ${escapeHTML(btc(d.btc))}"></i>`;
+  set('wallet-compose-total',btc(r.walletBtc));
+  const ahead=r.btcChange>1e-12,behind=r.btcChange<-1e-12,label=ahead?'AHEAD OF HOLDING':behind?'BEHIND HOLDING':'EVEN WITH HOLDING';
+  set('wallet-flow-badge',label);$('wallet-flow-badge').className='badge '+(ahead?'good':behind?'bad':'amber');
+  set('wallet-flow-verdict',`${label}: ${r.btcChange>0?'+':''}${fmt(r.btcChange,8)} BTC and ${signed(r.edgeVsHold)} versus keeping ${btc(d.btc)} untouched.`);$('wallet-flow-verdict').className='wallet-verdict '+(behind?'bad':'');
 }
 function renderRepaymentInsight(d,r,currentPrice,btc){
   const cases=[];

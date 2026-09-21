@@ -474,21 +474,20 @@
 <div class="panel-body">
 <p class="hint" id="repay-benchmark"></p>
 <div class="pots-grid repayment-grid">
-<article class="pot-card"><div class="overline">CURRENT BTC · REPAY TODAY</div><h3>BTC now price</h3><div class="repayment-value num amber" id="repay-recovery-price">—</div><p class="hint" id="repay-recovery-note"></p><button type="button" class="button small" id="repay-use-price">Use now price as target</button></article>
+<article class="pot-card"><div class="overline">CURRENT BTC · REPAY TODAY</div><h3>BTC now price</h3><div class="repayment-value num amber" id="repay-recovery-price">—</div><p class="hint" id="repay-recovery-note"></p></article>
 <article class="pot-card"><div class="overline">WALLET AFTER REPAYMENT</div><h3 id="repay-target-label">If repaid now</h3><div class="repayment-value num" id="repay-wallet">—</div><p class="hint" id="repay-btc-change"></p><p class="hint" id="repay-warning"></p></article>
 </div>
-<div class="pots-grid repayment-grid"><div id="repay-breakdown"></div><div id="repay-pnl"></div></div>
 <div class="break-even-summary">
 <div class="overline">AT CURRENT BTC PRICE</div>
 <h3 id="repay-be-title">Separate legs and combined result</h3>
 <p class="hint" id="repay-be-note">If you repay now: where every dollar and BTC comes from.</p>
 <div class="repay-insight"><div class="insight-head"><div><div class="overline">GLANCE VIEW</div><h3>BTC advantage vs. simply holding</h3></div><span class="badge" id="repay-insight-badge">—</span></div><div id="repay-insight-chart" class="repay-insight-chart" role="img" aria-label="BTC advantage at break-even, current, and target prices"></div><p class="hint">Bars show BTC gained or lost versus keeping your original collateral untouched. Final wallet and dollar advantage appear beside each scenario.</p></div>
 <div class="wallet-flow-card"><div class="insight-head"><div><div class="overline">WHERE YOUR BTC GOES</div><h3>Repay-now wallet flow</h3></div><span class="badge" id="wallet-flow-badge">—</span></div><div id="repay-wallet-flow" class="wallet-flow" role="img" aria-label="Original BTC minus collateral sold plus loan-funded BTC equals final debt-free wallet"></div><div class="wallet-compose"><div class="compose-head"><span>Final wallet composition</span><strong class="num" id="wallet-compose-total">—</strong></div><div class="compose-track" id="wallet-compose-track"></div><div class="compose-legend"><span><i class="original"></i>Original BTC remaining</span><span><i class="funded"></i>Loan-funded BTC</span><span><i class="benchmark"></i>Holding benchmark</span></div></div><p class="wallet-verdict" id="wallet-flow-verdict">—</p></div>
-<div class="break-even-grid">
+<details class="advanced repayment-details"><summary>Detailed repayment numbers</summary><div class="advanced-body"><div class="break-even-grid">
 <article class="pot-card"><div class="overline">01 · ORIGINAL HOLDING</div><h3>Holding benchmark</h3><div id="repay-be-hold"></div></article>
 <article class="pot-card"><div class="overline">02 · LOAN-FUNDED BTC</div><h3>Loan leg</h3><div id="repay-be-loan"></div></article>
 <article class="pot-card"><div class="overline">03 · DEBT-FREE TOTAL</div><h3>Combined wallet</h3><div id="repay-be-total"></div></article>
-</div>
+</div></div></details>
 </div>
 <details class="advanced"><summary>BTC quantity vs. dollar value</summary><div class="advanced-body notes">
 <p>The final wallet combines two sources: original collateral left after repayment, plus BTC previously bought with the loan. It never treats sold collateral as still owned.</p>

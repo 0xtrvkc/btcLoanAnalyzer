@@ -55,6 +55,8 @@ The entire repay-now section defaults to the latest displayed BTC quote: its hea
 
 The repay-now wallet flow visualizes the full BTC reconciliation: original collateral minus BTC sold for debt equals original BTC remaining; adding loan-funded BTC produces the final debt-free wallet. Every step displays both BTC quantity and its USD value at the current quote. A stacked composition bar distinguishes both BTC sources and marks the untouched-holding benchmark.
 
+To reduce repetition, the redundant “Use now price as target” action and duplicate repayment tables were removed. The 01/02/03 accounting cards remain available under the collapsed **Detailed repayment numbers** control.
+
 Borrowed-capital P/L measures the newly purchased BTC's change from its own purchase price, less all loan interest. Actual-cost-basis P/L applies the user's original purchase price only to the original collateral.
 
 Loan-funded BTC is assumed to remain separate from pledged collateral. Futures margin is additional cash; spot BTC is outside the isolated futures position. Funding is a flat entry-notional estimate. Fees, slippage, tax, compounding, margin tiers, and funding-driven liquidation changes are not modeled.

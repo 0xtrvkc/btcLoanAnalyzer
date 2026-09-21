@@ -130,15 +130,11 @@ function renderCollateralRepayment(d){
   set('repay-status',r.status.toUpperCase());$('repay-status').className='badge '+(r.available?r.status==='Margin call'?'amber':'good':'bad');
   set('repay-recovery-price',usd(currentPrice,2));
   set('repay-recovery-note',r.recoveryPrice===null?`Current repay-now result shown below. No finite BTC quantity break-even exists because no loan-funded BTC was purchased.`:`Quantity break-even: ${usd(r.recoveryPrice,2)}. Now is ${signedPct((currentPrice/r.recoveryPrice-1)*100)} from that threshold, so you are ${r.btcChange>=0?'ahead of':'behind'} holding after repayment.`);
-  $('repay-use-price').disabled=!Number.isFinite(currentPrice)||currentPrice<1||currentPrice>1e9;
   set('repay-target-label','If repaid now at '+usd(r.price,2));
   set('repay-wallet',r.available?btc(r.walletBtc):'Unavailable');
   $('repay-wallet').className='repayment-value num '+(r.available?tone(Math.abs(r.btcChange)<1e-12?0:r.btcChange):'bad');
   set('repay-btc-change',r.available?`${change(Math.abs(r.btcChange)<1e-12?0:r.btcChange)} BTC (${signedPct(r.btcChangePct)}) vs. your original amount.`:'Repayment totals are not shown beyond the liquidation threshold.');
   set('repay-warning',!r.available?'Liquidation settlement is not modeled.':r.status==='Margin call'?'Target is in the margin-call zone; lender intervention may occur.':d.undeployedUsd>0?`Debt fully repaid; ${usd(d.undeployedUsd,2)} unused loan cash remains separate.`:'Debt fully repaid. All borrowed cash was deployed; no unused loan cash remains.');
-  const value=n=>r.available?usd(n,2):'Unavailable';
-  $('repay-breakdown').innerHTML=row('Fixed loan principal',usd(d.loan,2))+row('Accrued interest today',usd(d.accruedInterest,2))+row('Total debt repaid today',usd(d.currentDebt,2),'total')+row('Collateral sold to repay',r.available?btc(r.soldBtc):'Unavailable')+row('Original collateral remaining',r.available?btc(r.residualBtc):'Unavailable')+row('Loan-funded BTC retained',btc(d.newBtc))+row('Final wallet · both sources',r.available?btc(r.walletBtc):'Unavailable','total');
-  $('repay-pnl').innerHTML=row('Gross profit · loan-bought BTC',r.available?signed(r.grossLoanProfit):'Unavailable')+row('Accrued financing cost','−'+usd(d.accruedInterest,2))+row('Net loan-trade profit',r.available?signed(r.netLoanProfit):'Unavailable','total')+row('BTC advantage vs. holding',r.available?`${change(r.btcChange)} BTC`:'Unavailable')+row('Dollar advantage vs. holding',r.available?signed(r.edgeVsHold):'Unavailable','total')+row('Debt-free BTC value',value(r.walletBtc*r.price));
   set('repay-value-recovery',`BTC quantity break-even compares your final debt-free wallet with simply holding ${btc(d.btc)}; it is not a zero-dollar-profit claim. Dollar break-even versus the collateral value at the borrowing reference is ${usd(r.valueRecoveryPrice,2)}. The separate horizon model uses ${usd(d.interestCost,2)} projected interest over ${fmt(d.months)} months.`);
   renderCurrentRepaymentSummary(d,r,btc);
 }
@@ -381,7 +377,6 @@ $('payoff-chart').addEventListener('pointerleave',hideInspect);
 document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>switchView(button.dataset.view,button.getAttribute('role')!=='tab')));
 document.querySelector('[role=tablist]').addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const keys=Object.keys(VIEWS),index=keys.indexOf(currentView);switchView(keys[event.key==='Home'?0:event.key==='End'?keys.length-1:(index+(event.key==='ArrowRight'?1:-1)+keys.length)%keys.length],true);});
 document.querySelectorAll('[data-target]').forEach(button=>button.addEventListener('click',()=>{if(!currentResult)return;const target=targetFor(button.dataset.target,currentResult);if(target>0)applyInput({target:button.dataset.target==='liq'?Math.floor(target):Math.round(target)});else toast('No liquidation price when there is no debt.');}));
-$('repay-use-price').addEventListener('click',()=>{if(!currentResult)return;const currentPrice=Number.isFinite(quote.price)&&quote.price>0?quote.price:currentResult.price;if(currentPrice>=1&&currentPrice<=1e9)applyInput({target:currentPrice});});
 $('pnl-basis').addEventListener('change',()=>currentResult&&renderScenarios(currentResult));
 $('refresh-btn').addEventListener('click',fetchLatestData);
 $('export-btn').addEventListener('click',exportSnapshot);

@@ -4,6 +4,8 @@
   const usd=x=>Number.isFinite(x)?'$'+num(x):'n/a';
   function build({input,data,weights,quote,source='Bundled snapshot',history=[],generatedAt=new Date().toISOString()}){
     const d=M.calculate(input,data,weights),f=M.futures(d),r=M.collateralRepayment(d);
+    const b=r.recoveryPrice!==null&&r.recoveryAvailable?M.collateralRepayment(d,r.recoveryPrice):null;
+    const costBasis=d.entry||d.price,holdPnlAtBreakEven=b?d.btc*(b.price-costBasis):null,totalPnlAtBreakEven=b?b.netAssets-d.btc*costBasis:null;
     const lines=['BTC LOAN TERMINAL — POSITION ANALYSIS',`Generated: ${generatedAt}`,'',
       'DATA PROVENANCE',`On-chain report: ${data.date} (${source})`,
       `Quote: ${quote?.source||'Report snapshot'}; date ${quote?.date||data.date}; fetched ${quote?.fetchedAt||'not live-fetched'}`,
@@ -45,6 +47,13 @@
       'Final wallet = original collateral remaining after repayment + loan-funded BTC retained.',
       'Repay-today calculations use fixed principal plus accrued interest today. Horizon projections remain separate.',
       'Requires lender support and no earlier liquidation; fees, slippage, and tax excluded.',
+      '', 'AT BTC QUANTITY BREAK-EVEN — SEPARATE & TOTAL',
+      `Break-even BTC price: ${b?usd(b.price):'n/a'}`,
+      `Holding leg — original BTC: ${num(d.btc,8)} BTC; value: ${b?usd(d.btc*b.price):'n/a'}; P/L vs ${d.entry?'cost basis':'reference'}: ${b?usd(holdPnlAtBreakEven):'n/a'}`,
+      `Loan leg — funded BTC: ${num(d.newBtc,8)} BTC; gross price profit: ${b?usd(b.grossLoanProfit):'n/a'}; accrued interest: ${usd(d.accruedInterest)}; net profit: ${b?usd(b.netLoanProfit):'n/a'}`,
+      `Combined — original BTC remaining: ${b?num(b.residualBtc,8):'n/a'} BTC; loan-funded BTC retained: ${num(d.newBtc,8)} BTC`,
+      `Combined — final debt-free wallet: ${b?num(b.walletBtc,8):'n/a'} BTC; value plus cash: ${b?usd(b.netAssets):'n/a'}; total P/L vs cost: ${b?usd(totalPnlAtBreakEven):'n/a'}`,
+      `Combined — BTC advantage vs holding: ${b?num(b.btcChange,8):'n/a'} BTC; dollar advantage vs holding: ${b?usd(b.edgeVsHold):'n/a'}`,
       '', 'LIQUIDATION & RISK',`Margin call LTV: ${num(d.mcLtv*100)}%; liquidation LTV: ${num(d.liqLtv*100)}%`,
       `Current margin call price (principal only): ${d.loan?usd(d.mcPrice):'n/a — no debt'}`,
       `Current liquidation price (principal only): ${d.loan?usd(d.liqPrice):'n/a — no debt'}`,

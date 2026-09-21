@@ -139,6 +139,26 @@ function renderCollateralRepayment(d){
   $('repay-breakdown').innerHTML=row('Fixed loan principal',usd(d.loan,2))+row('Accrued interest today',usd(d.accruedInterest,2))+row('Total debt repaid today',usd(d.currentDebt,2),'total')+row('Collateral sold to repay',r.available?btc(r.soldBtc):'Unavailable')+row('Original collateral remaining',r.available?btc(r.residualBtc):'Unavailable')+row('Loan-funded BTC retained',btc(d.newBtc))+row('Final wallet · both sources',r.available?btc(r.walletBtc):'Unavailable','total');
   $('repay-pnl').innerHTML=row('Gross profit · loan-bought BTC',r.available?signed(r.grossLoanProfit):'Unavailable')+row('Accrued financing cost','−'+usd(d.accruedInterest,2))+row('Net loan-trade profit',r.available?signed(r.netLoanProfit):'Unavailable','total')+row('BTC advantage vs. holding',r.available?`${change(r.btcChange)} BTC`:'Unavailable')+row('Dollar advantage vs. holding',r.available?signed(r.edgeVsHold):'Unavailable','total')+row('Debt-free BTC value',value(r.walletBtc*r.price));
   set('repay-value-recovery',`BTC quantity break-even compares your final debt-free wallet with simply holding ${btc(d.btc)}; it is not a zero-dollar-profit claim. Dollar break-even versus the collateral value at the borrowing reference is ${usd(r.valueRecoveryPrice,2)}. The separate horizon model uses ${usd(d.interestCost,2)} projected interest over ${fmt(d.months)} months.`);
+  renderBreakEvenSummary(d,r,btc);
+}
+function renderBreakEvenSummary(d,r,btc){
+  const unavailable=r.recoveryPrice===null||!r.recoveryAvailable;
+  if(unavailable){
+    set('repay-be-title','No usable BTC quantity break-even');
+    set('repay-be-note',r.recoveryPrice===null?'No loan-funded BTC exists to replace collateral sold for repayment.':'The algebraic threshold is inside the liquidation zone.');
+    for(const id of ['repay-be-hold','repay-be-loan','repay-be-total'])$(id).innerHTML=row('Status','Unavailable');
+    return;
+  }
+  const b=M.collateralRepayment(d,r.recoveryPrice);
+  const costBasis=d.entry||d.price;
+  const holdPnl=d.btc*(b.price-costBasis);
+  const totalPnl=b.netAssets-d.btc*costBasis;
+  const source=d.entry?'actual BTC cost basis':'borrowing reference price';
+  set('repay-be-title',`At BTC ${usd(b.price,2)}`);
+  set('repay-be-note',`At this threshold your final BTC equals ${btc(d.btc)}. Total dollar P/L still reflects movement in your original BTC versus its ${source}.`);
+  $('repay-be-hold').innerHTML=row('Original benchmark',btc(d.btc))+row('Value at break-even',usd(d.btc*b.price,2))+row(`P/L vs. ${d.entry?'cost basis':'reference'}`,signed(holdPnl),'total');
+  $('repay-be-loan').innerHTML=row('BTC bought with loan',btc(d.newBtc))+row('Gross price profit',signed(b.grossLoanProfit))+row('Accrued interest','−'+usd(d.accruedInterest,2))+row('Net loan-trade profit',signed(b.netLoanProfit),'total')+row('Net BTC vs. holding',`${b.btcChange>0?'+':''}${fmt(b.btcChange,8)} BTC`);
+  $('repay-be-total').innerHTML=row('Original BTC remaining',btc(b.residualBtc))+row('Loan-funded BTC retained',btc(d.newBtc))+row('Final debt-free wallet',btc(b.walletBtc),'total')+row('Wallet value + cash',usd(b.netAssets,2))+row('Total P/L vs. cost',signed(totalPnl),'total')+row('Advantage vs. holding',signed(b.edgeVsHold));
 }
 function setTwoPotsMode(mode){
   if(!['simple','quant'].includes(mode))return;

@@ -58,3 +58,12 @@ test('collateral repayment renders recovery, partial deployment and unavailable 
  app.nodes.get('inp-ltv').value='40';app.nodes.get('inp-target').value='100';app.run('render()');
  assert.equal(app.nodes.get('repay-wallet').textContent,'Unavailable');assert.doesNotMatch(app.nodes.get('repay-pnl').innerHTML,/NaN|Infinity/);
 });
+
+test('break-even summary separates holding, loan, and combined results',()=>{
+ const app=harness(600);app.run('runHiddenCommand()');app.run('render()');
+ assert.match(app.nodes.get('repay-be-title').textContent,/\$79,739\.69/);
+ assert.match(app.nodes.get('repay-be-hold').innerHTML,/P\/L vs\. cost basis/);
+ assert.match(app.nodes.get('repay-be-loan').innerHTML,/Net loan-trade profit/);
+ assert.match(app.nodes.get('repay-be-total').innerHTML,/Final debt-free wallet/);
+ assert.doesNotMatch(app.nodes.get('repay-be-total').innerHTML,/NaN|Infinity/);
+});

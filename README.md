@@ -27,7 +27,7 @@ No dependency installation is required for these commands. The pre-existing Pupp
 
 Inputs update immediately when valid. Invalid entries keep the last valid result visible with an explicit warning and disable export/save. Controls remain keyboard accessible. The left panel participates in normal page scrolling, with no fixed height cap or hidden nested scroll area. On mobile, summary metrics appear first and position inputs expand beneath them. Motion respects `prefers-reduced-motion`.
 
-The hidden **`iii`** shortcut restores the original repository preset when typed outside an editable field. On mobile, **press and hold BTC Amount for 800 ms** to restore the same preset. A quick tap edits normally; scrolling or cancelling the gesture aborts the hold. The **Load repository position preset** button is also available. Saving a position stores it only in the current browser and changes the button to **Load saved position**. The repository preset is in `LoanEngine.SAVED_POSITION`; changing a browser-saved position does not update the scheduled report's preset.
+The hidden **`iii`** shortcut restores the repository preset when typed outside an editable field. On mobile, **press and hold BTC Amount for 800 ms**. To edit your own preset later, open **`assets/user-config.js`**: it contains one clearly labeled block with plain-number values and comments. The browser app and scheduled report both read the same file. Run `npm run build` after editing it if you also commit the standalone `dist/index.html`.
 
 ## Calculation corrections
 
@@ -50,6 +50,8 @@ The calculator supports both modes. Leave **Actual loan principal** blank to siz
 Automatic loan principal = collateral BTC × reference price × initial LTV; an entered actual principal overrides it. Simple projected interest = principal × APR × months / 12. Horizon debt includes projected interest. Repay-today debt = fixed principal + accrued interest today. Newly purchased BTC = deployed principal / deployment price.
 
 The repay-now section labels its threshold **BTC quantity break-even**: the BTC price where the final debt-free wallet equals the original collateral BTC quantity. Above it the loan trade beats holding in BTC quantity; below it the loan trade trails holding. Final BTC always equals original collateral remaining after repayment plus loan-funded BTC retained.
+
+The break-even summary separates the original holding leg, the loan-funded leg, and the combined debt-free wallet. At BTC quantity break-even, the loan leg's net BTC advantage is zero by definition; total dollar P/L can still be positive or negative because the original BTC moved relative to its cost basis.
 
 Borrowed-capital P/L measures the newly purchased BTC's change from its own purchase price, less all loan interest. Actual-cost-basis P/L applies the user's original purchase price only to the original collateral.
 

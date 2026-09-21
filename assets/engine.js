@@ -1,12 +1,13 @@
 /* Shared, dependency-free calculation engine. Used by the UI and daily export. */
 (function (root, factory) {
-  const api = factory();
+  const preset = typeof module === 'object' && module.exports ? require('./user-config.js') : root.USER_POSITION_PRESET;
+  const api = factory(preset);
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.LoanEngine = api;
-})(typeof window !== 'undefined' ? window : this, function () {
+})(typeof window !== 'undefined' ? window : this, function (userPreset) {
   'use strict';
   const DEFAULTS = Object.freeze({btc:1,price:61042,ltv:40,loanPrincipal:0,accruedInterest:0,apr:1,mc:85,liq:90,vol:65,entry:0,deployPrice:0,deploy:100,target:100000,months:12,leverage:5,mm:0.5,funding:10});
-  const SAVED_POSITION = Object.freeze({btc:0.035,ltv:36,loanPrincipal:1000,accruedInterest:4,entry:79422,deployPrice:79422,apr:6,target:158844});
+  const SAVED_POSITION = Object.freeze({...userPreset});
   const WEIGHTS = Object.freeze({mvrv:30,zscore:25,ma:20,roc:10,cycle:15});
   const FIELDS = {
     btc:[0.00000001,1000000,'BTC collateral'],price:[1,1e9,'Reference price'],ltv:[0,99,'Initial LTV'],

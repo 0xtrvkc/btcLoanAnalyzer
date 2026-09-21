@@ -478,6 +478,16 @@
 <article class="pot-card"><div class="overline">WALLET AFTER REPAYMENT</div><h3 id="repay-target-label">At target price</h3><div class="repayment-value num" id="repay-wallet">—</div><p class="hint" id="repay-btc-change"></p><p class="hint" id="repay-warning"></p></article>
 </div>
 <div class="pots-grid repayment-grid"><div id="repay-breakdown"></div><div id="repay-pnl"></div></div>
+<div class="break-even-summary">
+<div class="overline">AT BTC QUANTITY BREAK-EVEN</div>
+<h3 id="repay-be-title">Separate legs and combined result</h3>
+<p class="hint" id="repay-be-note">Shows where the dollars and BTC come from without mixing the holding return with the loan trade.</p>
+<div class="break-even-grid">
+<article class="pot-card"><div class="overline">01 · ORIGINAL HOLDING</div><h3>Holding leg</h3><div id="repay-be-hold"></div></article>
+<article class="pot-card"><div class="overline">02 · LOAN-FUNDED BTC</div><h3>Loan leg</h3><div id="repay-be-loan"></div></article>
+<article class="pot-card"><div class="overline">03 · DEBT-FREE TOTAL</div><h3>Combined wallet</h3><div id="repay-be-total"></div></article>
+</div>
+</div>
 <details class="advanced"><summary>BTC quantity vs. dollar value</summary><div class="advanced-body notes">
 <p>The final wallet combines two sources: original collateral left after repayment, plus BTC previously bought with the loan. It never treats sold collateral as still owned.</p>
 <div class="formula">Debt today = fixed principal + accrued interest today<br>BTC sold = debt today ÷ target price<br>Final BTC = original BTC − BTC sold + loan-funded BTC<br>BTC quantity break-even = debt today ÷ loan-funded BTC</div>
@@ -810,6 +820,7 @@
 <aside id="preset-notice" class="preset-notice" role="status" hidden><button id="preset-dismiss" class="button icon" aria-label="Dismiss preset confirmation">×</button><div class="overline">III / POSITION RESTORED</div><h2>Welcome back.</h2><div id="preset-values" class="mono"></div></aside>
 <div class="toast" id="toast" role="status" aria-live="polite">
 </div>
+<script src="assets/user-config.js"></script>
 <script src="assets/engine.js">
 </script>
 <script src="assets/snapshot.js">

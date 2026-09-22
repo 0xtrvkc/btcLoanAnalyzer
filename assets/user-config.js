@@ -15,13 +15,12 @@
   return Object.freeze({
     btc: 0.035,              // BTC pledged as collateral
     loanPrincipal: 1000,     // Original fixed loan amount in USD
-    accruedInterest: 4,      // Interest owed if you repay today, in USD
+    loanDate: '2026-08-28',  // Date the loan was used to buy BTC
     ltv: 36,                 // Used only if loanPrincipal is blank or 0
     entry: 79422,            // Cost basis of your original BTC
     deployPrice: 79422,      // Price where loan money bought BTC
     deploy: 100,             // Percent of loan used to buy BTC
-    apr: 6,                  // APR for forward projections
-    months: 12,              // Forward projection period
+    apr: 6,                  // APR used for daily simple interest
     target: 158844           // Target BTC price
   });
 });

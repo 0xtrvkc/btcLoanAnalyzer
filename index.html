@@ -197,29 +197,22 @@
 </div>
 <div class="field">
 <div class="field-label">
-<label for="inp-months">Holding period</label>
-<span class="unit">mo</span>
+<label for="inp-loanDate">Loan used to buy BTC</label>
+<span class="unit">date</span>
 </div>
 <div class="input-shell">
-<input id="inp-months" data-field="months" type="number" inputmode="decimal" value="12" step="1" min="0" max="120" placeholder="" aria-describedby="error-months" autocomplete="off"/>
-<span class="suffix">mo</span>
+<input id="inp-loanDate" data-field="loanDate" type="date" value="" min="2012-01-01" aria-describedby="error-loanDate note-loanDate" autocomplete="off"/>
 </div>
-<p class="field-error" id="error-months">
+<p class="field-error" id="error-loanDate">
 </p>
+<p class="field-note" id="note-loanDate">Defaults to today. Holding days and interest update automatically.</p>
 </div>
 </div>
-<p class="hint">Forward scenarios use APR × holding period. The repay-today card uses the separate accrued-interest amount below.</p>
-<div class="split-fields">
+<p class="hint">Interest = principal × APR × elapsed days ÷ 365. Every view uses the same date-derived debt.</p>
 <div class="field">
 <div class="field-label"><label for="inp-loanPrincipal">Actual loan principal</label><span class="unit">USD</span></div>
 <div class="input-shell"><input id="inp-loanPrincipal" data-field="loanPrincipal" type="number" inputmode="decimal" value="" step="1" min="0" max="1000000000" placeholder="Auto from LTV" aria-describedby="error-loanPrincipal note-loanPrincipal" autocomplete="off"/><span class="suffix">USD</span></div>
 <p class="field-error" id="error-loanPrincipal"></p><p class="field-note" id="note-loanPrincipal">For an existing loan, enter its original fixed principal. Leave blank only when planning a new LTV-sized loan.</p>
-</div>
-<div class="field">
-<div class="field-label"><label for="inp-accruedInterest">Accrued interest today</label><span class="unit">USD</span></div>
-<div class="input-shell"><input id="inp-accruedInterest" data-field="accruedInterest" type="number" inputmode="decimal" value="0" step="0.01" min="0" max="1000000000" aria-describedby="error-accruedInterest note-accruedInterest" autocomplete="off"/><span class="suffix">USD</span></div>
-<p class="field-error" id="error-accruedInterest"></p><p class="field-note" id="note-accruedInterest">Used only for “repay today.” The APR × holding-period estimate remains separate.</p>
-</div>
 </div>
 <details class="advanced">
 <summary>Risk &amp; cost basis</summary>
@@ -307,7 +300,7 @@
 </div>
 <div class="view-meta">
 <span class="badge" id="plan-status">NEW LOAN SCENARIO</span>
-<div id="horizon-label">12 month horizon · USD</div>
+<div id="horizon-label">0 days held · USD</div>
 </div>
 </div>
 <div class="data-notice" id="data-notice" role="status">
@@ -470,7 +463,7 @@
 <div id="pots-quant" hidden><div id="pots-quant-rows"></div><div class="formula">Residual BTC = pledged BTC − (principal + interest) ÷ reference price<br>Wallet BTC = residual BTC + loan-funded BTC<br>Net assets = wallet BTC × reference price + unused cash</div></div>
 <p class="hint" style="margin-top:14px">Illustrative repayment by selling collateral at the reference price. Fees are excluded, and the position must survive liquidation. Unused cash is shown separately; borrowing itself creates no profit.</p></div></section>
 <section class="panel wide-panel" id="collateral-repayment" aria-labelledby="repay-title">
-<div class="panel-head flexible"><div><h2 id="repay-title">What if I repay today with collateral?</h2><p class="hint">Uses fixed principal + accrued interest today—not projected horizon interest.</p></div><span class="badge" id="repay-status">AT TARGET</span></div>
+<div class="panel-head flexible"><div><h2 id="repay-title">What if I repay today with collateral?</h2><p class="hint">Uses fixed principal + interest calculated automatically from the loan date.</p></div><span class="badge" id="repay-status">AT TARGET</span></div>
 <div class="panel-body">
 <p class="hint" id="repay-benchmark"></p>
 <div class="pots-grid repayment-grid">
@@ -568,7 +561,7 @@
 <tr>
 <th scope="col">BTC price</th>
 <th scope="col">Δ reference</th>
-<th scope="col">LTV at horizon</th>
+<th scope="col">LTV today</th>
 <th scope="col">Position status</th>
 <th scope="col">Net equity</th>
 <th scope="col" id="ladder-pnl-label">Net P/L</th>
@@ -651,7 +644,7 @@
 <p>
 <strong>Loan sizing:</strong> a new loan is sized from your reference price and initial LTV. This is a scenario planner; existing loan debt must not be inferred by changing today’s price.</p>
 <p>
-<strong>Interest:</strong> current thresholds use fixed principal + accrued interest today. Future scenarios use simple APR × months ÷ 12 as horizon debt. No trading fees, liquidation fees, tax, slippage, or compounding are included.</p>
+<strong>Interest:</strong> all views use fixed principal + simple interest accrued from the loan date through today: principal × APR × elapsed days ÷ 365. No trading fees, liquidation fees, tax, slippage, or compounding are included.</p>
 <p>
 <strong>Barrier probability:</strong> 2Φ[ln(liquidation price ÷ reference price) ÷ (σ√(90/365))], assuming constant volatility and zero log-price drift. It estimates touching a fixed principal-only barrier, and excludes jumps and interest-driven barrier changes. It is not a calibrated forecast.</p>
 <p>

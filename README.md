@@ -1,4 +1,4 @@
-# BTC Loan Terminal 
+# BTC Loan Terminal
 
 A static BTC-backed loan scenario planner with a quant terminal interface. Build a position, compare exits, stress test liquidation, inspect MVRV signals, and compare a loan with a spot-plus-futures position of equal additional BTC exposure.
 live: [0xtrvkc.github.io/btcLoanAnalyzer](https://0xtrvkc.github.io/btcLoanAnalyzer/)
@@ -21,20 +21,18 @@ No dependency installation is required for these commands. The pre-existing Pupp
 
 - **Overview:** principal, collateral, liquidation, carry cost, interactive payoff curve, deployment allocation, Two Separate Pots (Simple / Quant), and price checkpoints.
 - **Scenarios:** a price ladder, LTV overlay, P/L by reference price / borrowed capital / actual cost basis, and position decomposition.
-- **Risk:** current and horizon thresholds, collateral top-up versus repayment, a 90-day barrier model, and assumptions.
+- **Risk:** current thresholds, collateral top-up versus repayment, a 90-day barrier model, and assumptions.
 - **Signals:** on-chain indicators, cycle context, adjustable weights, source timestamps, and 14 local snapshots.
 - **Futures:** matched deployed BTC exposure, isolated margin, funding, liquidation, portfolio return, and futures-leg return.
 
 Inputs update immediately when valid. Invalid entries keep the last valid result visible with an explicit warning and disable export/save. Controls remain keyboard accessible. The left panel participates in normal page scrolling, with no fixed height cap or hidden nested scroll area. On mobile, summary metrics appear first and position inputs expand beneath them. Motion respects `prefers-reduced-motion`.
-
-The hidden **`iii`** shortcut restores the repository preset when typed outside an editable field. On mobile, **press and hold BTC Amount for 800 ms**. To edit your own preset later, open **`assets/user-config.js`**: it contains one clearly labeled block with plain-number values and comments. The browser app and scheduled report both read the same file. Run `npm run build` after editing it if you also commit the standalone `dist/index.html`.
 
 ## Calculation corrections
 
 - Removed silently substituted input values, including the 100× LTV fallback error. Enforced initial LTV < margin call LTV < liquidation LTV and valid maintenance margin.
 - Corrected the normal CDF's missing `sqrt(2)` scaling. The 90-day model now explicitly estimates a fixed-barrier touch using the reflection principle, rather than mislabeling an endpoint probability as a liquidation-within-period probability.
 - Made zero signal weights effective and documented the fallback when all weights are zero.
-- Applied the selected horizon's simple interest consistently to scenario P/L, debt, equity, breakeven, and horizon thresholds.
+- Applies date-derived simple interest consistently to scenario P/L, debt, equity, breakeven, and thresholds.
 - Matched futures notional to **deployed** loan capital, including partial and zero deployment. Corrected futures breakeven, isolated-long liquidation, portfolio return denominators, and the liquidation-buffer comparison.
 - Kept original collateral and loan-funded BTC cost bases separate. Holding unused loan cash does not create profit.
 - Stopped displaying open-position P/L below liquidation. Actual liquidation proceeds require execution, fees, and residual-balance assumptions.
@@ -47,7 +45,7 @@ The hidden **`iii`** shortcut restores the repository preset when typed outside 
 
 The calculator supports both modes. Leave **Actual loan principal** blank to size a new loan from reference price × LTV. For an existing loan, enter its fixed principal so market-price changes cannot silently resize the debt. **Accrued interest today** drives the repay-now card; APR × holding period remains a separate forward projection.
 
-Automatic loan principal = collateral BTC × reference price × initial LTV; an entered actual principal overrides it. Simple projected interest = principal × APR × months / 12. Horizon debt includes projected interest. Repay-today debt = fixed principal + accrued interest today. Newly purchased BTC = deployed principal / deployment price.
+Automatic loan principal = collateral BTC × reference price × initial LTV; an entered actual principal overrides it. Accrued simple interest = principal × APR × elapsed calendar days / 365. Elapsed days run from the loan date through today and update automatically whenever the app is opened. Every view uses the same date-derived debt. Newly purchased BTC = deployed principal / deployment price.
 
 The repay-now section labels its threshold **BTC quantity break-even**: the BTC price where the final debt-free wallet equals the original collateral BTC quantity. Above it the loan trade beats holding in BTC quantity; below it the loan trade trails holding. Final BTC always equals original collateral remaining after repayment plus loan-funded BTC retained.
 
@@ -57,7 +55,7 @@ The repay-now wallet flow visualizes the full BTC reconciliation: original colla
 
 To reduce repetition, the redundant “Use now price as target” action and duplicate repayment tables were removed. The 01/02/03 accounting cards remain available under the collapsed **Detailed repayment numbers** control.
 
-Debt timing is consistent across tabs: Overview and Risk “current” metrics use fixed principal plus accrued interest today; Scenarios, price checkpoints, and forward comparisons use projected APR × holding period. Labels identify which debt clock each result uses.
+Debt timing is consistent across tabs: every view uses fixed principal plus simple interest accrued from the loan date through today.
 
 Borrowed-capital P/L measures the newly purchased BTC's change from its own purchase price, less all loan interest. Actual-cost-basis P/L applies the user's original purchase price only to the original collateral.
 

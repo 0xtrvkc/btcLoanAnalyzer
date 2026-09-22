@@ -6,14 +6,15 @@ const vm=require('node:vm');
 const M=require('../assets/engine.js');
 const Report=require('../assets/report.js');
 const scope={window:{}};vm.runInNewContext(fs.readFileSync(require.resolve('../assets/snapshot.js'),'utf8'),scope);const data=scope.window.BUNDLED_SNAPSHOT;
-const base={...M.DEFAULTS,price:60000,target:90000,apr:6};
+const NOW=Date.parse('2026-09-22T12:00:00Z');
+const base={...M.DEFAULTS,price:60000,target:90000,apr:6,loanDate:'2025-09-22'};
 const near=(actual,expected,tolerance=1e-6)=>assert.ok(Math.abs(actual-expected)<tolerance,`${actual} != ${expected}`);
-const calc=changes=>M.calculate({...base,...changes},data,M.WEIGHTS);
+const calc=changes=>M.calculate({...base,...changes},data,M.WEIGHTS,NOW);
 
 test('loan balance, interest, and net equity reconcile independently',()=>{
  const d=calc();near(d.loan,24000);near(d.newBtc,.4);near(d.interestCost,1440);near(d.debtOwed,25440);
  near(d.totalValue,126000);near(d.equity,100560);near(d.netProfit,40560);near(d.leverageEdge,10560);
- near(d.mcPrice,24000/.85);near(d.liqPrice,24000/.9);near(d.liqPriceH,25440/.9);
+ near(d.mcPrice,25440/.85);near(d.liqPrice,25440/.9);near(d.liqPriceH,25440/.9);
 });
 test('partial deployment matches futures BTC and notional, with extra margin capital',()=>{
  const d=calc({deploy:25,deployPrice:50000}),f=M.futures(d);
@@ -31,7 +32,7 @@ test('zero debt means no carry or loan liquidation',()=>{
 test('flat price loses exactly financing costs; zero APR preserves equity',()=>{
  const d=calc({target:60000});near(d.netProfit,-1440);
  near(calc({target:60000,apr:0}).netProfit,0);
- near(calc({target:60000,months:0}).netProfit,0);
+ near(calc({target:60000,loanDate:'2026-09-22'}).netProfit,0);
 });
 test('loan and futures breakeven prices actually zero the matching P/L equations',()=>{
  const d=calc({deploy:40,deployPrice:75000});const f=M.futures(d);
@@ -53,20 +54,20 @@ test('futures liquidation solves equity = maintenance margin',()=>{
 test('negative funding is a receipt and reduces the cost-adjusted breakeven',()=>{
  const f=M.futures(calc({funding:-10}));near(f.fundingCost,-2400);assert.ok(f.breakevenAdj<f.breakevenSimple);
 });
-test('target thresholds are inclusive and higher interest shifts both barriers',()=>{
+test('target thresholds are inclusive and include date-derived interest',()=>{
  const d=calc();assert.equal(M.scenario(d,d.liqPriceH).status,'Liquidation');assert.equal(M.scenario(d,d.mcPriceH).status,'Margin call');
- assert.equal(M.scenario(d,d.mcPriceH+1).status,'Active');assert.ok(d.liqPriceH>d.liqPrice);
+ assert.equal(M.scenario(d,d.mcPriceH+1).status,'Active');near(d.liqPriceH,d.liqPrice);
 });
-test('accrued interest moves current risk thresholds without changing horizon debt',()=>{
- const baseDebt=calc({accruedInterest:0}),accrued=calc({accruedInterest:400});
- near(accrued.currentDebt,baseDebt.loan+400);near(accrued.currentLtvPct,accrued.currentDebt/accrued.collateral*100);
- assert.ok(accrued.mcPrice>baseDebt.mcPrice);assert.ok(accrued.liqPrice>baseDebt.liqPrice);near(accrued.debtOwed,baseDebt.debtOwed);
+test('loan date drives elapsed days, accrued interest, and risk thresholds',()=>{
+ const fresh=calc({loanDate:'2026-09-22'}),aged=calc({loanDate:'2025-09-22'});
+ near(fresh.interestCost,0);near(aged.interestCost,1440);assert.equal(aged.loanDays,365);
+ assert.ok(aged.mcPrice>fresh.mcPrice);assert.ok(aged.liqPrice>fresh.liqPrice);near(aged.currentDebt,aged.debtOwed);
 });
 test('invalid inputs cannot silently fall back to wrongly scaled thresholds',()=>{
- for(const x of [{mc:''},{liq:Infinity},{btc:0},{price:NaN},{ltv:85},{mc:95,liq:90},{apr:-1},{deploy:101},{deployPrice:-1},{months:''},{mm:20,leverage:5}]){
-   const v=M.validate({...base,...x});assert.equal(v.valid,false,JSON.stringify(x));assert.throws(()=>calc(x));
+ for(const x of [{mc:''},{liq:Infinity},{btc:0},{price:NaN},{ltv:85},{mc:95,liq:90},{apr:-1},{deploy:101},{deployPrice:-1},{loanDate:''},{loanDate:'2026-09-23'},{mm:20,leverage:5}]){
+   const v=M.validate({...base,...x},NOW);assert.equal(v.valid,false,JSON.stringify(x));assert.throws(()=>calc(x));
  }
- assert.equal(M.validate({...base,mc:85,liq:90,entry:'',deployPrice:''}).valid,true);
+ assert.equal(M.validate({...base,mc:85,liq:90,entry:'',deployPrice:''},NOW).valid,true);
 });
 test('normal CDF uses the correct sqrt(2) scaling and tails',()=>{
  near(M.normalCDF(0),.5);near(M.normalCDF(1),.841344746,1e-7);near(M.normalCDF(-2),.022750132,1e-7);
@@ -116,45 +117,45 @@ test('balance-sheet conservation holds over varied amounts, rates, and deploymen
 
 test('two separate pots reconcile BTC, unused cash, and debt without inventing equity',()=>{
  for(const deploy of [0,25,100]){const d=calc({deploy});const p=M.twoPots(d);near(p.netAssets,M.scenario(d,d.price).equity);near(p.walletBtc,p.residualBtc+d.newBtc);near(p.netAssets,d.collateral-d.interestCost);assert.equal(p.available,true);}
- assert.equal(M.twoPots(calc({apr:100,months:120})).available,false);
+ assert.equal(M.twoPots(calc({apr:100,loanDate:'2016-09-22'})).available,false);
 });
 
 
-test('repay-today uses accrued interest, not projected horizon interest',()=>{
- const d=calc({accruedInterest:4}),r=M.collateralRepayment(d);
- near(r.recoveryPrice,60010);near(r.soldBtc,24004/90000);near(r.residualBtc,1-24004/90000);
- near(r.walletBtc,1.4-24004/90000);near(r.edgeVsHold,11996);
+test('repay-today uses interest accrued from the loan date',()=>{
+ const d=calc({loanDate:'2026-09-21'}),r=M.collateralRepayment(d),debt=24000+24000*.06/365;
+ near(r.recoveryPrice,debt/.4);near(r.soldBtc,debt/90000);near(r.residualBtc,1-debt/90000);
+ near(r.walletBtc,1.4-debt/90000);near(r.edgeVsHold,36000-debt);
  const at=M.collateralRepayment(d,r.recoveryPrice);near(at.walletBtc,1);near(at.btcChange,0);
  near(at.netLoanProfit,0);
  near(M.collateralRepayment(d,r.valueRecoveryPrice).walletBtc*r.valueRecoveryPrice,d.collateral);
 });
 test('partial deployment keeps cash separate and reconciles with scenario net equity',()=>{
  const d=calc({deploy:25,deployPrice:50000}),r=M.collateralRepayment(d);
- near(r.recoveryPrice,200000);near(r.soldBtc,24000/90000);
+ near(r.recoveryPrice,212000);near(r.soldBtc,25440/90000);
  near(M.collateralRepayment(d,r.recoveryPrice).walletBtc,d.btc);
 });
 test('BTC quantity break-even handles zero debt, no purchases, fixed debt and liquidation',()=>{
  const noPurchases=M.collateralRepayment(calc({deploy:0}));assert.equal(noPurchases.recoveryPrice,null);assert.equal(noPurchases.recoveryStatus,'No finite price');assert.ok(noPurchases.btcChange<0);
  const noDebt=M.collateralRepayment(calc({ltv:0}));assert.equal(noDebt.recoveryStatus,'No debt');near(noDebt.walletBtc,1);near(noDebt.btcChange,0);
- near(M.collateralRepayment(calc({accruedInterest:0})).recoveryPrice,60000);
- near(M.collateralRepayment(calc({accruedInterest:2400})).recoveryPrice,66000);
+ near(M.collateralRepayment(calc({loanDate:'2026-09-22'})).recoveryPrice,60000);
+ near(M.collateralRepayment(calc({loanDate:'2025-01-30'})).recoveryPrice,(24000+24000*.06*600/365)/.4,1e-6);
  const d=calc();assert.equal(M.collateralRepayment(d,d.liqPrice).available,false);
  const lowPurchase=M.collateralRepayment(calc({deployPrice:1000}));assert.equal(lowPurchase.recoveryStatus,'Liquidation');assert.equal(lowPurchase.recoveryAvailable,false);
  for(const price of [0,-1,NaN,Infinity])assert.throws(()=>M.collateralRepayment(d,price),RangeError);
 });
-test('collateral repayment reconciles across fractional sizes and accrued costs',()=>{
- for(const btc of [.00000001,.035,1,20])for(const deploy of [0,25,100])for(const accruedInterest of [0,4,100]){
-  const d=calc({btc,deploy,accruedInterest}),r=M.collateralRepayment(d);
+test('collateral repayment reconciles across fractional sizes and holding periods',()=>{
+ for(const btc of [.00000001,.035,1,20])for(const deploy of [0,25,100])for(const loanDate of ['2026-09-22','2026-09-21','2025-09-22']){
+  const d=calc({btc,deploy,loanDate}),r=M.collateralRepayment(d);
   if(r.recoveryPrice!==null)near(M.collateralRepayment(d,r.recoveryPrice).walletBtc,btc);
  }
- const report=Report.build({input:{...base,accruedInterest:4},data});assert.match(report,/REPAY WITH COLLATERAL/);assert.match(report,/BTC quantity break-even price: \$60,010/);
+ const report=Report.build({input:{...base,loanDate:'2026-09-21'},data,generatedAt:'2026-09-22T12:00:00Z'});assert.match(report,/REPAY WITH COLLATERAL/);assert.match(report,/BTC quantity break-even price: \$60,009.86/);
  assert.match(report,/AT CURRENT BTC PRICE — SEPARATE & TOTAL/);assert.match(report,/Holding leg/);assert.match(report,/Loan leg/);assert.match(report,/Combined/);
 });
 
-test('fixed principal and four dollars interest match the saved real position',()=>{
+test('fixed principal preset derives current interest from its saved date',()=>{
  const d=calc({...M.SAVED_POSITION,price:80496.5}),r=M.collateralRepayment(d);
- near(d.loan,1000);near(d.currentDebt,1004);near(d.newBtc,1000/79422);
- near(r.recoveryPrice,79739.688,1e-3);
+ near(d.loan,1000);near(d.currentDebt,1000+1000*.06*25/365);near(d.newBtc,1000/79422);assert.equal(d.loanDays,25);
+ near(r.recoveryPrice,d.currentDebt/d.newBtc,1e-3);
  const atTarget=M.collateralRepayment(d,84187.32);
- assert.ok(atTarget.walletBtc>.035);near(atTarget.edgeVsHold,56,0.1);
+ assert.ok(atTarget.walletBtc>.035);near(atTarget.edgeVsHold,55.89,0.1);
 });

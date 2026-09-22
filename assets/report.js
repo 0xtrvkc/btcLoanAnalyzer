@@ -3,7 +3,7 @@
   const num=(x,n=2)=>Number.isFinite(x)?x.toLocaleString('en-US',{maximumFractionDigits:n}):'n/a';
   const usd=x=>Number.isFinite(x)?'$'+num(x):'n/a';
   function build({input,data,weights,quote,source='Bundled snapshot',history=[],generatedAt=new Date().toISOString()}){
-    const d=M.calculate(input,data,weights),f=M.futures(d),r=M.collateralRepayment(d);
+    const d=M.calculate(input,data,weights,Date.parse(generatedAt)),f=M.futures(d),r=M.collateralRepayment(d);
     const currentPrice=quote?.price||d.price,b=M.collateralRepayment(d,currentPrice);
     const costBasis=d.entry||d.price,holdPnlNow=b.available?d.btc*(b.price-costBasis):null,totalPnlNow=b.available?b.netAssets-d.btc*costBasis:null;
     const lines=['BTC LOAN TERMINAL — POSITION ANALYSIS',`Generated: ${generatedAt}`,'',
@@ -14,8 +14,8 @@
       M.ageHours(data.date,Date.parse(generatedAt))>48?'ON-CHAIN DATA IS STALE (older than 48h).':'On-chain date is within 48 hours of report generation.',
       '', 'POSITION & FINANCING',...Object.entries({
         'BTC collateral':num(d.btc,8),'Reference BTC price':usd(d.price),'Collateral value':usd(d.collateral),'Initial LTV':num(d.ltvPct)+'%',
-        'Loan principal':usd(d.loan),'Principal source':d.loanPrincipal?'Fixed actual principal':'Reference price × LTV','Accrued interest today':usd(d.accruedInterest),'Debt if repaid today':usd(d.currentDebt),'APR assumption':num(d.apr*100)+'%','Horizon':num(d.months)+' months',
-        'Simple interest over horizon':usd(d.interestCost),'Debt at horizon':usd(d.debtOwed),'Deployment':num(d.deployPct*100)+'%',
+        'Loan principal':usd(d.loan),'Principal source':d.loanPrincipal?'Fixed actual principal':'Reference price × LTV','Loan date':d.loanDate,'As-of date':d.asOfDate,'Days held':num(d.loanDays,0),'APR assumption':num(d.apr*100)+'%',
+        'Accrued simple interest':usd(d.interestCost),'Debt today':usd(d.debtOwed),'Deployment':num(d.deployPct*100)+'%',
         'Deployment BTC price':usd(d.deployPrice),'Loan cash held':usd(d.undeployedUsd),'Additional BTC':num(d.newBtc,8),'Total BTC exposure':num(d.totalBtc,8),
         'Original collateral cost basis':d.entry?usd(d.entry):'unset'
       }).map(([k,v])=>k+': '+v),'','TARGET SCENARIO',`Target BTC price: ${usd(d.targetPrice)}`,`Target status: ${d.targetStatus}`,
@@ -30,7 +30,7 @@
       `Break-even threshold status: ${r.recoveryStatus}`,
       `Repayment target status: ${r.status}`,
       `Fixed principal repaid: ${usd(d.loan)}`,
-      `Accrued interest repaid today: ${usd(d.accruedInterest)}`,
+      `Accrued interest repaid today: ${usd(d.interestCost)}`,
       `BTC sold for today's debt: ${r.available?num(r.soldBtc,8):'n/a'}`,
       `Original collateral remaining: ${r.available?num(r.residualBtc,8):'n/a'} BTC`,
       `Loan-funded BTC retained separately: ${num(d.newBtc,8)} BTC`,
@@ -45,12 +45,12 @@
       `Net loan-trade profit after accrued interest: ${r.available?usd(r.netLoanProfit):'n/a'}`,
       `Dollar-value break-even price: ${usd(r.valueRecoveryPrice)}`,
       'Final wallet = original collateral remaining after repayment + loan-funded BTC retained.',
-      'Repay-today calculations use fixed principal plus accrued interest today. Horizon projections remain separate.',
+      'All calculations use fixed principal plus date-derived simple interest accrued through today.',
       'Requires lender support and no earlier liquidation; fees, slippage, and tax excluded.',
       '', 'AT CURRENT BTC PRICE — SEPARATE & TOTAL',
       `Current BTC price used: ${usd(currentPrice)}`,
       `Holding leg — original BTC: ${num(d.btc,8)} BTC; value: ${b.available?usd(d.btc*b.price):'n/a'}; P/L vs ${d.entry?'cost basis':'reference'}: ${b.available?usd(holdPnlNow):'n/a'}`,
-      `Loan leg — funded BTC: ${num(d.newBtc,8)} BTC; gross price profit: ${b.available?usd(b.grossLoanProfit):'n/a'}; accrued interest: ${usd(d.accruedInterest)}; net profit: ${b.available?usd(b.netLoanProfit):'n/a'}`,
+      `Loan leg — funded BTC: ${num(d.newBtc,8)} BTC; gross price profit: ${b.available?usd(b.grossLoanProfit):'n/a'}; accrued interest: ${usd(d.interestCost)}; net profit: ${b.available?usd(b.netLoanProfit):'n/a'}`,
       `Combined — original BTC remaining: ${b.available?num(b.residualBtc,8):'n/a'} BTC; loan-funded BTC retained: ${num(d.newBtc,8)} BTC`,
       `Combined — final debt-free wallet: ${b.available?num(b.walletBtc,8):'n/a'} BTC; value plus cash: ${b.available?usd(b.netAssets):'n/a'}; total P/L vs cost: ${b.available?usd(totalPnlNow):'n/a'}`,
       `Combined — BTC advantage vs holding: ${b.available?num(b.btcChange,8):'n/a'} BTC; dollar advantage vs holding: ${b.available?usd(b.edgeVsHold):'n/a'}`,
@@ -58,8 +58,8 @@
       `Current LTV (principal + accrued interest today): ${num(d.currentLtvPct)}%`,
       `Current margin call price (accrued interest included): ${d.loan?usd(d.mcPrice):'n/a — no debt'}`,
       `Current liquidation price (accrued interest included): ${d.loan?usd(d.liqPrice):'n/a — no debt'}`,
-      `Horizon margin call price (interest included): ${d.loan?usd(d.mcPriceH):'n/a — no debt'}`,
-      `Horizon liquidation price (interest included): ${d.loan?usd(d.liqPriceH):'n/a — no debt'}`,
+      `Margin call price as of today (interest included): ${d.loan?usd(d.mcPriceH):'n/a — no debt'}`,
+      `Liquidation price as of today (interest included): ${d.loan?usd(d.liqPriceH):'n/a — no debt'}`,
       `90d fixed-barrier touch probability: ${num(d.pLiq90*100,4)}%`,
       'Probability assumes constant annual volatility, zero log drift, no jumps, and no barrier changes due to interest.',
       `Annualized volatility assumption: ${num(d.vol*100)}%`,

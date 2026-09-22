@@ -74,11 +74,11 @@ function render(){
   const input=validateAndRead();if(!input)return;
   validInput=input;const d=M.calculate(input,D,weights());currentResult=d;
   const ltvMax=Math.max(0,Math.ceil(d.mcLtv*100)-1);$('ltv-range').max=ltvMax;$('ltv-range').value=d.ltvPct;set('ltv-max-label',ltvMax+'%');
-  set('horizon-label',`${fmt(d.months)} month horizon · USD`);
+  set('horizon-label',`${fmt(d.loanDays,0)} days held · as of ${d.asOfDate}`);
   set('kpi-loan',usd(d.loan));set('kpi-loan-sub',`${pct(d.ltvPct,0)} initial LTV`);
   set('kpi-collateral',usd(d.collateral));set('kpi-collateral-sub',`${fmt(d.btc,Math.max(3,d.btc<0.001?8:3))} BTC pledged`);
   set('kpi-liq',d.loan?usd(d.liqPrice):'No debt');set('kpi-liq-sub',d.loan?`${pct(-d.liqDropPct)} drop from reference`:'No liquidation threshold');
-  set('kpi-cost',usd(d.interestCost));set('kpi-cost-sub',`${pct(d.apr*100)} APR · ${fmt(d.months)} months`);
+  set('kpi-cost',usd(d.interestCost));set('kpi-cost-sub',`${pct(d.apr*100)} APR · ${fmt(d.loanDays,0)} days`);
   document.querySelectorAll('[data-target]').forEach(button=>{const match=targetFor(button.dataset.target,d);button.setAttribute('aria-pressed',String(match>0&&Math.abs(d.targetPrice-Math.round(match))<1));});
   renderOverview(d);renderActive(d);
   set('update-status',refreshRunning?'Refreshing data…':'Inputs applied');
@@ -104,7 +104,7 @@ function renderOverview(d){
   set('level-liq',d.loan?usd(d.liqPriceH):'No debt');set('level-liq-sub',d.loan?`${signedPct((d.liqPriceH/d.price-1)*100)} from reference`:'No liquidation');
   set('level-mc',d.loan?usd(d.mcPriceH):'No debt');set('level-mc-sub',d.loan?`${signedPct((d.mcPriceH/d.price-1)*100)} from reference`:'No margin call');
   set('level-floor',usd(D.floorPrice));set('level-ceiling',usd(D.ceilPrice));
-  const title=liquidated?'Target crosses liquidation':d.mcPriceH>=d.price?'Interest pushes the horizon into margin call':d.leverageEdge>=0?'Added exposure improves this target outcome':'Borrowing reduces this target outcome';
+  const title=liquidated?'Target crosses liquidation':d.mcPrice>=d.price?'Accrued interest pushes the loan into margin call':d.leverageEdge>=0?'Added exposure improves this target outcome':'Borrowing reduces this target outcome';
   set('overview-insight-title',title);
   set('overview-insight',liquidated?`At ${usd(d.targetPrice)}, the model reaches your ${pct(d.liqLtv*100,0)} liquidation LTV. Open-position P/L is unavailable; sale execution, fees, and any residual balance determine the outcome.`:`At ${usd(d.targetPrice)}, the loan strategy produces ${signed(d.netProfit)} after ${usd(d.interestCost)} of interest, versus ${signed(d.unlevProfit)} from holding ${fmt(d.btc,3)} BTC. The extra ${fmt(d.newBtc,5)} BTC also increases downside exposure. Results require the position to survive the path to target.`);
   renderTwoPots(d);
@@ -121,14 +121,14 @@ function renderTwoPots(d){
   const fundedPotPnl=d.newBtc*(currentPrice-purchasePrice);
   const pricePnlLabel=`Price P/L vs ${usd(purchasePrice)}`;
   $('pots-warning').hidden=p.available;
-  set('pots-warning','The reference price falls in the horizon liquidation zone. Repayment and wallet totals are unavailable.');
+  set('pots-warning','The reference price falls in today’s liquidation zone. Repayment and wallet totals are unavailable.');
   $('pot-original-details').innerHTML=row('Original collateral',btc(d.btc))+row('Sell to repay debt',btc(p.debtBtc))+row('Principal + interest',usd(d.debtOwed))+row('Current BTC price',usd(currentPrice))+row(pricePnlLabel,p.available?signed(originalPotPnl):'Unavailable',p.available?'total':'');
   $('pot-new-details').innerHTML=row('Bought at',usd(purchasePrice))+row('Current BTC price',usd(currentPrice))+row('BTC price move',signedPct(priceMovePct))+row(pricePnlLabel,signed(fundedPotPnl),'total');
   set('pot-original-btc',p.available?btc(p.residualBtc):'Unavailable');set('pot-original-value',p.available?usd(originalPotBtc*currentPrice)+' now':'Liquidation threshold crossed');
   set('pot-new-btc',btc(d.newBtc));set('pot-new-value',usd(d.newBtc*currentPrice)+' now');
   set('pots-total-btc',p.available?btc(p.walletBtc):'Unavailable');set('pots-total-note',p.available?usd(p.walletBtc*d.price)+' in BTC after repayment':'Liquidation settlement is not modeled.');
   set('pots-cash',usd(p.cash));set('pots-net-value',p.available?'BTC + cash = '+usd(p.netAssets):'Net assets unavailable');
-  $('pots-quant-rows').innerHTML=row('Reference BTC price',usd(d.price))+row('Current BTC price',usd(currentPrice))+row('Loan-funded BTC purchase price',usd(purchasePrice))+row('BTC price move',signedPct(priceMovePct))+row('Pledged BTC',btc(d.btc))+row('Principal + horizon interest',usd(d.debtOwed))+row('Debt in BTC at reference',btc(p.debtBtc))+row('Residual collateral BTC',p.available?btc(p.residualBtc):'Unavailable','total')+row('Pot 01 price P/L',p.available?signed(originalPotPnl):'Unavailable')+row('Loan-funded BTC',btc(d.newBtc))+row('Pot 02 price P/L',signed(fundedPotPnl))+row('BTC after repayment',p.available?btc(p.walletBtc):'Unavailable','total')+row('Unused loan cash',usd(p.cash))+row('Net assets, BTC + cash',p.available?usd(p.netAssets):'Unavailable')+row('P/L scope','Price movement only; debt and interest shown separately');
+  $('pots-quant-rows').innerHTML=row('Reference BTC price',usd(d.price))+row('Current BTC price',usd(currentPrice))+row('Loan-funded BTC purchase price',usd(purchasePrice))+row('BTC price move',signedPct(priceMovePct))+row('Pledged BTC',btc(d.btc))+row('Principal + accrued interest',usd(d.debtOwed))+row('Debt in BTC at reference',btc(p.debtBtc))+row('Residual collateral BTC',p.available?btc(p.residualBtc):'Unavailable','total')+row('Pot 01 price P/L',p.available?signed(originalPotPnl):'Unavailable')+row('Loan-funded BTC',btc(d.newBtc))+row('Pot 02 price P/L',signed(fundedPotPnl))+row('BTC after repayment',p.available?btc(p.walletBtc):'Unavailable','total')+row('Unused loan cash',usd(p.cash))+row('Net assets, BTC + cash',p.available?usd(p.netAssets):'Unavailable')+row('P/L scope','Price movement only; debt and interest shown separately');
 }
 function renderCollateralRepayment(d){
   const currentPrice=Number.isFinite(quote.price)&&quote.price>0?quote.price:d.price;
@@ -143,7 +143,7 @@ function renderCollateralRepayment(d){
   $('repay-wallet').className='repayment-value num '+(r.available?tone(Math.abs(r.btcChange)<1e-12?0:r.btcChange):'bad');
   set('repay-btc-change',r.available?`${change(Math.abs(r.btcChange)<1e-12?0:r.btcChange)} BTC (${signedPct(r.btcChangePct)}) vs. your original amount.`:'Repayment totals are not shown beyond the liquidation threshold.');
   set('repay-warning',!r.available?'Liquidation settlement is not modeled.':r.status==='Margin call'?'Target is in the margin-call zone; lender intervention may occur.':d.undeployedUsd>0?`Debt fully repaid; ${usd(d.undeployedUsd,2)} unused loan cash remains separate.`:'Debt fully repaid. All borrowed cash was deployed; no unused loan cash remains.');
-  set('repay-value-recovery',`BTC quantity break-even compares your final debt-free wallet with simply holding ${btc(d.btc)}; it is not a zero-dollar-profit claim. Dollar break-even versus the collateral value at the borrowing reference is ${usd(r.valueRecoveryPrice,2)}. The separate horizon model uses ${usd(d.interestCost,2)} projected interest over ${fmt(d.months)} months.`);
+  set('repay-value-recovery',`BTC quantity break-even compares your final debt-free wallet with simply holding ${btc(d.btc)}; it is not a zero-dollar-profit claim. Dollar break-even versus the collateral value at the borrowing reference is ${usd(r.valueRecoveryPrice,2)}. Interest accrued from ${d.loanDate} through ${d.asOfDate}: ${usd(d.interestCost,2)} over ${fmt(d.loanDays,0)} days.`);
   renderCurrentRepaymentSummary(d,r,btc);
 }
 function renderCurrentRepaymentSummary(d,r,btc){
@@ -245,7 +245,7 @@ function renderScenarios(d){
   const basis=$('pnl-basis').value,rows=ladder(d),hasCost=d.entry>0;
   set('ladder-pnl-label',basis==='pnl'?'Net P/L':basis==='borrowed'?'Borrowed P/L':'Cost basis P/L');
   $('ladder-rows').innerHTML=rows.map(s=>{const dead=s.status==='Liquidation',value=s[basis];return `<tr class="${s.labels.includes('Target')?'target-row':''}"><td><span class="row-price">${usd(s.price)}</span>${s.labels.length?`<span class="row-label">${escapeHTML(s.labels.join(' · '))}</span>`:''}</td><td>${signedPct(s.change)}</td><td class="${dead?'bad':s.status==='Margin call'?'amber':''}">${pct(s.ltv*100)}</td><td>${badge(s.status,dead?'bad':s.status==='Margin call'?'amber':'')}</td><td>${dead?'—':usd(s.equity)}</td><td class="${dead?'muted':tone(value)}">${dead?'—':signed(value)}</td></tr>`;}).join('');
-  set('ladder-note',basis==='cost'&&!hasCost?'Set your original BTC cost basis in Risk & cost basis to see this view. Loan-funded BTC uses its deployment price.':`All values include ${usd(d.interestCost)} of interest over ${fmt(d.months)} months. ${basis==='borrowed'?'Borrowed P/L isolates loan-funded BTC and subtracts the full loan interest.':basis==='cost'?'Cost-basis P/L uses each BTC holding’s actual purchase price.':'Net P/L is measured against the original collateral’s reference value.'} Values below liquidation are unavailable; an earlier barrier crossing can also invalidate a higher exit price.`);
+  set('ladder-note',basis==='cost'&&!hasCost?'Set your original BTC cost basis in Risk & cost basis to see this view. Loan-funded BTC uses its deployment price.':`All values include ${usd(d.interestCost)} of interest accrued over ${fmt(d.loanDays,0)} days. ${basis==='borrowed'?'Borrowed P/L isolates loan-funded BTC and subtracts the full loan interest.':basis==='cost'?'Cost-basis P/L uses each BTC holding’s actual purchase price.':'Net P/L is measured against the original collateral’s reference value.'} Values below liquidation are unavailable; an earlier barrier crossing can also invalidate a higher exit price.`);
   const dead=d.targetStatus==='Liquidation';
   $('decomposition').innerHTML=row('Original BTC at target',usd(d.btc*d.targetPrice))+row('Loan-funded BTC at target',usd(d.newBtc*d.targetPrice))+row('Undeployed loan cash',usd(d.undeployedUsd))+row('Principal + interest','−'+usd(d.debtOwed))+row('Net equity at target',dead?'Unavailable':usd(d.equity),'total')+row('Initial collateral value',usd(d.collateral))+row('Net P/L',dead?'Unavailable':signed(d.netProfit),'total')+`<p class="hint" style="margin-top:12px">${dead?'Liquidation threshold crossed. Net values require an execution and residual-balance model.':'Cash and loan-funded BTC are matched by debt. Borrowing itself creates no profit.'}</p>`;
   renderLadderChart(d,rows,basis);
@@ -267,7 +267,7 @@ function renderRisk(d){
   set('risk-rr',Number.isFinite(d.rrRatio)?fmt(d.rrRatio,2)+' : 1':d.entry>0?'Undefined':'Set cost basis');
   set('risk-kelly',pct(d.kellyLtv*100,1));
   const callRepayLtv=Math.min(.7,d.mcLtv*.8),atCallCollateral=d.btc*d.mcPrice,topup=d.loan?Math.max(0,d.currentDebt/callRepayLtv-atCallCollateral):0,repay=d.loan?Math.max(0,d.currentDebt-callRepayLtv*atCallCollateral):0;
-  $('risk-mechanics').innerHTML=row('Current debt',usd(d.currentDebt))+row('Current LTV · accrued interest included',pct(d.currentLtvPct))+row('Margin call LTV',pct(d.mcLtv*100))+row('Liquidation LTV',pct(d.liqLtv*100))+row('Current liquidation price',d.loan?usd(d.liqPrice):'No debt','total')+row('Horizon liquidation price',d.loan?usd(d.liqPriceH):'No debt')+row('Horizon LTV at reference',pct(d.debtOwed/d.collateral*100))+`<div class="risk-track" aria-hidden="true"><span style="width:${d.currentLtvPct}%;background:var(--accent)"></span><span style="width:${Math.max(0,d.mcLtv*100-d.currentLtvPct)}%;background:var(--surface3)"></span><span style="width:${(d.liqLtv-d.mcLtv)*100}%;background:var(--red);opacity:.45"></span><span style="flex:1;background:var(--red);opacity:.8"></span></div><p class="hint">Current thresholds use fixed principal + accrued interest today. Horizon thresholds use projected APR × holding period. Unpledged loan-funded BTC does not lower either threshold.</p>`;
+  $('risk-mechanics').innerHTML=row('Debt today',usd(d.currentDebt))+row('Days held',fmt(d.loanDays,0))+row('Current LTV · interest included',pct(d.currentLtvPct))+row('Margin call LTV',pct(d.mcLtv*100))+row('Liquidation LTV',pct(d.liqLtv*100))+row('Current liquidation price',d.loan?usd(d.liqPrice):'No debt','total')+`<div class="risk-track" aria-hidden="true"><span style="width:${d.currentLtvPct}%;background:var(--accent)"></span><span style="width:${Math.max(0,d.mcLtv*100-d.currentLtvPct)}%;background:var(--surface3)"></span><span style="width:${(d.liqLtv-d.mcLtv)*100}%;background:var(--red);opacity:.45"></span><span style="flex:1;background:var(--red);opacity:.8"></span></div><p class="hint">Debt uses principal plus simple interest accrued from ${d.loanDate} through ${d.asOfDate}. Unpledged loan-funded BTC does not lower the threshold.</p>`;
   $('stress-test').innerHTML=row('Start at current margin call',d.loan?usd(d.mcPrice):'No debt')+row('After another −2% (24h)',d.loan?usd(d.mcPrice*.98):'—')+row('After −5%/day for 48h',d.loan?usd(d.mcPrice*.95**2):'—')+row('Collateral top-up at margin call',usd(topup),'total')+row('Or repay current debt',usd(repay))+`<p class="hint" style="margin-top:12px">The two alternatives restore LTV to ${pct(callRepayLtv*100,0)} at the current-debt margin-call price. A top-up adds collateral value; repayment reduces principal plus accrued interest. No warning or grace period is assumed.</p>`;
 }
 function renderSignals(d){
@@ -291,7 +291,7 @@ function renderFutures(d){
     ['Capital committed',cell(usd(d.collateral),'Pledged BTC'),cell(usd(f.capital),'Spot BTC + cash margin')],
     ['Collateral / margin exposed',cell(usd(d.collateral),'Original collateral subject to liquidation'),cell(usd(f.margin),'Isolated margin; spot BTC kept separate')],
     ['Liquidation price · now',cell(d.loan?usd(d.liqPrice):'No debt',d.loan?signedPct(d.liqDropPct)+' from reference':''),cell(none?'No position':usd(f.liqPrice),none?'':signedPct(f.liqDropPct)+' from reference')],
-    ['Carry cost over '+fmt(d.months)+' months',cell(usd(d.interestCost),pct(d.apr*100)+' fixed APR'),cell(usd(f.fundingCost),pct(f.fundingApr*100)+' funding assumption')],
+    ['Carry cost over '+fmt(d.loanDays,0)+' days',cell(usd(d.interestCost),pct(d.apr*100)+' fixed APR'),cell(usd(f.fundingCost),pct(f.fundingApr*100)+' funding assumption')],
     ['Breakeven before carry',cell(usd(d.breakevenGross)),cell(usd(f.breakevenSimple))],
     ['Breakeven after carry',cell(usd(d.breakevenPrice)),cell(usd(f.breakevenAdj))],
     ['Net portfolio P/L at target',cell(loanDead?'Unavailable':signed(d.netProfit),loanDead?'Liquidation threshold crossed':'After loan interest'),cell(futDead?'Unavailable':signed(f.pnlFutAdj),futDead?'Liquidation threshold crossed':'After estimated funding')],
@@ -356,7 +356,8 @@ let presetNoticeTimer=null;
 function dismissPresetNotice(){clearTimeout(presetNoticeTimer);$('preset-notice').hidden=true;}
 function runHiddenCommand(){
   applyInput(M.SAVED_POSITION);
-  $('preset-values').innerHTML=[`BTC AMOUNT → ${fmt(M.SAVED_POSITION.btc,3)}`,`FIXED LOAN → ${usd(M.SAVED_POSITION.loanPrincipal)}`,`INTEREST TODAY → ${usd(M.SAVED_POSITION.accruedInterest,2)}`,`ENTRY / DEPLOY → ${usd(M.SAVED_POSITION.entry)}`,`TARGET (2× ENTRY) → ${usd(M.SAVED_POSITION.target)}`].map(line=>'<div>'+escapeHTML(line)+'</div>').join('');
+  const restored=M.calculate({...M.DEFAULTS,...M.SAVED_POSITION,price:Number($('inp-price').value)||D.btcPrice},D,weights());
+  $('preset-values').innerHTML=[`BTC AMOUNT → ${fmt(M.SAVED_POSITION.btc,3)}`,`FIXED LOAN → ${usd(M.SAVED_POSITION.loanPrincipal)}`,`LOAN DATE → ${M.SAVED_POSITION.loanDate}`,`HELD → ${fmt(restored.loanDays,0)} DAYS`,`INTEREST TODAY → ${usd(restored.interestCost,2)}`,`ENTRY / DEPLOY → ${usd(M.SAVED_POSITION.entry)}`,`TARGET (2× ENTRY) → ${usd(M.SAVED_POSITION.target)}`].map(line=>'<div>'+escapeHTML(line)+'</div>').join('');
   $('preset-notice').hidden=false;clearTimeout(presetNoticeTimer);presetNoticeTimer=setTimeout(dismissPresetNotice,4000);
 }
 function setupPresetShortcuts(){
@@ -375,7 +376,9 @@ function setupPresetShortcuts(){
 }
 function updateClock(){set('utc-clock',new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'})+' UTC');}
 $('inp-price').value=D.btcPrice;
-$('entry-date').max=new Date().toISOString().slice(0,10);
+const nowLocal=new Date(),todayISO=new Date(nowLocal.getTime()-nowLocal.getTimezoneOffset()*60000).toISOString().slice(0,10);
+$('entry-date').max=todayISO;$('inp-loanDate').max=todayISO;
+if(!$('inp-loanDate').value)$('inp-loanDate').value=todayISO;
 fields.forEach(node=>node.addEventListener('input',()=>{if(node.dataset.field==='price')priceEdited=true;editRevision++;chartAnimate=false;chartPrice=null;scheduleRender();}));
 $('ltv-range').addEventListener('input',event=>{applyInput({ltv:event.target.value});});
 $('chart-scrub').addEventListener('input',event=>inspectChart(Number(event.target.value)));

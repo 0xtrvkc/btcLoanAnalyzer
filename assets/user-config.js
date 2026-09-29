@@ -17,10 +17,10 @@
     loanPrincipal: 1000,     // Original fixed loan amount in USD
     loanDate: '2026-09-27',  // Date the loan was used to buy BTC
     ltv: 33.77,                 // Used only if loanPrincipal is blank or 0
-    entry: 89400.86,            // Cost basis of your original BTC
-    deployPrice: 89400.86,      // Price where loan money bought BTC
+    entry: 84900.86,            // Cost basis of your original BTC
+    deployPrice: 84900.86,      // Price where loan money bought BTC
     deploy: 100,             // Percent of loan used to buy BTC
     apr: 5,                  // APR used for daily simple interest
-    target: 178801.72           // Target BTC price
+    target: 169801.72           // Target BTC price
   });
 });

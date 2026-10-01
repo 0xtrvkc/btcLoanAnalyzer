@@ -2,6 +2,9 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const M=require('../assets/engine.js');
+const preset=require('../assets/user-config.js');
+const asOf=new Date(preset.loanDate+'T12:00:00');asOf.setDate(asOf.getDate()+25);
+const testEngine={...M,validate:input=>M.validate(input,asOf.getTime()),calculate:(input,data,weights)=>M.calculate(input,data,weights,asOf.getTime())};
 const html=fs.readFileSync(require.resolve('../index.html'),'utf8');
 const code=fs.readFileSync(require.resolve('../assets/app.js'),'utf8').split("\n$('inp-price').value=D.btcPrice;")[0];
 const scope={window:{}};vm.runInNewContext(fs.readFileSync(require.resolve('../assets/snapshot.js'),'utf8'),scope);
@@ -13,9 +16,9 @@ function harness(width,storageThrows=false){
    for(const[k,v]of Object.entries(attrs))if(k.startsWith('data-'))n.dataset[k.slice(5)]=v;
    nodes.set(attrs.id,n);
  }
- nodes.get('inp-loanDate').value=M.DEFAULTS.loanDate;
+ nodes.get('inp-loanDate').value=preset.loanDate;
  const query=selector=>[...nodes.values()].filter(n=>selector==='[data-field]'?n.dataset.field:selector==='[data-target]'?n.dataset.target:selector==='[role=tab]'?n.attrs.role==='tab':selector==='[role=tabpanel]'?n.attrs.role==='tabpanel':false);
- const context={window:{LoanEngine:M,BUNDLED_SNAPSHOT:scope.window.BUNDLED_SNAPSHOT},document:{getElementById:id=>nodes.get(id),querySelectorAll:query},localStorage:{getItem(){if(storageThrows)throw new Error('blocked');return null;},setItem(){if(storageThrows)throw new Error('blocked');}},console,setTimeout,clearTimeout,URL,Blob};
+ const context={window:{LoanEngine:testEngine,BUNDLED_SNAPSHOT:scope.window.BUNDLED_SNAPSHOT},document:{getElementById:id=>nodes.get(id),querySelectorAll:query},localStorage:{getItem(){if(storageThrows)throw new Error('blocked');return null;},setItem(){if(storageThrows)throw new Error('blocked');}},console,setTimeout,clearTimeout,URL,Blob};
  vm.createContext(context);vm.runInContext(code,context);return {context,nodes,run:s=>vm.runInContext(s,context)};
 }
 test('all five views render finite chart geometry and values at narrow and wide widths',()=>{
@@ -42,9 +45,12 @@ test('liquidated targets and zero-deployment futures render explicit states',()=
  app.nodes.get('inp-deploy').value='0';app.run('render()');app.run("switchView('futures')");assert.match(app.nodes.get('comparison-rows').innerHTML,/No position/);assert.doesNotMatch(app.nodes.get('comparison-rows').innerHTML,/NaN|Infinity/);
 });
 
-test('iii restores the original fixed preset and both pots modes render',()=>{
+test('iii restores the editable repository preset and both pots modes render',()=>{
  const app=harness(600);app.run('render()');app.run('runHiddenCommand()');
- assert.equal(Number(app.nodes.get('inp-btc').value),.035);assert.equal(Number(app.nodes.get('inp-loanPrincipal').value),1000);assert.equal(app.nodes.get('inp-loanDate').value,'2026-08-28');assert.equal(Number(app.nodes.get('inp-apr').value),6);assert.equal(Number(app.nodes.get('inp-target').value),158844);
+ for(const [key,value]of Object.entries(preset)){
+  const actual=app.nodes.get('inp-'+key).value;
+  assert.equal(typeof value==='number'?Number(actual):actual,value,key);
+ }
  app.run('dismissPresetNotice()');app.run("setTwoPotsMode('quant')");assert.equal(app.nodes.get('pots-simple').hidden,true);assert.equal(app.nodes.get('pots-quant').hidden,false);assert.match(app.nodes.get('pots-quant-rows').innerHTML,/Unused loan cash/);
  assert.match(app.nodes.get('pots-quant-rows').innerHTML,/Pot 01 price P\/L/);assert.match(app.nodes.get('pots-quant-rows').innerHTML,/Pot 02 price P\/L/);assert.match(app.nodes.get('pot-new-details').innerHTML,/Bought at/);
 });

@@ -152,10 +152,23 @@ test('collateral repayment reconciles across fractional sizes and holding period
  assert.match(report,/AT CURRENT BTC PRICE — SEPARATE & TOTAL/);assert.match(report,/Holding leg/);assert.match(report,/Loan leg/);assert.match(report,/Combined/);
 });
 
-test('fixed principal preset derives current interest from its saved date',()=>{
- const d=calc({...M.SAVED_POSITION,price:80496.5}),r=M.collateralRepayment(d);
+test('historical fixed principal position derives current interest from its loan date',()=>{
+ // Historical regression fixture stays independent of the editable user preset.
+ const d=calc({btc:.035,loanPrincipal:1000,loanDate:'2026-08-28',apr:6,entry:79422,deployPrice:79422,deploy:100,target:158844,price:80496.5}),r=M.collateralRepayment(d);
  near(d.loan,1000);near(d.currentDebt,1000+1000*.06*25/365);near(d.newBtc,1000/79422);assert.equal(d.loanDays,25);
  near(r.recoveryPrice,d.currentDebt/d.newBtc,1e-3);
  const atTarget=M.collateralRepayment(d,84187.32);
  assert.ok(atTarget.walletBtc>.035);near(atTarget.edgeVsHold,55.89,0.1);
+});
+
+test('editable repository preset derives debt and purchases from its configured values',()=>{
+ const preset=require('../assets/user-config.js');
+ assert.deepEqual(M.SAVED_POSITION,preset);
+ // Evaluate 25 local calendar days after the configured loan date, regardless of the wall clock.
+ const asOf=new Date(preset.loanDate+'T12:00:00');asOf.setDate(asOf.getDate()+25);
+ const d=M.calculate({...base,...preset},data,M.WEIGHTS,asOf.getTime());
+ const principal=preset.loanPrincipal||preset.btc*base.price*preset.ltv/100;
+ near(d.loan,principal);assert.equal(d.loanDays,25);
+ near(d.currentDebt,principal*(1+preset.apr/100*25/365));
+ near(d.newBtc,principal*preset.deploy/100/(preset.deployPrice||base.price));
 });

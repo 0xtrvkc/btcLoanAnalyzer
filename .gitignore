@@ -1,0 +1,4 @@
+
+# Local Jev secrets and browser verification artifacts
+.dev.vars
+test-artifacts/

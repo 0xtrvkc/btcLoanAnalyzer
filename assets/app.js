@@ -304,6 +304,7 @@ function renderFutures(d){
   if(loanDead||futDead)insight+='At least one target crosses liquidation; a surviving-position P/L comparison is unavailable.';else insight+='These target payoffs assume neither position is liquidated along the way.';
   set('futures-insight',insight);
 }
+window.JevApp={openGoal(key){const goal=window.JevFeature.goals[key];if(goal)switchView(goal.view,true);}};
 const VIEWS={overview:'Position overview',scenarios:'Scenario analysis',risk:'Risk & liquidation',signals:'On-chain signals',futures:'Loan vs. futures'};
 function switchView(view,focus=false){
   if(!Object.hasOwn(VIEWS,view))return;

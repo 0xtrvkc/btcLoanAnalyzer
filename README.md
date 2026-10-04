@@ -88,10 +88,3 @@ On-chain reports and daily prices use the original [dynamic BTC analytics reposi
 | `tests/` | Calculation, data failure, and render-logic regressions |
 
 Validation: 31 automated tests pass, including balance-sheet conservation, breakeven roots, partial/zero deployment, probability values, parser rejection, network fallbacks, and view rendering at multiple widths. Render-logic tests use source-backed stubs; actual browser layout, pointer behavior, and live CORS requests have not been visually verified in this environment.
-
-
-## Optional Jev upgrade
-
-**Goal-based comparison navigation.** Describe a goal around BTC quantity, repayment costs, liquidation exposure or financing comparison. Jev selects the corresponding existing view. Explicitly open it after reviewing the result. All source inputs, engine calculations, charts, liquidation thresholds and repayment scenarios remain owned by the existing calculator. The standalone dist build embeds the new browser assets.
-
-See [JEV.md](JEV.md) for browser-first setup, privacy, input limits, tests and live-evaluation limitations. Existing functionality works without Jev configuration.

@@ -10,6 +10,7 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="assets/terminal.css">
+<link rel="stylesheet" href="jev/style.css">
 </head>
 <body>
 <a href="#workspace" class="skip">Skip to analysis</a>
@@ -356,6 +357,7 @@
 <button class="tab" id="tab-futures" role="tab" aria-selected="false" aria-controls="pane-futures" tabindex="-1" data-view="futures">
 <span>05</span>Futures</button>
 </nav>
+<div id="jevMount"></div>
 <section class="pane" id="pane-overview" role="tabpanel" aria-labelledby="tab-overview" tabindex="0">
 <div class="overview-grid">
 <div class="panel chart-panel">
@@ -826,5 +828,10 @@
 <script src="assets/shortcuts.js"></script>
 <script src="assets/app.js">
 </script>
+<script src="jev/config.js"></script>
+<script src="jev/contract.js"></script>
+<script src="jev/feature.js"></script>
+<script src="jev/client.js"></script>
+<script src="jev/adapter.js"></script>
 </body>
 </html>

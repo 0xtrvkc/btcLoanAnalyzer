@@ -86,6 +86,12 @@ test('zero weights exclude a signal; all-zero weights use the documented default
  const zero=Object.fromEntries(Object.keys(M.WEIGHTS).map(k=>[k,0]));const all=M.normalizeWeights(zero);assert.equal(all.usedDefaults,true);near(all.weights.mvrv,.3);
  assert.equal(M.kellyIllustration(8,-.2,.5,.9),0);assert.ok(Number.isFinite(M.kellyIllustration(8,0,.5,.9)));
 });
+test('report without a BTC Price line still parses (upstream omits it when its price file lags), but a non-positive price is rejected',()=>{
+ const base='Date: 2026-11-12\nMVRV: 1.37\nZ-score: -0.19\nHistorical mean MVRV: 1.849\nCycle position: 65.2%\nCeiling consensus midpoint: $111,822\nFloor consensus midpoint: $35,122\nROC 30d: -11.2%\nMA stack: Mixed\n';
+ const d=M.parseSummary(base);assert.equal(d.btcPrice,null);near(d.cyclePos,65.2);
+ assert.throws(()=>M.parseSummary(base+'BTC Price: $0\n'));
+ near(M.parseSummary(base+'BTC Price: $77,000\n').btcPrice,77000);
+});
 test('report parser rejects incomplete or corrupt reports without carrying old fields',()=>{
  const summary='Date: 2026-09-06\nMVRV: 1.5\nZ-score: -0.1\nBTC Price: $80,000\nHistorical mean MVRV: 1.8\nCycle position: 60%\nCeiling consensus midpoint: $120,000\nFloor consensus midpoint: $35,000\nROC 30d: 10%\nMA stack: Bullish\n';
  const d=M.parseSummary(summary);near(d.btcPrice,80000);assert.equal(d.c4Ath,undefined);

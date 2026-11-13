@@ -17,6 +17,14 @@ test('failed mid quote falls back to a dated daily snapshot, excluding future da
  const result=await Client.refresh(Date.parse('2026-09-07T12:00:00Z'));assert.equal(result.data,null);assert.equal(result.quote.price,79946);assert.equal(result.quote.date,'2026-09-06');assert.equal(result.quote.live,false);
  }finally{global.fetch=old;}
 });
+test('report lacking BTC Price is accepted and priced from the live quote, flagged as such',async()=>{
+ const old=global.fetch;
+ try{const noPrice=text('2026-09-06').replace('BTC Price: $80,000\n','');
+ global.fetch=async url=>url.includes('hyperliquid')?response({BTC:'81000'}):url.includes('2026-09-06')?response(noPrice,true):response('incomplete',true);
+ const result=await Client.refresh(Date.parse('2026-09-07T12:00:00Z'));
+ assert.equal(result.data.date,'2026-09-06');assert.equal(result.data.btcPrice,81000);assert.equal(result.data.btcPriceFromQuote,true);assert.equal(result.reportError,null);
+ }finally{global.fetch=old;}
+});
 test('both source failures produce explicit errors instead of fabricated freshness',async()=>{
  const old=global.fetch;
  try{global.fetch=async()=>{throw new Error('network blocked');};const result=await Client.refresh();assert.equal(result.data,null);assert.equal(result.quote,null);assert.ok(result.reportError);assert.ok(result.quoteError);}

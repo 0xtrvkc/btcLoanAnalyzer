@@ -179,8 +179,10 @@
     const data={date:str('Date'),signal:str('Signal')||'Unclassified',maStack:str('MA stack')||'Unknown',cycleName:str('Current cycle')||'Unknown'};
     const mapping={mvrv:'MVRV',zscore:'Z-score',ma20:'MA20',ma50:'MA50',ma200:'MA200',roc30:'ROC 30d',roc90:'ROC 90d',btcPrice:'BTC Price',histMeanMvrv:'Historical mean MVRV',cyclePos:'Cycle position',ceilPrice:'Ceiling consensus midpoint',floorPrice:'Floor consensus midpoint',cycleDrawdown:'Current drawdown from cycle peak',mvrvVsCyclePeak:'Current MVRV vs cycle peak'};
     for(const [key,label]of Object.entries(mapping))data[key]=num(label);
-    const required=['mvrv','zscore','btcPrice','histMeanMvrv','cyclePos','ceilPrice','floorPrice','roc30'];
-    if(!dateValid(data.date)||required.some(k=>!Number.isFinite(data[k]))||['mvrv','btcPrice','histMeanMvrv','ceilPrice','floorPrice'].some(k=>data[k]<=0)||data.cyclePos<0||data.cyclePos>100||data.maStack==='Unknown')throw new Error('Incomplete or invalid MVRV report; previous data retained.');
+    // btcPrice is optional: the upstream generator omits "BTC Price" when its daily price file lags the report date.
+    // refresh() fills the gap from the live quote; a present-but-non-positive price is still rejected.
+    const required=['mvrv','zscore','histMeanMvrv','cyclePos','ceilPrice','floorPrice','roc30'];
+    if(!dateValid(data.date)||required.some(k=>!Number.isFinite(data[k]))||['mvrv','histMeanMvrv','ceilPrice','floorPrice'].some(k=>data[k]<=0)||(data.btcPrice!==null&&data.btcPrice<=0)||data.cyclePos<0||data.cyclePos>100||data.maStack==='Unknown')throw new Error('Incomplete or invalid MVRV report; previous data retained.');
     data.totalPoints=str('Total data points')||null;data.dataRange=str('Data range')||null;
     const peak=str('Cycle peak so far')?.match(/([\d.]+)\s+on\s+(\d{4}-\d{2}-\d{2})/);
     data.cyclePeakMvrv=peak?Number(peak[1]):null;data.cyclePeakDate=peak?peak[2]:null;

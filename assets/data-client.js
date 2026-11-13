@@ -26,7 +26,10 @@
   }
   async function refresh(now=Date.now()){
     const [onchain,market]=await Promise.allSettled([summary(now),quote(now)]);
-    return {data:onchain.status==='fulfilled'?onchain.value:null,quote:market.status==='fulfilled'?market.value:null,
+    let data=onchain.status==='fulfilled'?onchain.value:null;
+    // Report omitted BTC Price: use the quote so downstream consumers still get a finite price, and flag it.
+    if(data&&!Number.isFinite(data.btcPrice)&&market.status==='fulfilled')data={...data,btcPrice:market.value.price,btcPriceFromQuote:true};
+    return {data,quote:market.status==='fulfilled'?market.value:null,
       reportError:onchain.status==='rejected'?onchain.reason.message:null,quoteError:market.status==='rejected'?market.reason.message:null};
   }
   return {refresh,dailySeries,BASE,PRICE_URL};

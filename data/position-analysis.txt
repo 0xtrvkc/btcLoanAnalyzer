@@ -1,26 +1,26 @@
 BTC LOAN TERMINAL — POSITION ANALYSIS
-Generated: 2026-11-21T08:08:32.530Z
+Generated: 2026-11-22T07:53:43.777Z
 
 DATA PROVENANCE
-On-chain report: 2026-11-19 (GitHub report)
-Quote: Hyperliquid mid; date 2026-11-21; fetched 2026-11-21T08:08:32.529Z
-Market quote: $57,785; reference price used for loan sizing: $57,785
+On-chain report: 2026-11-21 (GitHub report)
+Quote: Hyperliquid mid; date 2026-11-22; fetched 2026-11-22T07:53:43.777Z
+Market quote: $59,129; reference price used for loan sizing: $59,129
 Fixed principal override is active; market-price changes do not resize the loan.
-ON-CHAIN DATA IS STALE (older than 48h).
+On-chain date is within 48 hours of report generation.
 
 POSITION & FINANCING
 BTC collateral: 0.03565762
-Reference BTC price: $57,785
-Collateral value: $2,060.48
-Initial LTV: 48.53%
+Reference BTC price: $59,129
+Collateral value: $2,108.4
+Initial LTV: 47.43%
 Loan principal: $1,000
 Principal source: Fixed actual principal
 Loan date: 2026-09-27
-As-of date: 2026-11-21
-Days held: 55
+As-of date: 2026-11-22
+Days held: 56
 APR assumption: 5%
-Accrued simple interest: $7.53
-Debt today: $1,007.53
+Accrued simple interest: $7.67
+Debt today: $1,007.67
 Deployment: 100%
 Deployment BTC price: $84,900.86
 Loan cash held: $0
@@ -31,86 +31,86 @@ Original collateral cost basis: $84,900.86
 TARGET SCENARIO
 Target BTC price: $169,801.72
 Target status: Active
-Net equity: $7,047.19
-Net P/L after interest: $4,986.72
-Return on pledged collateral: 242.02%
-Spot-only P/L: $3,994.25
-Leverage edge: $992.47
-Breakeven including interest: $64,676.74
-P/L vs actual cost basis: $4,019.83
+Net equity: $7,047.05
+Net P/L after interest: $4,938.65
+Return on pledged collateral: 234.24%
+Spot-only P/L: $3,946.33
+Leverage edge: $992.33
+Breakeven including interest: $65,689.91
+P/L vs actual cost basis: $4,019.69
 
 REPAY WITH COLLATERAL (AT TARGET)
 Original BTC benchmark (loan-funded BTC excluded): 0.03565762 BTC
-BTC quantity break-even price: $85,540.52
+BTC quantity break-even price: $85,552.15
 Break-even threshold status: Active
 Repayment target status: Active
 Fixed principal repaid: $1,000
-Accrued interest repaid today: $7.53
-BTC sold for today's debt: 0.00593359
-Original collateral remaining: 0.02972403 BTC
+Accrued interest repaid today: $7.67
+BTC sold for today's debt: 0.0059344
+Original collateral remaining: 0.02972322 BTC
 Loan-funded BTC retained separately: 0.01177844 BTC
-Final wallet after repayment: 0.04150247 BTC
-BTC change vs original amount: 0.00584485 BTC (16.39%)
+Final wallet after repayment: 0.04150166 BTC
+BTC change vs original amount: 0.00584404 BTC (16.39%)
 Unused cash (not applied to repayment): $0
-Debt-free net assets, BTC + cash: $7,047.19
-Net P/L vs borrowing-date collateral value: $4,986.72
-P/L % on original collateral value: 242.02%
-Dollar edge vs holding original BTC: $992.47
+Debt-free net assets, BTC + cash: $7,047.05
+Net P/L vs borrowing-date collateral value: $4,938.65
+P/L % on original collateral value: 234.24%
+Dollar edge vs holding original BTC: $992.33
 Gross profit on loan-funded BTC: $1,000
-Net loan-trade profit after accrued interest: $992.47
-Dollar-value break-even price: $64,676.74
+Net loan-trade profit after accrued interest: $992.33
+Dollar-value break-even price: $65,689.91
 Final wallet = original collateral remaining after repayment + loan-funded BTC retained.
 All calculations use fixed principal plus date-derived simple interest accrued through today.
 Requires lender support and no earlier liquidation; fees, slippage, and tax excluded.
 
 AT CURRENT BTC PRICE — SEPARATE & TOTAL
-Current BTC price used: $57,785
-Holding leg — original BTC: 0.03565762 BTC; value: $2,060.48; P/L vs cost basis: $-966.89
-Loan leg — funded BTC: 0.01177844 BTC; gross price profit: $-319.38; accrued interest: $7.53; net profit: $-326.92
-Combined — original BTC remaining: 0.01822171 BTC; loan-funded BTC retained: 0.01177844 BTC
-Combined — final debt-free wallet: 0.03000015 BTC; value plus cash: $1,733.56; total P/L vs cost: $-1,293.8
-Combined — BTC advantage vs holding: -0.00565747 BTC; dollar advantage vs holding: $-326.92
+Current BTC price used: $59,129
+Holding leg — original BTC: 0.03565762 BTC; value: $2,108.4; P/L vs cost basis: $-918.96
+Loan leg — funded BTC: 0.01177844 BTC; gross price profit: $-303.55; accrued interest: $7.67; net profit: $-311.22
+Combined — original BTC remaining: 0.01861571 BTC; loan-funded BTC retained: 0.01177844 BTC
+Combined — final debt-free wallet: 0.03039415 BTC; value plus cash: $1,797.18; total P/L vs cost: $-1,230.19
+Combined — BTC advantage vs holding: -0.00526347 BTC; dollar advantage vs holding: $-311.22
 
 LIQUIDATION & RISK
 Margin call LTV: 85%; liquidation LTV: 90%
-Current LTV (principal + accrued interest today): 48.9%
-Current margin call price (accrued interest included): $33,242.11
-Current liquidation price (accrued interest included): $31,395.32
-Margin call price as of today (interest included): $33,242.11
-Liquidation price as of today (interest included): $31,395.32
-90d fixed-barrier touch probability: 5.874%
+Current LTV (principal + accrued interest today): 47.79%
+Current margin call price (accrued interest included): $33,246.63
+Current liquidation price (accrued interest included): $31,399.59
+Margin call price as of today (interest included): $33,246.63
+Liquidation price as of today (interest included): $31,399.59
+90d fixed-barrier touch probability: 4.9885%
 Probability assumes constant annual volatility, zero log drift, no jumps, and no barrier changes due to interest.
 Annualized volatility assumption: 65%
 Reward/risk from cost basis: 0.5
-Illustrative half-Kelly output: 18.76% (uncalibrated heuristic; not an optimal LTV)
+Illustrative half-Kelly output: 18.4% (uncalibrated heuristic; not an optimal LTV)
 
 ON-CHAIN SIGNALS
-Heuristic score: 6.01/10 (not a lending recommendation)
-mvrv: score 6.8/10; weight 30%
-zscore: score 8.67/10; weight 25%
+Heuristic score: 6.2/10 (not a lending recommendation)
+mvrv: score 6.94/10; weight 30%
+zscore: score 9.26/10; weight 25%
 ma: score 5/10; weight 20%
 roc: score 2/10; weight 10%
 cycle: score 4/10; weight 15%
-date: 2026-11-19
-signal: Accumulate
+date: 2026-11-21
+signal: Capitulation
 maStack: Mixed
 cycleName: C4 (2024–2028 (est.))
-mvrv: 1.181
-zscore: -1.335
-ma20: 1.346
-ma50: 1.457
-ma200: 1.359
-roc30: -22.4
-roc90: -17.1
-btcPrice: 61914
+mvrv: 1.132
+zscore: -1.628
+ma20: 1.316
+ma50: 1.439
+ma200: 1.355
+roc30: -26.5
+roc90: -22.4
+btcPrice: 55909
 histMeanMvrv: 1.848
-cyclePos: 65.7
+cyclePos: 65.8
 ceilPrice: 111822
 floorPrice: 35122
-cycleDrawdown: -56.7
-mvrvVsCyclePeak: 43
-totalPoints: 5,886
-dataRange: 2010-10-09 to 2026-11-19
+cycleDrawdown: -58.5
+mvrvVsCyclePeak: 41
+totalPoints: 5,888
+dataRange: 2010-10-09 to 2026-11-21
 cyclePeakMvrv: 2.73
 cyclePeakDate: 2024-11-22
 ceilLow: 97717
@@ -125,27 +125,27 @@ worstCycleDrawdown: -90.6
 MATCHED-EXPOSURE FUTURES COMPARISON
 Additional BTC exposure on both sides: 0.01177844
 Futures entry notional: $1,000; isolated leverage: 5x
-Additional cash margin: $200; spot plus margin capital: $2,260.48
+Additional cash margin: $200; spot plus margin capital: $2,308.4
 Futures liquidation price (approximate): $68,262
-Loan interest: $7.53; futures funding assumption: $15.07
-Loan net P/L at target: $4,986.72
+Loan interest: $7.67; futures funding assumption: $15.34
+Loan net P/L at target: $4,938.65
 Spot + futures net P/L at target: n/a — liquidation threshold crossed
 Futures portfolio return on spot + margin: n/a
 Futures leg return on margin: n/a
-Futures portfolio breakeven: $64,835.57
+Futures portfolio breakeven: $65,851.63
 
 PRICE LADDER (interest included)
 Exit USD | LTV | Status | Net equity | Net P/L | Borrowed P/L | Cost basis P/L
-$31,395.32 | 90% | Liquidation | n/a | n/a | n/a | n/a
-$33,242.11 | 85% | Margin call | $569.34 | $-1,491.14 | $-615.99 | $-2,458.02
-$35,122 | 80.45% | Active | $658.52 | $-1,401.96 | $-593.85 | $-2,368.85
-$46,228 | 61.12% | Active | $1,185.34 | $-875.14 | $-463.04 | $-1,842.02
-$57,785 | 48.9% | Active | $1,733.56 | $-326.92 | $-326.92 | $-1,293.8
-$64,676.74 | 43.69% | Active | $2,060.48 | $0 | $-245.74 | $-966.89
-$69,342 | 40.75% | Active | $2,281.78 | $221.3 | $-190.79 | $-745.59
-$111,822 | 25.27% | Active | $4,296.86 | $2,236.39 | $309.55 | $1,269.5
-$124,728 | 22.65% | Active | $4,909.07 | $2,848.6 | $461.57 | $1,881.71
-$169,801.72 | 16.64% | Active | $7,047.19 | $4,986.72 | $992.47 | $4,019.83
+$31,399.59 | 90% | Liquidation | n/a | n/a | n/a | n/a
+$33,246.63 | 85% | Margin call | $569.42 | $-1,538.98 | $-616.08 | $-2,457.94
+$35,122 | 80.46% | Active | $658.38 | $-1,450.02 | $-593.99 | $-2,368.98
+$47,303.2 | 59.74% | Active | $1,236.21 | $-872.19 | $-450.51 | $-1,791.16
+$59,129 | 47.79% | Active | $1,797.18 | $-311.22 | $-311.22 | $-1,230.19
+$65,689.91 | 43.02% | Active | $2,108.4 | $0 | $-233.95 | $-918.96
+$70,954.8 | 39.83% | Active | $2,358.15 | $249.75 | $-171.93 | $-669.22
+$111,822 | 25.27% | Active | $4,296.72 | $2,188.32 | $309.42 | $1,269.36
+$124,728 | 22.66% | Active | $4,908.93 | $2,800.53 | $461.43 | $1,881.57
+$169,801.72 | 16.64% | Active | $7,047.05 | $4,938.65 | $992.33 | $4,019.69
 
 RECENT ON-CHAIN SNAPSHOTS
 

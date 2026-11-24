@@ -30,3 +30,16 @@ test('both source failures produce explicit errors instead of fabricated freshne
  try{global.fetch=async()=>{throw new Error('network blocked');};const result=await Client.refresh();assert.equal(result.data,null);assert.equal(result.quote,null);assert.ok(result.reportError);assert.ok(result.quoteError);}
  finally{global.fetch=old;}
 });
+test('when Hyperliquid fails, CoinTH supplies the price before the daily close',async()=>{
+ const old=global.fetch;
+ try{global.fetch=async url=>{if(url.includes('hyperliquid'))throw new Error('blocked');if(url.includes('cointh.com'))return response({ok:true,asOf:'2026-11-24T07:13:00.823Z',updatedAt:'2026-11-24T07:13:00.823Z',data:{price:60410.5}});if(url.endsWith('.json'))return response({'2026-11-23':61003});return response('bad',true);};
+ const q=await Client.quote(Date.parse('2026-11-24T08:00:00Z'));assert.equal(q.source,'CoinTH');assert.equal(q.price,60410.5);assert.equal(q.live,false);
+ const stale=await Client.quote(Date.parse('2026-11-25T08:00:00Z'));assert.equal(stale.source,'Daily snapshot');assert.equal(stale.price,61003);
+ }finally{global.fetch=old;}
+});
+test('a real report in the new upstream format refreshes on-chain data',async()=>{
+ const old=global.fetch,fs=require('node:fs');const report=fs.readFileSync(require.resolve('./fixtures/mvrv_summary_2026-11-23.txt'),'utf8');
+ try{global.fetch=async url=>url.includes('hyperliquid')?response({BTC:'61432.5'}):url.includes('mvrv_summary_2026-11-23')?response(report,true):response('404: Not Found',true);
+ const r=await Client.refresh(Date.parse('2026-11-24T08:00:00Z'));assert.equal(r.data.date,'2026-11-23');assert.equal(r.reportError,null);assert.equal(r.quote.price,61432.5);
+ }finally{global.fetch=old;}
+});

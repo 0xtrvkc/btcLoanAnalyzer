@@ -281,33 +281,37 @@
     return typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(s)&&Number.isFinite(Date.parse(s+'T00:00:00Z'))&&new Date(s+'T00:00:00Z').toISOString().slice(0,10)===s;
   }
   function ageHours(date,now=Date.now()) {return dateValid(date)?Math.max(0,(now-Date.parse(date+'T00:00:00Z'))/36e5):Infinity;}
+  // Accepts both the original report labels and the format introduced upstream on 2026-11-23.
   function parseSummary(text) {
     if (typeof text!=='string'||text.length>2e6) throw new Error('Invalid MVRV report.');
     const lines=text.split(/\r?\n/).map(s=>s.trim());
     const map=new Map();
     for(const line of lines){const i=line.indexOf(':');if(i>0&&!map.has(line.slice(0,i).toLowerCase()))map.set(line.slice(0,i).toLowerCase(),line.slice(i+1).trim());}
-    const str=k=>map.get(k.toLowerCase());
-    const num=k=>{const raw=str(k);if(raw==null)return null;const clean=raw.replace(/[$,%]/g,'').replace(/−/g,'-');const m=clean.match(/^[-+]?\d+(?:\.\d+)?/);return m?Number(m[0]):null;};
-    const data={date:str('Date'),signal:str('Signal')||'Unclassified',maStack:str('MA stack')||'Unknown',cycleName:str('Current cycle')||'Unknown'};
-    const mapping={mvrv:'MVRV',zscore:'Z-score',ma20:'MA20',ma50:'MA50',ma200:'MA200',roc30:'ROC 30d',roc90:'ROC 90d',btcPrice:'BTC Price',histMeanMvrv:'Historical mean MVRV',cyclePos:'Cycle position',ceilPrice:'Ceiling consensus midpoint',floorPrice:'Floor consensus midpoint',cycleDrawdown:'Current drawdown from cycle peak',mvrvVsCyclePeak:'Current MVRV vs cycle peak'};
-    for(const [key,label]of Object.entries(mapping))data[key]=num(label);
-    // btcPrice is optional: the upstream generator omits "BTC Price" when its daily price file lags the report date.
-    // refresh() fills the gap from the live quote; a present-but-non-positive price is still rejected.
+    const str=(...keys)=>{for(const k of keys){const v=map.get(k.toLowerCase());if(v!=null)return v;}return undefined;};
+    const num=(...keys)=>{const raw=str(...keys);if(raw==null)return null;const clean=raw.replace(/[$,%]/g,'').replace(/−/g,'-');const m=clean.match(/^[-+]?\d+(?:\.\d+)?/);return m?Number(m[0]):null;};
+    const data={date:str('MVRV date','Date'),signal:str('Signal')||'Unclassified',maStack:str('MA stack','MA alignment')||'Unknown',cycleName:str('Current cycle')||'Unknown'};
+    const mapping={mvrv:['MVRV'],zscore:['Z-score','Rolling MVRV z (365d)'],ma20:['MA20'],ma50:['MA50'],ma200:['MA200'],roc30:['ROC 30d','MVRV ROC 30d'],roc90:['ROC 90d','MVRV ROC 90d'],
+      btcPrice:['BTC Price','BTC price on MVRV date'],histMeanMvrv:['Historical mean MVRV','Dataset mean MVRV'],cyclePos:['Cycle position'],
+      ceilPrice:['Ceiling consensus midpoint','Ceiling ensemble (median)'],floorPrice:['Floor consensus midpoint','Floor ensemble (median)'],
+      cycleDrawdown:['Current drawdown from cycle peak','Current drawdown from cycle MVRV peak'],mvrvVsCyclePeak:['Current MVRV vs cycle peak']};
+    for(const [key,labels]of Object.entries(mapping))data[key]=num(...labels);
+    data.zscoreKind=str('Z-score')!=null?'standard':str('Rolling MVRV z (365d)')!=null?'rolling365':null;
+    // btcPrice is optional: the upstream generator omits it when its daily price file lags the report date.
     const required=['mvrv','zscore','histMeanMvrv','cyclePos','ceilPrice','floorPrice','roc30'];
     if(!dateValid(data.date)||required.some(k=>!Number.isFinite(data[k]))||['mvrv','histMeanMvrv','ceilPrice','floorPrice'].some(k=>data[k]<=0)||(data.btcPrice!==null&&data.btcPrice<=0)||data.cyclePos<0||data.cyclePos>100||data.maStack==='Unknown')throw new Error('Incomplete or invalid MVRV report; previous data retained.');
-    data.totalPoints=str('Total data points')||null;data.dataRange=str('Data range')||null;
-    const peak=str('Cycle peak so far')?.match(/([\d.]+)\s+on\s+(\d{4}-\d{2}-\d{2})/);
+    data.totalPoints=str('Total data points','Daily observations')||null;data.dataRange=str('Data range')||null;
+    const peak=str('Cycle peak so far','Cycle MVRV peak so far')?.match(/([\d.]+)\s+on\s+(\d{4}-\d{2}-\d{2})/);
     data.cyclePeakMvrv=peak?Number(peak[1]):null;data.cyclePeakDate=peak?peak[2]:null;
-    const range=str('Ceiling consensus range')?.match(/\$([\d,]+)\s*[–—-]\s*\$([\d,]+)/);
+    const range=str('Ceiling consensus range','Ceiling model spread')?.match(/\$([\d,]+)\s*[–—-]\s*\$([\d,]+)/);
     data.ceilLow=range?Number(range[1].replaceAll(',','')):null;data.ceilHigh=range?Number(range[2].replaceAll(',','')):null;
     const cycleNumber=data.cycleName.match(/C(?:ycle)?\s*(\d+)/i)?.[1];let currentCycle=null,worst=0;
     for(const line of lines){
-      const cycle=line.match(/^Cycle\s+(\d+):/i);if(cycle)currentCycle=cycle[1];
-      const ath=line.match(/BTC ATH:\s*\$([\d,]+)\s+on\s+(\d{4}-\d{2}-\d{2})/i);
-      if(ath&&currentCycle===cycleNumber){data.c4Ath=Number(ath[1].replaceAll(',',''));data.c4AthDate=ath[2];}
+      const cycle=line.match(/^Cycle\s+(\d+)\b/i);if(cycle)currentCycle=cycle[1];
+      const ath=line.match(/(?:BTC ATH|BTC price high):\s*\$([\d,]+)\s+on\s+(\d{4}-\d{2}-\d{2})/i);
+      if(ath&&currentCycle===cycleNumber){const v=Number(ath[1].replaceAll(',',''));if(!(data.c4Ath>=v)){data.c4Ath=v;data.c4AthDate=ath[2];}}
       const dd=line.match(/Max drawdown:\s*(-[\d.]+)%/i);if(dd&&Number(dd[1])<worst){worst=Number(dd[1]);data.worstCycleTag='C'+currentCycle;}
       for(const [key,label]of [['mvrvUpside','Upside'],['mvrvDownside','Downside']]){const m=line.match(new RegExp('MVRV '+label+':\\s*\\$([\\d,]+)','i'));if(m)data[key]=Number(m[1].replaceAll(',',''));}
-      const halving=line.match(/C\d+ halving:\s*(\d{4}-\d{2}-\d{2}).*\[upcoming/i);
+      const halving=line.match(/C\d+ halving:\s*~?(\d{4}-\d{2}-\d{2}).*\[(?:upcoming|estimated)/i);
       if(halving&&dateValid(halving[1])&&halving[1]>data.date&&(!data.nextHalving||halving[1]<data.nextHalving))data.nextHalving=halving[1];
     }
     data.worstCycleDrawdown=worst||null;

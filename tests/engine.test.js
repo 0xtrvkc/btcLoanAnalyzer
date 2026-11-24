@@ -166,3 +166,10 @@ test('daily quotes validate dates and find the nearest earlier UTC date',()=>{
  assert.equal(M.nearestPrice(p,'2026-08-30'),null);assert.equal(M.nearestPrice(p,'2026-09-10'),null);
  assert.equal(M.dateValid('2026-02-29'),false);assert.equal(M.dateValid('2024-02-29'),true);assert.equal(M.ageHours('broken'),Infinity);
 });
+test('parser reads the upstream format introduced on 2026-11-23',()=>{
+ const d=M.parseSummary(fs.readFileSync(require.resolve('./fixtures/mvrv_summary_2026-11-23.txt'),'utf8'));
+ assert.equal(d.date,'2026-11-23');near(d.mvrv,1.143);near(d.zscore,-1.535);assert.equal(d.zscoreKind,'rolling365');
+ near(d.btcPrice,61003);near(d.histMeanMvrv,1.847);near(d.cyclePos,65.9);near(d.ceilPrice,180542);near(d.floorPrice,52374);
+ near(d.roc30,-23.5);assert.match(d.maStack,/Mixed/);assert.equal(d.c4Ath,124728);assert.equal(d.nextHalving,'2028-03-26');
+ assert.equal(d.ceilLow,77999);assert.equal(d.ceilHigh,308116);near(d.worstCycleDrawdown,-90.6);
+});

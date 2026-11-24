@@ -9,7 +9,7 @@ Live: [0xtrvkc.github.io/btcLoanAnalyzer](https://0xtrvkc.github.io/btcLoanAnaly
 Open `index.html`, or serve the folder with any static server. A local HTTP origin works best for live data requests.
 
 ```sh
-npm test                  # 39 regression tests (node --test, no install needed)
+npm test                  # 42 regression tests (node --test, no install needed)
 npm run build             # dist/index.html with everything inlined (git-ignored)
 npm run export:example    # offline text report for the public example position
 ```
@@ -68,7 +68,7 @@ Nothing about your real loan lives in this repository:
 
 ## Data
 
-On-chain reports and daily prices come from [dynamic-btc-analytics-dashboard](https://github.com/0xtrvkc/dynamic-btc-analytics-dashboard). Quotes come from Hyperliquid mids, with the daily close as a fallback. A refresh never overwrites a price you typed; **Use live quote** puts it back.
+On-chain reports and daily prices come from [dynamic-btc-analytics-dashboard](https://github.com/0xtrvkc/dynamic-btc-analytics-dashboard). Prices come from the Hyperliquid mid (live). If that fails, the app uses [CoinTH](https://cointh.com/api-docs) (cached up to 1 hour), then the daily close. The parser accepts both the original report labels and the format introduced upstream on 23 Nov 2026. A refresh never overwrites a price you typed; **Use live quote** puts it back.
 
 ## Files
 

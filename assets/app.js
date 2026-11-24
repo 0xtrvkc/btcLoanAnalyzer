@@ -404,7 +404,7 @@ function updateMarket() {
   set('ticker-trend', bull ? 'Bullish' : /bear/i.test(D.maStack) ? 'Bearish' : 'Mixed'); $('ticker-trend').className = 'market-value ' + (bull ? 'good' : 'warn');
   set('ticker-cycle', pct(D.cyclePos)); set('data-date', dateLabel(D.date));
   const age = quote.fetchedAt ? (Date.now() - Date.parse(quote.fetchedAt)) / 6e4 : Infinity;
-  const src = quote.live ? (age < 5 ? 'Live' : 'Cached') + ' · ' + utcTime(quote.fetchedAt) : quote.source === 'Daily snapshot' ? `Daily close · ${dateLabel(quote.date)}` : `Snapshot · ${dateLabel(quote.date)}`;
+  const src = quote.live ? (age < 5 ? 'Live' : 'Cached') + ' · ' + utcTime(quote.fetchedAt) : quote.source === 'CoinTH' ? `CoinTH · ${utcTime(quote.fetchedAt)}` : quote.source === 'Daily snapshot' ? `Daily close · ${dateLabel(quote.date)}` : `Snapshot · ${dateLabel(quote.date)}`;
   set('quote-source', src); $('quote-source').className = 'live-dot ' + (quote.live && age < 5 ? 'on' : '');
   const inputPrice = Number($('inp-price').value);
   set('price-source', Number.isFinite(inputPrice) && Math.abs(inputPrice - quote.price) < 0.005 ? src : 'Edited manually');
@@ -421,15 +421,21 @@ async function fetchLatestData() {
   if (refreshRunning) return;
   refreshRunning = true; const btn = $('refresh-btn'); btn.disabled = true; btn.classList.add('spin'); btn.setAttribute('aria-busy', 'true'); set('update-status', 'Refreshing data…');
   const revision = editRevision;
+  let result = null, failure = null;
+  try { result = await window.MarketClient.refresh(); } catch (e) { failure = e; }
   try {
-    const result = await window.MarketClient.refresh(); reportError = result.reportError; quoteError = result.quoteError;
-    if (result.data && result.data.date >= D.date) { D = result.data; dataSource = 'GitHub report'; putStored(STORAGE.data, D); saveHistory(D); }
-    else if (result.data) reportError = 'Older report returned';
-    if (result.quote) { quote = result.quote; if (!priceEdited && editRevision === revision) $('inp-price').value = quote.price; }
-    updateMarket(); render();
-    toast(result.data && result.quote ? 'Market and on-chain data refreshed' : result.quote ? 'Price refreshed; previous on-chain report kept' : result.data ? 'On-chain report refreshed; previous price kept' : 'Sources unavailable; previous data kept');
-  } catch { reportError = quoteError = 'Network request failed'; updateMarket(); toast('Refresh failed. Your inputs are unchanged.'); }
-  finally { refreshRunning = false; btn.disabled = false; btn.classList.remove('spin'); btn.setAttribute('aria-busy', 'false'); set('update-status', reportError || quoteError ? 'Refresh incomplete' : 'Data refreshed'); window.__refreshComplete = true; }
+    if (result) {
+      reportError = result.reportError; quoteError = result.quoteError;
+      if (result.data && validData(result.data) && result.data.date >= D.date) { D = result.data; dataSource = 'GitHub report'; putStored(STORAGE.data, D); saveHistory(D); }
+      else if (result.data) reportError = 'Older or incomplete report returned';
+      if (result.quote) { quote = result.quote; if (!priceEdited && editRevision === revision) $('inp-price').value = quote.price; }
+    } else reportError = quoteError = 'Network request failed';
+  } catch (e) { failure = failure || e; }
+  try { updateMarket(); render(); } catch (e) { failure = failure || e; }
+  if (failure) { console.error('Refresh error', failure); toast(`Refresh error: ${failure?.message || failure}. Your inputs are unchanged.`); }
+  else toast(result.data && result.quote ? `Price (${quote.source}) and on-chain data refreshed` : result.quote ? `Price refreshed (${quote.source}); on-chain report unavailable` : result.data ? 'On-chain report refreshed; price unavailable' : 'Sources unavailable; previous data kept');
+  refreshRunning = false; btn.disabled = false; btn.classList.remove('spin'); btn.setAttribute('aria-busy', 'false');
+  set('update-status', failure ? 'Refresh error' : reportError || quoteError ? 'Refresh incomplete' : 'Data refreshed'); window.__refreshComplete = true;
 }
 function saveHistory(data) { history = history.filter(h => h.date !== data.date); history.push({ date: data.date, mvrv: data.mvrv, zscore: data.zscore, btcPrice: data.btcPrice }); history.sort((a, b) => b.date.localeCompare(a.date)); history = history.slice(0, 14); putStored(STORAGE.history, history); }
 async function lookupEntryPrice() {

@@ -1,13 +1,16 @@
-name: Export daily position snapshot
+name: Export daily position report
+
+# Your position comes from the POSITION_JSON repository secret and the report is uploaded as a
+# private workflow artifact (visible only to people with access to this repo's Actions).
+# Nothing about your position is committed to the repository.
 
 on:
   schedule:
-    # Once a day, 01:00 UTC, after the daily market export.
-    - cron: '00 1 * * *'
-  workflow_dispatch: {} # lets you run it on demand from the Actions tab
+    - cron: '00 1 * * *'   # 01:00 UTC, after the daily market export
+  workflow_dispatch: {}
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: export-position
@@ -16,12 +19,12 @@ concurrency:
 jobs:
   export:
     runs-on: ubuntu-latest
+    env:
+      POSITION_JSON: ${{ secrets.POSITION_JSON }}
     steps:
-      - name: Check out repo
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
 
-      - name: Set up Node
-        uses: actions/setup-node@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: '24'
           package-manager-cache: false
@@ -29,17 +32,18 @@ jobs:
       - name: Check calculation regressions
         run: npm test
 
-      - name: Run export script
+      - name: Run export
+        if: ${{ env.POSITION_JSON != '' }}
         run: node scripts/export-position.js
 
-      - name: Commit updated snapshot (only if it changed)
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/position-analysis.txt
-          if git diff --cached --quiet; then
-            echo "No change in analysis output — nothing to commit."
-            exit 0
-          fi
-          git commit -m "chore: daily position snapshot [skip ci]"
-          git push
+      - name: Skip (no POSITION_JSON secret)
+        if: ${{ env.POSITION_JSON == '' }}
+        run: echo "Add a POSITION_JSON repository secret to enable the daily report."
+
+      - name: Upload report
+        if: ${{ env.POSITION_JSON != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: position-analysis
+          path: data/position-analysis.txt
+          retention-days: 14

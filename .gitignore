@@ -1,0 +1,7 @@
+# Your private position and generated reports never belong in the repo
+position.local.json
+data/position-analysis*.txt
+data/*.tmp
+# Build output (npm run build)
+dist/
+node_modules/

@@ -1,3 +1,5 @@
+/* Keyboard shortcut: typing "iii" outside any text field loads the position saved on this device.
+   The old long-press on the BTC field was removed: on mobile it collided with paste/select and wiped inputs. */
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.PresetShortcuts=api;})(typeof window!=='undefined'?window:this,function(){
   'use strict';
   function keyHandler(activate,now=Date.now){
@@ -11,23 +13,5 @@
       if(count===3){count=0;activate();}
     };
   }
-  function holdHandlers({activate,charge,focus,blur,schedule=setTimeout,cancel=clearTimeout}){
-    let press=null;
-    function stop(){if(press)cancel(press.timer);press=null;charge(false);}
-    return {
-      down(event){
-        if(event.isPrimary===false||event.button>0)return;
-        stop();
-        // Pointer cancellation does not disable native pan/zoom; touch-action does.
-        if(event.pointerType==='touch')event.preventDefault();
-        const state={id:event.pointerId,x:event.clientX,y:event.clientY,touch:event.pointerType==='touch',done:false,timer:null};press=state;charge(true);
-        state.timer=schedule(()=>{if(press!==state)return;state.done=true;charge(false);blur();activate();},800);
-      },
-      move(event){if(press&&event.pointerId===press.id&&(Math.abs(event.clientX-press.x)>12||Math.abs(event.clientY-press.y)>12))stop();},
-      up(event){if(!press||event.pointerId!==press.id)return;const tap=press.touch&&!press.done;stop();if(tap)focus();},
-      cancel:stop,
-      context(event){if(press)event.preventDefault();}
-    };
-  }
-  return {keyHandler,holdHandlers};
+  return {keyHandler};
 });

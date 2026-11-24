@@ -1,15 +1,12 @@
 {
-  "name": "btc-loan-analyzer-export",
+  "name": "btc-loan-analyzer",
   "private": true,
-  "version": "2.0.0",
-  "description": "BTC loan scenario terminal with a shared calculation and report engine",
+  "version": "3.0.0",
+  "description": "BTC-backed loan planner and tracker with a shared calculation and report engine",
   "scripts": {
-    "export": "node scripts/export-position.js",
     "test": "node --test tests/*.test.js",
     "build": "node scripts/build-static.js",
-    "export:offline": "node scripts/export-position.js --offline"
-  },
-  "dependencies": {
-    "puppeteer": "^25.0.0"
+    "export": "node scripts/export-position.js",
+    "export:example": "node scripts/export-position.js --offline --example"
   }
 }

@@ -1,410 +1,532 @@
-/* Interface orchestration. Calculation and data parsing live in the shared engine. */
+/* Interface orchestration. All calculation lives in engine.js; this file only reads inputs and renders. */
 'use strict';
-const M=window.LoanEngine, $=id=>document.getElementById(id);
-const escapeHTML=value=>String(value??'—').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const fmt=(n,dp=0)=>Number.isFinite(n)?n.toLocaleString('en-US',{minimumFractionDigits:dp,maximumFractionDigits:dp}):'—';
-const usd=(n,dp=0)=>Number.isFinite(n)?(n<0?'−':'')+'$'+fmt(Math.abs(n),dp):'—';
-const signed=n=>Number.isFinite(n)?(n>0?'+':'')+usd(n):'—';
-const pct=(n,dp=1)=>Number.isFinite(n)?fmt(n,dp)+'%':'—';
-const signedPct=n=>Number.isFinite(n)?(n>0?'+':'')+pct(n):'—';
-const compact=n=>Math.abs(n)>=1e6?(n<0?'−':'')+'$'+fmt(Math.abs(n)/1e6,1)+'m':Math.abs(n)>=1000?(n<0?'−':'')+'$'+fmt(Math.abs(n)/1000,0)+'k':usd(n);
-const tone=n=>n>0?'good':n<0?'bad':'muted';
-const set=(id,text)=>{const node=$(id);if(node&&node.textContent!==String(text))node.textContent=text;};
-const badge=(label,kind='')=>`<span class="badge ${kind}">${escapeHTML(label)}</span>`;
-const row=(label,value,cls='')=>`<div class="key-row ${cls}"><span>${escapeHTML(label)}</span><strong>${value}</strong></div>`;
-const STORAGE={position:'btc_terminal_position_v2',data:'btc_terminal_data_v2',history:'btc_loan_snapshots_v2',weights:'btc_terminal_weights_v2'};
-function getStored(key,fallback){try{const raw=localStorage.getItem(key);return raw===null?fallback:JSON.parse(raw);}catch{return fallback;}}
-function putStored(key,value){try{localStorage.setItem(key,JSON.stringify(value));return true;}catch{return false;}}
-function validData(x){return x&&M.dateValid(x.date)&&['mvrv','zscore','btcPrice','histMeanMvrv','cyclePos','ceilPrice','floorPrice','roc30'].every(k=>Number.isFinite(x[k]))&&['mvrv','btcPrice','histMeanMvrv','ceilPrice','floorPrice'].every(k=>x[k]>0)&&x.cyclePos>=0&&x.cyclePos<=100&&typeof x.maStack==='string';}
-let D=window.BUNDLED_SNAPSHOT;
-const cached=getStored(STORAGE.data,null);
-let dataSource='Bundled snapshot';
-if(validData(cached)&&cached.date>=D.date){D=cached;dataSource='Cached report';}
-let quote={price:D.btcPrice,date:D.date,source:'Report snapshot',live:false,fetchedAt:null};
-let history=getStored(STORAGE.history,[]);
-if(!Array.isArray(history))history=[];
-history=history.filter(h=>h&&M.dateValid(h.date)&&['mvrv','zscore','btcPrice'].every(k=>Number.isFinite(h[k]))).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,14);
-let rawWeights=getStored(STORAGE.weights,{...M.WEIGHTS});
-if(!rawWeights||typeof rawWeights!=='object'||Array.isArray(rawWeights))rawWeights={...M.WEIGHTS};
-for(const k of Object.keys(M.WEIGHTS)){const n=Number(rawWeights[k]);rawWeights[k]=Number.isFinite(n)?M.clamp(n,0,100):M.WEIGHTS[k];}
-let currentView='overview',currentResult=null,validInput=null,refreshRunning=false,priceEdited=false,editRevision=0,quoteError=null,reportError=null,renderFrame=null,toastTimer=null;
-let chartScale=null,chartPrice=null,chartAnimate=true;
-const fields=[...document.querySelectorAll('[data-field]')];
-function readInputs(){return Object.fromEntries(fields.map(n=>[n.dataset.field,n.value]));}
-function weights(){return {...rawWeights};}
-function calc(){return M.calculate(readInputs(),D,weights());}
-function calcFutures(d){return M.futures(d);}
-function toast(message){set('toast',message);$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),3500);}
-function applyInput(input,{markPrice=true}={}){for(const [key,value]of Object.entries(input)){const node=$('inp-'+key);if(node&&value!=null)node.value=value===0&&(key==='entry'||key==='deployPrice')?'':value;}if(markPrice&&Object.hasOwn(input,'price'))priceEdited=true;editRevision++;render();}
-function saveHistory(data){history=history.filter(h=>h.date!==data.date);history.push({date:data.date,mvrv:data.mvrv,zscore:data.zscore,btcPrice:data.btcPrice});history.sort((a,b)=>b.date.localeCompare(a.date));history=history.slice(0,14);putStored(STORAGE.history,history);}
-function dateLabel(s){return M.dateValid(s)?new Date(s+'T00:00:00Z').toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'}):'Unavailable';}
-function updateMarket(){
-  set('market-price',usd(quote.price));set('ticker-mvrv',fmt(D.mvrv,3));set('ticker-zscore',fmt(D.zscore,3));
-  $('ticker-zscore').className='ticker-val '+(D.zscore<0?'good':'');
-  set('ticker-trend',/bull/i.test(D.maStack)?'Bullish':/bear/i.test(D.maStack)?'Bearish':'Mixed');
-  $('ticker-trend').className='ticker-val '+(/bull/i.test(D.maStack)?'good':'amber');
-  set('ticker-cycle',pct(D.cyclePos));set('data-date',dateLabel(D.date));
-  const quoteAge=quote.fetchedAt?(Date.now()-Date.parse(quote.fetchedAt))/6e4:Infinity;
-  set('quote-source',quote.live?(quoteAge<5?'MID · ':'CACHED · ')+new Date(quote.fetchedAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'})+' UTC':quote.source);
-  const notes=[];
-  if(M.ageHours(D.date)>48)notes.push(`On-chain data is stale (${dateLabel(D.date)}).`);
-  else if(dataSource==='Bundled snapshot'||dataSource==='Cached report')notes.push(`${dataSource} · ${dateLabel(D.date)}.`);
-  if(reportError)notes.push('On-chain refresh unavailable; previous valid report retained.');
-  if(quoteError)notes.push('Quote unavailable; previous price retained.');
-  else if(!quote.live)notes.push(`BTC quote uses ${quote.date} report data.`);
-  else if(quoteAge>=5)notes.push('Market quote is over five minutes old. Refresh to update.');
-  $('data-notice').hidden=!notes.length;set('data-notice-text',notes.join(' '));
-  set('data-provenance',`${dataSource} · on-chain ${dateLabel(D.date)} · quote ${quote.source}, ${quote.date}${quote.fetchedAt?' at '+new Date(quote.fetchedAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'})+' UTC':''}`);
+const M = window.LoanEngine, $ = id => document.getElementById(id);
+const escapeHTML = v => String(v ?? '—').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmt = (n, dp = 0) => Number.isFinite(n) ? n.toLocaleString('en-US', { minimumFractionDigits: dp, maximumFractionDigits: dp }) : '—';
+const usd = (n, dp) => { if (!Number.isFinite(n)) return '—'; const d = dp ?? (Math.abs(n) < 10000 ? 2 : 0); return (n < 0 ? '−' : '') + '$' + fmt(Math.abs(n), d); };
+const signed = (n, dp) => { if (!Number.isFinite(n)) return '—'; if (Math.abs(n) < 0.005) n = 0; return (n > 0 ? '+' : '') + usd(n, dp); };
+const pct = (n, dp = 1) => Number.isFinite(n) ? (n < 0 ? '−' : '') + fmt(Math.abs(n), dp) + '%' : '—';
+const signedPct = (n, dp = 1) => Number.isFinite(n) ? (n > 0 ? '+' : '') + pct(n, dp) : '—';
+const btcAmt = (n, dp = 6) => Number.isFinite(n) ? fmt(n, dp) + ' BTC' : '—';
+const sats = n => { if (!Number.isFinite(n)) return '—'; const s = Math.round(n * 1e8); return (s > 0 ? '+' : s < 0 ? '−' : '') + fmt(Math.abs(s)) + ' sats'; };
+const compact = n => !Number.isFinite(n) ? '—' : Math.abs(n) >= 1e6 ? (n < 0 ? '−' : '') + '$' + fmt(Math.abs(n) / 1e6, 1) + 'm' : Math.abs(n) >= 1000 ? (n < 0 ? '−' : '') + '$' + fmt(Math.abs(n) / 1000, Math.abs(n) < 10000 ? 1 : 0) + 'k' : usd(n, 0);
+const tone = n => n > 1e-9 ? 'good' : n < -1e-9 ? 'bad' : 'muted';
+const statusTone = s => s === 'Liquidation' ? 'bad' : s === 'Margin call' ? 'warn' : s === 'No debt' ? '' : 'good';
+const set = (id, text) => { const n = $(id); if (n && n.textContent !== String(text)) n.textContent = text; };
+const badge = (label, kind = '') => `<span class="badge ${kind}">${escapeHTML(label)}</span>`;
+const row = (label, value, cls = '') => `<div class="key-row ${cls}"><span>${escapeHTML(label)}</span><strong>${value}</strong></div>`;
+const dateLabel = s => M.dateValid(s) ? new Date(s + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }) : '—';
+const utcTime = iso => new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }) + ' UTC';
+
+const STORAGE = { position: 'btc_loan_position_v3', legacy: 'btc_terminal_position_v2', data: 'btc_terminal_data_v2', history: 'btc_loan_snapshots_v2', weights: 'btc_terminal_weights_v2', theme: 'btc_loan_theme' };
+function getStored(key, fallback) { try { const raw = localStorage.getItem(key); return raw === null ? fallback : JSON.parse(raw); } catch { return fallback; } }
+function putStored(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch { return false; } }
+function validData(x) { return x && M.dateValid(x.date) && ['mvrv', 'zscore', 'btcPrice', 'histMeanMvrv', 'cyclePos', 'ceilPrice', 'floorPrice', 'roc30'].every(k => Number.isFinite(x[k])) && ['mvrv', 'btcPrice', 'histMeanMvrv', 'ceilPrice', 'floorPrice'].every(k => x[k] > 0) && x.cyclePos >= 0 && x.cyclePos <= 100 && typeof x.maStack === 'string'; }
+
+let D = window.BUNDLED_SNAPSHOT, dataSource = 'Bundled snapshot';
+const cached = getStored(STORAGE.data, null);
+if (validData(cached) && cached.date >= D.date) { D = cached; dataSource = 'Cached report'; }
+let quote = { price: D.btcPrice, date: D.date, source: 'Report snapshot', live: false, fetchedAt: null };
+let history = getStored(STORAGE.history, []);
+if (!Array.isArray(history)) history = [];
+history = history.filter(h => h && M.dateValid(h.date) && ['mvrv', 'zscore', 'btcPrice'].every(k => Number.isFinite(h[k]))).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 14);
+let rawWeights = getStored(STORAGE.weights, { ...M.WEIGHTS });
+if (!rawWeights || typeof rawWeights !== 'object' || Array.isArray(rawWeights)) rawWeights = { ...M.WEIGHTS };
+for (const k of Object.keys(M.WEIGHTS)) { const n = Number(rawWeights[k]); rawWeights[k] = Number.isFinite(n) ? M.clamp(n, 0, 100) : M.WEIGHTS[k]; }
+
+let mode = 'new', basis = 'start', repayWhen = 'now', currentView = 'overview', currentResult = null;
+let refreshRunning = false, priceEdited = false, editRevision = 0, quoteError = null, reportError = null;
+let renderFrame = null, toastTimer = null, chartScale = null, chartPrice = null, firstErrorKey = null, undoInputs = null;
+const fields = [...document.querySelectorAll('[data-field]')];
+const FUTURES_FIELDS = ['leverage', 'mm', 'funding'];
+
+function readInputs() { return { mode, ...Object.fromEntries(fields.map(n => [n.dataset.field, n.value])) }; }
+function weights() { return { ...rawWeights }; }
+
+/* ---------- toast with optional undo ---------- */
+function toast(message, undo = null) {
+  set('toast-text', message); $('toast').classList.add('show');
+  const action = $('toast-action'); action.hidden = !undo; undoInputs = undo;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { $('toast').classList.remove('show'); undoInputs = null; }, undo ? 7000 : 3500);
 }
-function validateAndRead(){
-  const validation=M.validate(readInputs());
-  fields.forEach(node=>{const message=validation.errors[node.dataset.field]||'';node.setAttribute('aria-invalid',String(Boolean(message)));set('error-'+node.dataset.field,message);});
-  $('validation-banner').hidden=validation.valid;
-  $('workspace').classList.toggle('invalid-results',!validation.valid);
-  if(!validation.valid){
-    const message=Object.values(validation.errors)[0];set('validation-message',`${message} Results show the last valid inputs; export and save are paused.`);
-    set('update-status','Check inputs');$('export-btn').disabled=true;$('save-position').disabled=true;
-    if(Object.keys(validation.errors).some(k=>['leverage','mm','funding'].includes(k))&&currentView!=='futures')switchView('futures',false);
+
+/* ---------- inputs ---------- */
+function applyInput(input, { keepPrice = true, undo = false, message = null } = {}) {
+  const before = readInputs();
+  if (input.mode) setMode(input.mode, false);
+  for (const [key, value] of Object.entries(input)) {
+    if (key === 'mode' || (key === 'price' && keepPrice)) continue;
+    const node = $('inp-' + key);
+    if (node && value != null) node.value = value;
+  }
+  editRevision++; chartPrice = null; render();
+  if (message) toast(message, undo ? before : null);
+}
+function setMode(next, rerender = true) {
+  mode = next === 'existing' ? 'existing' : 'new';
+  $('position-panel').dataset.mode = mode;
+  document.querySelectorAll('[data-mode-btn]').forEach(b => b.setAttribute('aria-checked', String(b.dataset.modeBtn === mode)));
+  set('mode-hint', mode === 'new' ? 'Plan a loan opened today. Principal is sized from LTV.' : 'Track a loan you hold. Principal, dates and purchase price stay fixed as the market moves.');
+  $('inp-deployPrice').placeholder = mode === 'new' ? 'Current price' : 'Required';
+  set('note-deployPrice', mode === 'new' ? 'Blank buys at the current price.' : 'What you actually paid per BTC.');
+  $('basis-switch').hidden = mode !== 'existing';
+  if (mode === 'new') basis = 'start';
+  setRepay(mode === 'new' ? 'exit' : 'now');
+  if (rerender) { editRevision++; render(); }
+}
+function setBasis(next) { basis = next; document.querySelectorAll('[data-basis]').forEach(b => b.setAttribute('aria-checked', String(b.dataset.basis === basis))); chartPrice = null; if (currentResult) renderOverview(currentResult); }
+function setRepay(next) { repayWhen = next === 'exit' ? 'exit' : 'now'; document.querySelectorAll('[data-repay]').forEach(b => b.setAttribute('aria-checked', String(b.dataset.repay === repayWhen))); if (currentResult) renderRepay(currentResult); }
+
+function validateAndRead() {
+  const v = M.validate(readInputs());
+  fields.forEach(node => { const msg = v.errors[node.dataset.field] || ''; node.setAttribute('aria-invalid', String(Boolean(msg))); set('error-' + node.dataset.field, msg); });
+  $('validation-banner').hidden = v.valid;
+  $('content').classList.toggle('invalid-results', !v.valid);
+  $('export-btn').disabled = !v.valid; $('save-position').disabled = !v.valid;
+  $('warning-banner').hidden = !v.warnings.length; set('warning-message', v.warnings.join(' '));
+  if (!v.valid) {
+    firstErrorKey = Object.keys(v.errors)[0];
+    set('validation-message', `${v.errors[firstErrorKey]} Results show the last valid inputs; export and save are paused.`);
+    set('update-status', 'Check inputs');
     return null;
   }
-  $('export-btn').disabled=false;$('save-position').disabled=false;
-  return validation.value;
+  firstErrorKey = null;
+  return v.value;
 }
-function render(){
-  const input=validateAndRead();if(!input)return;
-  validInput=input;const d=M.calculate(input,D,weights());currentResult=d;
-  const ltvMax=Math.max(0,Math.ceil(d.mcLtv*100)-1);$('ltv-range').max=ltvMax;$('ltv-range').value=d.ltvPct;set('ltv-max-label',ltvMax+'%');
-  set('horizon-label',`${fmt(d.loanDays,0)} days held · as of ${d.asOfDate}`);
-  set('kpi-loan',usd(d.loan));set('kpi-loan-sub',`${pct(d.ltvPct,0)} initial LTV`);
-  set('kpi-collateral',usd(d.collateral));set('kpi-collateral-sub',`${fmt(d.btc,Math.max(3,d.btc<0.001?8:3))} BTC pledged`);
-  set('kpi-liq',d.loan?usd(d.liqPrice):'No debt');set('kpi-liq-sub',d.loan?`${pct(-d.liqDropPct)} drop from reference`:'No liquidation threshold');
-  set('kpi-cost',usd(d.interestCost));set('kpi-cost-sub',`${pct(d.apr*100)} APR · ${fmt(d.loanDays,0)} days`);
-  document.querySelectorAll('[data-target]').forEach(button=>{const match=targetFor(button.dataset.target,d);button.setAttribute('aria-pressed',String(match>0&&Math.abs(d.targetPrice-Math.round(match))<1));});
-  renderOverview(d);renderActive(d);
-  set('update-status',refreshRunning?'Refreshing data…':'Inputs applied');
-  window.__terminalReady=true;
+function gotoError() {
+  if (!firstErrorKey) return;
+  if (FUTURES_FIELDS.includes(firstErrorKey)) switchView('futures');
+  else { $('position-panel').open = true; const node = $('inp-' + firstErrorKey); node?.closest('details.disclosure')?.setAttribute('open', ''); }
+  $('inp-' + firstErrorKey)?.focus();
 }
-function scheduleRender(){if(renderFrame!==null)cancelAnimationFrame(renderFrame);renderFrame=requestAnimationFrame(()=>{renderFrame=null;render();});}
-function renderOverview(d){
-  const liquidated=d.targetStatus==='Liquidation',profit=d.netProfit;
-  set('target-pnl',liquidated?'Unavailable':signed(profit));$('target-pnl').className='chart-result num '+(liquidated?'bad':tone(profit));
-  set('target-return',liquidated?'Target crosses the liquidation threshold':`${signedPct(d.levReturnPct)} return on collateral`);
-  set('target-value',usd(d.targetPrice));set('target-status',d.targetStatus.toUpperCase());
-  $('target-status').className='badge '+(liquidated?'bad':d.targetStatus==='Margin call'?'amber':'good');
-  set('overview-breakeven',usd(d.breakevenPrice));set('overview-edge',liquidated?'—':signed(d.leverageEdge));
-  $('overview-edge').className='num '+(liquidated?'muted':tone(d.leverageEdge));
-  set('score-number',fmt(d.score,1));set('score-date',D.date);
-  const stale=M.ageHours(D.date)>48;set('score-badge',stale?'STALE MODEL':'HEURISTIC');
-  set('score-title',d.score>=7?'Supportive cycle signals':d.score>=5?'Mixed cycle signals':'Cautious cycle signals');
-  const delta=(D.mvrv/D.histMeanMvrv-1)*100;
-  set('score-context',`MVRV sits ${pct(Math.abs(delta),0)} ${delta<0?'below':'above'} its historical mean. This score measures cycle context, not loan safety.`);
-  $('score-track').innerHTML=Array.from({length:10},(_,i)=>`<i class="score-seg ${i<Math.round(d.score)?'on':''}"></i>`).join('');
-  $('allocation-fill').style.width=d.deployPct*100+'%';
-  set('allocation-deployed',usd(d.deployedUsd));set('allocation-cash',usd(d.undeployedUsd));set('allocation-btc','+'+fmt(d.newBtc,5));set('allocation-total',fmt(d.totalBtc,5)+' BTC');
-  set('level-liq',d.loan?usd(d.liqPriceH):'No debt');set('level-liq-sub',d.loan?`${signedPct((d.liqPriceH/d.price-1)*100)} from reference`:'No liquidation');
-  set('level-mc',d.loan?usd(d.mcPriceH):'No debt');set('level-mc-sub',d.loan?`${signedPct((d.mcPriceH/d.price-1)*100)} from reference`:'No margin call');
-  set('level-floor',usd(D.floorPrice));set('level-ceiling',usd(D.ceilPrice));
-  const title=liquidated?'Target crosses liquidation':d.mcPrice>=d.price?'Accrued interest pushes the loan into margin call':d.leverageEdge>=0?'Added exposure improves this target outcome':'Borrowing reduces this target outcome';
-  set('overview-insight-title',title);
-  set('overview-insight',liquidated?`At ${usd(d.targetPrice)}, the model reaches your ${pct(d.liqLtv*100,0)} liquidation LTV. Open-position P/L is unavailable; sale execution, fees, and any residual balance determine the outcome.`:`At ${usd(d.targetPrice)}, the loan strategy produces ${signed(d.netProfit)} after ${usd(d.interestCost)} of interest, versus ${signed(d.unlevProfit)} from holding ${fmt(d.btc,3)} BTC. The extra ${fmt(d.newBtc,5)} BTC also increases downside exposure. Results require the position to survive the path to target.`);
-  renderTwoPots(d);
-  renderCollateralRepayment(d);
-  if(currentView==='overview')renderPayoff(d);
+
+/* ---------- render ---------- */
+function render() {
+  if (!validateAndRead()) return;
+  const d = M.calculate(readInputs(), D, weights()); currentResult = d;
+  const range = $('ltv-range'); range.max = Math.max(0, d.mcLtv * 100 - 0.5); if (mode === 'new') range.value = d.input.ltv;
+  set('horizon-label', d.existing
+    ? `Borrowed ${dateLabel(d.loanDate)} · ${fmt(d.loanDays)} days ago · exit ${dateLabel(d.exitDate)} (in ${fmt(d.exitDays)} days)`
+    : `Opened today · exit ${dateLabel(d.exitDate)} (in ${fmt(d.exitDays)} days) · dates in UTC`);
+  set('plan-status', d.existing ? `Existing loan · day ${fmt(d.loanDays)}` : 'New loan plan');
+  $('plan-status').className = 'badge ' + (d.existing ? 'info' : '');
+  set('position-summary', `${fmt(d.btc, 4)} BTC · ${usd(d.loan, 0)} loan`);
+  // KPIs
+  set('kpi-debt', d.loan ? usd(d.debtToday) : 'No debt');
+  set('kpi-debt-sub', d.loan ? `${usd(d.loan)} principal + ${usd(d.accruedInterest, 2)} interest` : 'Nothing borrowed');
+  set('kpi-ltv', pct(d.currentLtv * 100)); $('kpi-ltv').className = 'kpi-value ' + statusTone(d.currentStatus);
+  set('kpi-ltv-sub', d.existing ? `Started at ${pct(d.initialLtv * 100)} · margin call ${pct(d.mcLtv * 100, 0)}` : `Margin call at ${pct(d.mcLtv * 100, 0)}`);
+  set('kpi-liq', d.loan ? usd(d.liqPrice, 0) : 'No debt');
+  set('kpi-liq-sub', d.loan ? `${pct(-d.liqDropPct)} below today’s price` : 'No liquidation threshold');
+  set('kpi-interest', d.existing ? usd(d.accruedInterest, 2) : usd(d.exitInterest));
+  set('kpi-interest-sub', d.existing ? `so far · ${usd(d.exitInterest)} by exit date` : `by exit date · ${pct(d.apr * 100)} APR`);
+  document.querySelectorAll('[data-target]').forEach(b => { const t = targetFor(b.dataset.target, d); b.setAttribute('aria-pressed', String(t > 0 && Math.abs(d.target - Math.round(t)) < 1)); b.disabled = !(t > 0); });
+  renderOverview(d); renderActive(d);
+  set('update-status', refreshRunning ? 'Refreshing data…' : 'Up to date');
+  window.__terminalReady = true;
 }
-function renderTwoPots(d){
-  const p=M.twoPots(d),btc=n=>fmt(n,6)+' BTC';
-  const currentPrice=Number.isFinite(quote.price)&&quote.price>0?quote.price:d.price;
-  const purchasePrice=d.deployPrice||d.price;
-  const priceMovePct=(currentPrice/purchasePrice-1)*100;
-  const originalPotBtc=p.available?p.residualBtc:0;
-  const originalPotPnl=originalPotBtc*(currentPrice-purchasePrice);
-  const fundedPotPnl=d.newBtc*(currentPrice-purchasePrice);
-  const pricePnlLabel=`Price P/L vs ${usd(purchasePrice)}`;
-  $('pots-warning').hidden=p.available;
-  set('pots-warning','The reference price falls in today’s liquidation zone. Repayment and wallet totals are unavailable.');
-  $('pot-original-details').innerHTML=row('Original collateral',btc(d.btc))+row('Sell to repay debt',btc(p.debtBtc))+row('Principal + interest',usd(d.debtOwed))+row('Current BTC price',usd(currentPrice))+row(pricePnlLabel,p.available?signed(originalPotPnl):'Unavailable',p.available?'total':'');
-  $('pot-new-details').innerHTML=row('Bought at',usd(purchasePrice))+row('Current BTC price',usd(currentPrice))+row('BTC price move',signedPct(priceMovePct))+row(pricePnlLabel,signed(fundedPotPnl),'total');
-  set('pot-original-btc',p.available?btc(p.residualBtc):'Unavailable');set('pot-original-value',p.available?usd(originalPotBtc*currentPrice)+' now':'Liquidation threshold crossed');
-  set('pot-new-btc',btc(d.newBtc));set('pot-new-value',usd(d.newBtc*currentPrice)+' now');
-  set('pots-total-btc',p.available?btc(p.walletBtc):'Unavailable');set('pots-total-note',p.available?usd(p.walletBtc*d.price)+' in BTC after repayment':'Liquidation settlement is not modeled.');
-  set('pots-cash',usd(p.cash));set('pots-net-value',p.available?'BTC + cash = '+usd(p.netAssets):'Net assets unavailable');
-  $('pots-quant-rows').innerHTML=row('Reference BTC price',usd(d.price))+row('Current BTC price',usd(currentPrice))+row('Loan-funded BTC purchase price',usd(purchasePrice))+row('BTC price move',signedPct(priceMovePct))+row('Pledged BTC',btc(d.btc))+row('Principal + accrued interest',usd(d.debtOwed))+row('Debt in BTC at reference',btc(p.debtBtc))+row('Residual collateral BTC',p.available?btc(p.residualBtc):'Unavailable','total')+row('Pot 01 price P/L',p.available?signed(originalPotPnl):'Unavailable')+row('Loan-funded BTC',btc(d.newBtc))+row('Pot 02 price P/L',signed(fundedPotPnl))+row('BTC after repayment',p.available?btc(p.walletBtc):'Unavailable','total')+row('Unused loan cash',usd(p.cash))+row('Net assets, BTC + cash',p.available?usd(p.netAssets):'Unavailable')+row('P/L scope','Price movement only; debt and interest shown separately');
-}
-function renderCollateralRepayment(d){
-  const currentPrice=Number.isFinite(quote.price)&&quote.price>0?quote.price:d.price;
-  const r=M.collateralRepayment(d,currentPrice),btc=n=>fmt(n,8)+' BTC';
-  const change=(n,dp=8)=>(n>0?'+':'')+fmt(n,dp);
-  set('repay-benchmark',`Holding benchmark: ${btc(d.btc)}. Repay-today debt: ${usd(d.currentDebt,2)} = ${usd(d.loan,2)} principal + ${usd(d.accruedInterest,2)} accrued interest.`);
-  set('repay-status',r.status.toUpperCase());$('repay-status').className='badge '+(r.available?r.status==='Margin call'?'amber':'good':'bad');
-  set('repay-recovery-price',usd(currentPrice,2));
-  set('repay-recovery-note',r.recoveryPrice===null?`Current repay-now result shown below. No finite BTC quantity break-even exists because no loan-funded BTC was purchased.`:`Quantity break-even: ${usd(r.recoveryPrice,2)}. Now is ${signedPct((currentPrice/r.recoveryPrice-1)*100)} from that threshold, so you are ${r.btcChange>=0?'ahead of':'behind'} holding after repayment.`);
-  set('repay-target-label','If repaid now at '+usd(r.price,2));
-  set('repay-wallet',r.available?btc(r.walletBtc):'Unavailable');
-  $('repay-wallet').className='repayment-value num '+(r.available?tone(Math.abs(r.btcChange)<1e-12?0:r.btcChange):'bad');
-  set('repay-btc-change',r.available?`${change(Math.abs(r.btcChange)<1e-12?0:r.btcChange)} BTC (${signedPct(r.btcChangePct)}) vs. your original amount.`:'Repayment totals are not shown beyond the liquidation threshold.');
-  set('repay-warning',!r.available?'Liquidation settlement is not modeled.':r.status==='Margin call'?'Target is in the margin-call zone; lender intervention may occur.':d.undeployedUsd>0?`Debt fully repaid; ${usd(d.undeployedUsd,2)} unused loan cash remains separate.`:'Debt fully repaid. All borrowed cash was deployed; no unused loan cash remains.');
-  set('repay-value-recovery',`BTC quantity break-even compares your final debt-free wallet with simply holding ${btc(d.btc)}; it is not a zero-dollar-profit claim. Dollar break-even versus the collateral value at the borrowing reference is ${usd(r.valueRecoveryPrice,2)}. Interest accrued from ${d.loanDate} through ${d.asOfDate}: ${usd(d.interestCost,2)} over ${fmt(d.loanDays,0)} days.`);
-  renderCurrentRepaymentSummary(d,r,btc);
-}
-function renderCurrentRepaymentSummary(d,r,btc){
-  const currentPrice=Number.isFinite(quote.price)&&quote.price>0?quote.price:d.price;
-  const b=M.collateralRepayment(d,currentPrice);
-  const costBasis=d.entry||d.price;
-  const holdPnl=d.btc*(b.price-costBasis);
-  const totalPnl=b.netAssets-d.btc*costBasis;
-  const source=d.entry?'actual BTC cost basis':'borrowing reference price';
-  set('repay-be-title',`At current BTC ${usd(b.price,2)}`);
-  set('repay-be-note',`Repay today using ${usd(d.currentDebt,2)} total debt. Results use the latest displayed quote${quote.live?'':' fallback'} and keep the ${usd(r.recoveryPrice,2)} quantity break-even as a reference.`);
-  $('repay-be-hold').innerHTML=row('BTC if you just hold',btc(d.btc))+row('Current holding value',usd(d.btc*b.price,2))+row(`Holding P/L vs. ${d.entry?'cost basis':'reference'}`,signed(holdPnl),'total');
-  $('repay-be-loan').innerHTML=row('BTC bought with loan',btc(d.newBtc))+row('Gross price profit',signed(b.grossLoanProfit))+row('Accrued interest','−'+usd(d.accruedInterest,2))+row('Net loan-trade profit',signed(b.netLoanProfit),'total')+row('Net BTC vs. holding',`${b.btcChange>0?'+':''}${fmt(b.btcChange,8)} BTC`);
-  $('repay-be-total').innerHTML=row('Original BTC remaining',btc(b.residualBtc))+row('Loan-funded BTC retained',btc(d.newBtc))+row('Final debt-free wallet',btc(b.walletBtc),'total')+row('Wallet value + cash',usd(b.netAssets,2))+row('Total P/L vs. cost',signed(totalPnl),'total')+row('Advantage vs. holding',signed(b.edgeVsHold));
-  renderWalletFlow(d,b,btc);
-  renderRepaymentInsight(d,r,currentPrice,btc);
-}
-function renderWalletFlow(d,r,btc){
-  if(!r.available){
-    $('repay-wallet-flow').innerHTML='<div class="flow-node sold"><span>Status</span><strong>Unavailable</strong></div>';
-    $('wallet-compose-track').innerHTML='';set('wallet-compose-total','Unavailable');set('wallet-flow-badge','LIQUIDATION ZONE');set('wallet-flow-verdict','Repay-now composition is unavailable below the modeled liquidation threshold.');$('wallet-flow-verdict').className='wallet-verdict bad';return;
+function scheduleRender() { if (renderFrame !== null) cancelAnimationFrame(renderFrame); renderFrame = requestAnimationFrame(() => { renderFrame = null; render(); }); }
+function renderActive(d) { if (currentView === 'scenarios') renderScenarios(d); if (currentView === 'risk') renderRisk(d); if (currentView === 'signals') renderSignals(d); if (currentView === 'futures') renderFutures(d); }
+
+const pnlKey = () => basis === 'today' ? 'pnlToday' : 'pnlStart';
+const holdKey = () => basis === 'today' ? 'holdToday' : 'holdStart';
+
+function renderOverview(d) {
+  renderVerdict(d);
+  const s = d.at, dead = s.status === 'Liquidation', pnl = s[pnlKey()], ret = basis === 'today' ? s.returnTodayPct : s.returnStartPct;
+  set('target-pnl-label', basis === 'today' ? 'P/L from today, at target' : (d.existing ? 'P/L since borrowing, at target' : 'P/L at target'));
+  set('target-pnl', dead ? 'Unavailable' : signed(pnl)); $('target-pnl').className = 'hero-num num ' + (dead ? 'bad' : tone(pnl));
+  set('target-return', dead ? 'Target is past your liquidation price.' : `${signedPct(ret)} · holding alone: ${signed(s[holdKey()])} · loan adds ${signed(s.loanTrade)}`);
+  set('target-value', usd(d.target, 0)); set('target-status', s.status); $('target-status').className = 'badge ' + statusTone(s.status);
+  set('payoff-sub', `Valued on ${dateLabel(d.exitDate)}, after ${usd(d.exitInterest)} total interest.`);
+  // Signal card
+  if (d.score != null) {
+    set('score-number', fmt(d.score, 1));
+    const stale = M.ageHours(D.date) > 48; set('score-badge', stale ? 'Stale data' : 'Heuristic'); $('score-badge').className = 'badge ' + (stale ? 'warn' : '');
+    set('score-title', d.score >= 7 ? 'Supportive cycle signals' : d.score >= 5 ? 'Mixed cycle signals' : 'Cautious cycle signals');
+    const delta = (D.mvrv / D.histMeanMvrv - 1) * 100;
+    set('score-context', `MVRV is ${pct(Math.abs(delta), 0)} ${delta < 0 ? 'below' : 'above'} its long-run mean. This is market context, not loan safety.`);
+    $('score-track').innerHTML = Array.from({ length: 10 }, (_, i) => `<i class="${i < Math.round(d.score) ? 'on' : ''}"></i>`).join('');
   }
-  const flowNode=(label,amount,cls='')=>`<div class="flow-node ${cls}"><span>${escapeHTML(label)}</span><strong>${escapeHTML(btc(amount))}</strong><em>${escapeHTML(usd(amount*r.price,2))} now</em></div>`;
-  $('repay-wallet-flow').innerHTML=flowNode('Original BTC',d.btc)+`<div class="flow-op">−</div>`+flowNode('Sold for debt',r.soldBtc,'sold')+`<div class="flow-op">=</div>`+flowNode('Original remaining',r.residualBtc)+`<div class="flow-op">+</div>`+flowNode('Loan-funded retained',d.newBtc,'funded')+`<div class="flow-op">=</div>`+flowNode('Final debt-free wallet',r.walletBtc,'final');
-  const scale=Math.max(d.btc,r.walletBtc)*1.08, walletWidth=r.walletBtc/scale*100, originalShare=r.walletBtc?r.residualBtc/r.walletBtc*100:0, fundedShare=r.walletBtc?d.newBtc/r.walletBtc*100:0, benchmarkLeft=d.btc/scale*100;
-  $('wallet-compose-track').innerHTML=`<div class="compose-wallet" style="width:${walletWidth}%"><i class="compose-original" style="width:${originalShare}%"></i><i class="compose-funded" style="width:${fundedShare}%"></i></div><i class="compose-benchmark" style="left:${benchmarkLeft}%" title="Holding benchmark ${escapeHTML(btc(d.btc))}"></i>`;
-  set('wallet-compose-total',`${btc(r.walletBtc)} · ${usd(r.walletBtc*r.price,2)}`);
-  const ahead=r.btcChange>1e-12,behind=r.btcChange<-1e-12,label=ahead?'AHEAD OF HOLDING':behind?'BEHIND HOLDING':'EVEN WITH HOLDING';
-  set('wallet-flow-badge',label);$('wallet-flow-badge').className='badge '+(ahead?'good':behind?'bad':'amber');
-  set('wallet-flow-verdict',`${label}: ${r.btcChange>0?'+':''}${fmt(r.btcChange,8)} BTC and ${signed(r.edgeVsHold)} versus keeping ${btc(d.btc)} untouched.`);$('wallet-flow-verdict').className='wallet-verdict '+(behind?'bad':'');
+  $('allocation-fill').style.width = d.deployPct * 100 + '%';
+  set('allocation-deployed', usd(d.deployedUsd)); set('allocation-cash', usd(d.cash));
+  set('allocation-btc', d.newBtc ? '+' + btcAmt(d.newBtc) : '—'); set('allocation-total', btcAmt(d.totalBtc));
+  renderRepay(d); renderCheckpoints(d);
+  if (currentView === 'overview') renderPayoff(d);
 }
-function renderRepaymentInsight(d,r,currentPrice,btc){
-  const cases=[];
-  if(r.recoveryPrice!==null&&r.recoveryAvailable)cases.push({label:'Break-even',price:r.recoveryPrice});
-  cases.push({label:'Now',price:currentPrice});
-  if(Math.abs(d.targetPrice-currentPrice)>.01)cases.push({label:'Target',price:d.targetPrice});
-  const results=cases.map(item=>({...item,result:M.collateralRepayment(d,item.price)}));
-  const max=Math.max(1e-12,...results.map(x=>Math.abs(x.result.btcChange)));
-  $('repay-insight-chart').innerHTML=results.map(({label,price,result})=>{
-    const change=result.available?result.btcChange:0,width=Math.min(50,Math.abs(change)/max*50),kind=change>1e-12?'good':change<-1e-12?'bad':'zero';
-    const bar=kind==='zero'?'<i class="insight-dot"></i>':`<i class="insight-bar ${kind}" style="width:${width}%"></i>`;
-    const status=result.available?`${change>0?'+':''}${fmt(change,8)} BTC`:'Unavailable';
-    const dollar=result.available?`${signed(result.edgeVsHold)} vs hold`:'Liquidation zone';
-    return `<div class="insight-row"><div class="insight-label"><strong>${escapeHTML(label)}</strong><span>${escapeHTML(usd(price,0))}</span></div><div class="insight-track">${bar}</div><div class="insight-value"><strong class="${result.available?tone(change):'bad'}">${escapeHTML(status)}</strong><span>${escapeHTML(result.available?btc(result.walletBtc)+' final · '+dollar:dollar)}</span></div></div>`;
-  }).join('');
-  const now=M.collateralRepayment(d,currentPrice),ahead=now.available?now.btcChange:NaN;
-  set('repay-insight-badge',!now.available?'UNAVAILABLE':Math.abs(ahead)<1e-12?'EVEN WITH HOLDING':ahead>0?'AHEAD OF HOLDING':'BEHIND HOLDING');
-  $('repay-insight-badge').className='badge '+(!now.available||ahead<0?'bad':ahead>0?'good':'amber');
+
+function renderVerdict(d) {
+  let label, kind, text;
+  if (!d.loan) { label = 'No debt'; kind = ''; text = 'No loan is modelled. Set an LTV above 0% (new loan) or enter your principal (existing loan).'; }
+  else if (d.existing) {
+    const r = M.repayment(d, d.price, 'now');
+    if (!r.available) { label = 'Liquidation zone'; kind = 'bad'; text = `At ${usd(d.price, 0)} your LTV is ${pct(d.currentLtv * 100)}, past your ${pct(d.liqLtv * 100, 0)} liquidation level. Check your lender’s position now.`; }
+    else {
+      const ahead = r.btcChange > 1e-12, behind = r.btcChange < -1e-12;
+      label = ahead ? 'Ahead of holding' : behind ? 'Behind holding' : 'Even with holding'; kind = ahead ? 'good' : behind ? 'bad' : '';
+      text = `Repaying today would leave ${btcAmt(r.walletBtc)}: ${sats(Math.abs(r.btcChange)).replace(/^[+−]/, '')} ${ahead ? 'more' : behind ? 'fewer' : 'difference'} than just holding (${signed(r.edgeVsHold)}).`;
+      if (r.beatHoldPrice !== null) text += ` The loan starts beating holding above ${usd(r.beatHoldPrice, 0)} (${signedPct((r.beatHoldPrice / d.price - 1) * 100)} from now).`;
+      text += ` Liquidation sits at ${usd(d.liqPrice, 0)}, ${pct(-d.liqDropPct)} below today.`;
+      if (d.currentStatus === 'Margin call') { label = 'Margin call zone'; kind = 'warn'; }
+    }
+  } else {
+    label = 'Plan'; kind = 'info';
+    text = `Borrowing ${usd(d.loan)} at ${pct(d.initialLtv * 100)} LTV`;
+    text += d.newBtc ? ` buys ${btcAmt(d.newBtc)}. By ${dateLabel(d.exitDate)} you’ll owe ${usd(d.debtAtExit)}. The trade beats just holding if BTC is above ${usd(d.beatHoldPrice, 0)} then (${signedPct((d.beatHoldPrice / d.price - 1) * 100)} from now).` : ` and holding it as cash costs ${usd(d.exitInterest)} by ${dateLabel(d.exitDate)} with no upside.`;
+    text += ` Liquidation would start at ${usd(d.liqPrice, 0)} (${pct(-d.liqDropPct)}).`;
+  }
+  set('verdict-badge', label); $('verdict-badge').className = 'badge ' + kind; set('verdict-text', text);
 }
-function setTwoPotsMode(mode){
-  if(!['simple','quant'].includes(mode))return;
-  $('pots-simple').hidden=mode!=='simple';$('pots-quant').hidden=mode!=='quant';
-  $('pots-simple-btn').setAttribute('aria-pressed',String(mode==='simple'));
-  $('pots-quant-btn').setAttribute('aria-pressed',String(mode==='quant'));
+
+function renderRepay(d) {
+  const when = repayWhen, px = when === 'now' ? d.price : d.target, r = M.repayment(d, px, when);
+  set('repay-sub', when === 'now'
+    ? `At today’s ${usd(d.price, 0)}, paying ${usd(r.debt)} (principal + interest to date).`
+    : `At your ${usd(d.target, 0)} target on ${dateLabel(d.exitDate)}, paying ${usd(r.debt)} (interest to exit date).`);
+  const rows = [
+    row('Debt to repay', usd(r.debt)), row('of which interest', usd(r.interest)),
+    row('Paid from unused loan cash', usd(r.cashUsed)),
+    row(`Collateral sold at ${usd(px, 0)}`, r.available ? btcAmt(r.soldBtc, 8) : '—'),
+    row('Your BTC left', r.available ? btcAmt(r.residualBtc, 8) : '—'),
+    row('BTC bought with loan (kept)', btcAmt(d.newBtc, 8)),
+    row('Final wallet', r.available ? btcAmt(r.walletBtc, 8) : '—', 'total'),
+    row('Cash left over', usd(r.cashLeft)),
+    row('Wallet value + cash', r.available ? usd(r.netAssets) : '—'),
+    row(d.existing ? 'P/L since borrowing' : 'P/L vs. collateral today', r.available ? signed(r.pnlStart) : '—'),
+    row('P/L vs. your cost basis', r.available ? signed(r.costBasisPnl) : '—'),
+    row('Advantage vs. just holding', r.available ? signed(r.edgeVsHold) : '—', 'total'),
+    row('Beat-holding price', r.beatHoldPrice === null ? 'n/a (no loan BTC)' : usd(r.beatHoldPrice, 0))
+  ];
+  $('repay-rows').innerHTML = rows.join('');
+  $('repay-formula').innerHTML = 'Cash used = min(unused loan cash, debt)<br>Collateral sold = (debt − cash used) ÷ price<br>Final BTC = your BTC − collateral sold + loan BTC<br>Beat-holding price = (debt − cash) ÷ loan BTC';
+  if (!d.loan) {
+    set('repay-wallet', btcAmt(d.btc)); set('repay-change', 'No debt to repay.'); set('repay-badge', 'No debt'); $('repay-badge').className = 'badge';
+    $('repay-flow').innerHTML = ''; $('compose-track').innerHTML = ''; set('compose-total', btcAmt(d.btc)); set('repay-note', ''); return;
+  }
+  if (!r.available) {
+    set('repay-wallet', 'Unavailable'); $('repay-wallet').className = 'hero-num num bad';
+    set('repay-change', `At ${usd(px, 0)} the LTV is ${pct(r.ltv * 100)}, past liquidation.`);
+    set('repay-badge', 'Liquidation zone'); $('repay-badge').className = 'badge bad';
+    $('repay-flow').innerHTML = '<p class="hint">Lender liquidation settlement (fees, residual balance) is not modelled.</p>';
+    $('compose-track').innerHTML = ''; set('compose-total', '—'); set('repay-note', ''); return;
+  }
+  const ahead = r.btcChange > 1e-12, behind = r.btcChange < -1e-12;
+  set('repay-wallet', btcAmt(r.walletBtc)); $('repay-wallet').className = 'hero-num num ' + (ahead ? 'good' : behind ? 'bad' : '');
+  set('repay-change', `${sats(r.btcChange)} (${signedPct(r.btcChangePct)}) vs. holding ${btcAmt(d.btc)} · ${signed(r.edgeVsHold)} in dollars`);
+  const label = r.status === 'Margin call' ? 'Margin call zone' : ahead ? 'Ahead of holding' : behind ? 'Behind holding' : 'Even with holding';
+  set('repay-badge', label); $('repay-badge').className = 'badge ' + (r.status === 'Margin call' ? 'warn' : ahead ? 'good' : behind ? 'bad' : '');
+  const node = (title, amount, cls = '', sub = '') => `<div class="flow-node ${cls}"><span>${escapeHTML(title)}</span><strong>${escapeHTML(btcAmt(amount))}</strong><em>${escapeHTML(sub || usd(amount * px) + ' at this price')}</em></div>`;
+  $('repay-flow').innerHTML = node('Your BTC', d.btc) + '<div class="flow-op" aria-label="minus">−</div>'
+    + node('Sold to repay', r.soldBtc, 'sold', r.cashUsed > 0 ? `after ${usd(r.cashUsed)} paid from cash` : usd(r.soldBtc * px) + ' at this price')
+    + '<div class="flow-op" aria-label="equals">=</div>' + node('Your BTC left', r.residualBtc)
+    + '<div class="flow-op" aria-label="plus">+</div>' + node('Bought with loan', d.newBtc, 'funded')
+    + '<div class="flow-op" aria-label="equals">=</div>' + node('Final wallet', r.walletBtc, 'final');
+  const scale = Math.max(d.btc, r.walletBtc) * 1.06, ww = r.walletBtc / scale * 100;
+  const oShare = r.walletBtc ? Math.max(0, r.residualBtc) / r.walletBtc * 100 : 0, fShare = r.walletBtc ? d.newBtc / r.walletBtc * 100 : 0;
+  $('compose-track').innerHTML = `<div class="compose-wallet" style="width:${ww}%"><i class="compose-original" style="width:${oShare}%"></i><i class="compose-funded" style="width:${fShare}%"></i></div><i class="compose-benchmark" style="left:${d.btc / scale * 100}%"></i>`;
+  set('compose-total', `${btcAmt(r.walletBtc)} · ${usd(r.netAssets)}`);
+  const notes = [];
+  if (r.cashUsed > 0) notes.push(`${usd(r.cashUsed)} of unused loan cash pays the debt first${r.cashLeft > 0 ? `; ${usd(r.cashLeft)} cash is left over` : ''}.`);
+  if (r.beatHoldPrice !== null) notes.push(`You end with more BTC than holding whenever BTC is above ${usd(r.beatHoldPrice, 0)} at repayment.`);
+  if (r.status === 'Margin call') notes.push('This price is inside the margin-call zone; your lender may act first.');
+  notes.push('Fees, slippage and tax are excluded.');
+  set('repay-note', notes.join(' '));
 }
-function renderActive(d){if(currentView==='scenarios')renderScenarios(d);if(currentView==='risk')renderRisk(d);if(currentView==='signals')renderSignals(d);if(currentView==='futures')renderFutures(d);}
-function domain(d){const points=[d.price,d.targetPrice,d.breakevenPrice,D.floorPrice,D.ceilPrice,d.liqPriceH,d.mcPriceH].filter(n=>Number.isFinite(n)&&n>0);let min=Math.max(1,Math.min(d.price*.4,...points)*.8),max=Math.max(...points,d.price*1.3)*1.08;return [min,max];}
-function renderPayoff(d){
-  const node=$('payoff-chart');if(!node||currentView!=='overview')return;
-  const width=Math.max(310,node.clientWidth||600),height=width<400?265:285,L=58,R=20,T=25,B=38,W=width-L-R,H=height-T-B;
-  const [min,max]=domain(d),sMin=M.scenario(d,min),sMax=M.scenario(d,max);
-  const vals=[sMin.pnl,sMax.pnl,sMin.hold,sMax.hold,0],yMin=Math.min(...vals),yMax=Math.max(...vals),pad=Math.max(1,(yMax-yMin)*.08);
-  const lo=yMin-pad,hi=yMax+pad,x=p=>L+(p-min)/(max-min)*W,y=p=>T+(hi-p)/(hi-lo)*H;
-  const grid=Array.from({length:5},(_,i)=>{const value=lo+(hi-lo)*i/4;return `<line class="gridline" x1="${L}" x2="${width-R}" y1="${y(value)}" y2="${y(value)}"/><text x="${L-9}" y="${y(value)+4}" text-anchor="end">${compact(value)}</text>`;}).join('');
-  const tickCount=width<450?4:5;
-  const ticks=Array.from({length:tickCount},(_,i)=>{const value=min+(max-min)*i/(tickCount-1);return `<text x="${x(value)}" y="${height-12}" text-anchor="middle">${compact(value)}</text>`;}).join('');
-  const liqX=x(M.clamp(d.liqPriceH,min,max)),mcX=x(M.clamp(d.mcPriceH,min,max));
-  const solidMin=Math.max(min,d.liqPriceH),solidS=M.scenario(d,solidMin);
-  const alive=solidMin<=max;
-  const curve=alive?`M ${x(solidMin)} ${y(solidS.pnl)} L ${x(max)} ${y(sMax.pnl)}`:'';
-  const region=alive?`M ${x(solidMin)} ${y(0)} L ${x(solidMin)} ${y(solidS.pnl)} L ${x(max)} ${y(sMax.pnl)} L ${x(max)} ${y(0)} Z`:'';
-  const target=M.scenario(d,d.targetPrice),targetAlive=target.status!=='Liquidation';
-  const animated=chartAnimate?'':' style="animation:none"';
-  node.innerHTML=`<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Scenario payoff. Breakeven ${escapeHTML(usd(d.breakevenPrice))}. Loan payoff is unavailable below ${escapeHTML(usd(d.liqPriceH))} liquidation at the selected horizon."><defs><linearGradient id="payoff-fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".13"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient><clipPath id="plot-clip"><rect x="${L}" y="${T}" width="${W}" height="${H}"/></clipPath></defs>${grid}${ticks}<g clip-path="url(#plot-clip)"><rect x="${L}" y="${T}" width="${Math.max(0,liqX-L)}" height="${H}" fill="var(--red)" opacity=".055"/><rect x="${liqX}" y="${T}" width="${Math.max(0,mcX-liqX)}" height="${H}" fill="var(--accent)" opacity=".06"/><line class="zero" x1="${L}" x2="${width-R}" y1="${y(0)}" y2="${y(0)}"/><path d="M ${x(min)} ${y(sMin.hold)} L ${x(max)} ${y(sMax.hold)}" class="hold-line"/><path d="${region}" fill="url(#payoff-fill)"/><path d="${curve}" class="curve"${animated}/><line x1="${x(d.breakevenPrice)}" x2="${x(d.breakevenPrice)}" y1="${T}" y2="${height-B}" stroke="var(--accent)" opacity=".28" stroke-dasharray="3 4"/><line x1="${x(d.targetPrice)}" x2="${x(d.targetPrice)}" y1="${T}" y2="${height-B}" stroke="var(--muted)" opacity=".4" stroke-dasharray="3 5"/>${targetAlive?`<circle cx="${x(d.targetPrice)}" cy="${y(target.pnl)}" r="4" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>`:''}<line id="inspect-line" x1="0" x2="0" y1="${T}" y2="${height-B}" stroke="var(--cyan)" stroke-width="1" opacity="0"/><circle id="inspect-point" cx="0" cy="0" r="3" fill="var(--cyan)" opacity="0"/></g><text x="${L}" y="14">NET P/L · USD</text>${d.liqPriceH>min?`<text class="red" x="${L+6}" y="${T+17}" style="font-size:12px">LIQ.</text>`:''}</svg><div class="chart-tooltip" id="payoff-tooltip" hidden></div>`;
-  chartScale={x,y,min,max,L,R,width,height};chartAnimate=false;
-  $('chart-scrub').min=Math.ceil(min);$('chart-scrub').max=Math.floor(max);$('chart-scrub').step=Math.max(1,Math.round((max-min)/200));
-  const inspect=chartPrice===null?d.targetPrice:M.clamp(chartPrice,min,max);$('chart-scrub').value=inspect;set('scrub-output',usd(inspect));
+
+function renderCheckpoints(d) {
+  const be = basis === 'today' ? d.breakevenToday : d.breakevenStart;
+  const items = [
+    ['Liquidation', d.loan ? usd(d.liqPrice, 0) : 'No debt', d.loan ? `${signedPct(d.liqDropPct)} · ${usd(d.liqPriceExit, 0)} by exit` : '', 'bad'],
+    ['Margin call', d.loan ? usd(d.mcPrice, 0) : 'No debt', d.loan ? `${signedPct((d.mcPrice / d.price - 1) * 100)} · ${usd(d.mcPriceExit, 0)} by exit` : '', 'warn'],
+    ['Beat holding', d.beatHoldPrice != null ? usd(d.beatHoldPrice, 0) : 'n/a', d.beatHoldPrice != null ? `${signedPct((d.beatHoldPrice / d.price - 1) * 100)} · loan trade breaks even` : 'No BTC bought with the loan', 'info'],
+    [basis === 'today' ? 'Break-even from today' : (d.existing ? 'Break-even since borrowing' : 'Break-even'), usd(be, 0), `${signedPct((be / d.price - 1) * 100)} · total P/L = 0`, ''],
+    ['Model floor', usd(D.floorPrice, 0), 'MVRV model estimate', 'muted'],
+    ['Model ceiling', usd(D.ceilPrice, 0), 'MVRV model estimate', 'good']
+  ];
+  $('checkpoints').innerHTML = items.map(([label, value, sub, kind]) => `<div class="level-item"><div class="level-label"><i class="level-bar ${kind}"></i>${escapeHTML(label)}</div><div class="num strong ${kind}">${escapeHTML(value)}</div><p class="hint">${escapeHTML(sub)}</p></div>`).join('');
+  set('checkpoints-sub', 'Liquidation and margin call use today’s debt; break-evens use the debt on your exit date.');
 }
-function inspectChart(price,pointerX=null){
-  if(!chartScale||!currentResult)return;
-  const d=currentResult,s=chartScale,p=M.clamp(price,s.min,s.max),out=M.scenario(d,p);chartPrice=p;
-  $('chart-scrub').value=p;set('scrub-output',usd(p));
-  const line=$('inspect-line'),point=$('inspect-point'),tip=$('payoff-tooltip');if(!line||!tip)return;
-  line.setAttribute('x1',s.x(p));line.setAttribute('x2',s.x(p));line.setAttribute('opacity','.6');
-  point.setAttribute('cx',s.x(p));point.setAttribute('cy',s.y(out.pnl));point.setAttribute('opacity',out.status==='Liquidation'?'0':'1');
-  tip.innerHTML=`<span class="muted">BTC ${usd(p)}</span><strong class="${out.status==='Liquidation'?'bad':tone(out.pnl)}">${out.status==='Liquidation'?'Liquidation zone':signed(out.pnl)}</strong><span class="dim">LTV ${pct(out.ltv*100)} · ${out.status}</span>`;
-  tip.hidden=false;tip.style.top='35px';tip.style.left=M.clamp((pointerX??s.x(p))+12,8,Math.max(8,s.width-205))+'px';
+
+/* ---------- payoff chart ---------- */
+function domain(d) {
+  const pts = [d.price, d.target, d.beatHoldPrice, d.breakevenStart, D.floorPrice, D.ceilPrice, d.liqPriceExit, d.mcPriceExit].filter(n => Number.isFinite(n) && n > 0);
+  return [Math.max(1, Math.min(d.price * 0.4, ...pts) * 0.85), Math.max(...pts, d.price * 1.3) * 1.08];
 }
-function hideInspect(){const tip=$('payoff-tooltip');if(tip)tip.hidden=true;for(const id of ['inspect-line','inspect-point'])$(id)?.setAttribute('opacity','0');}
-function ladder(d){
-  const anchors=[{price:d.liqPriceH,label:'Liquidation'},{price:d.mcPriceH,label:'Margin call'},{price:D.floorPrice,label:'Model floor'},{price:d.price,label:'Reference'},{price:d.targetPrice,label:'Target'},{price:d.breakevenPrice,label:'Breakeven'},{price:D.ceilPrice,label:'Model ceiling'},{price:D.c4Ath,label:'Cycle ATH'}];
-  const values=[.4,.6,.8,1.2,1.5,2].map(v=>({price:d.price*v,label:''}));
-  const sorted=[...values,...anchors].filter(r=>Number.isFinite(r.price)&&r.price>0).sort((a,b)=>a.price-b.price);
-  const merged=[];
-  for(const r of sorted){const prev=merged.at(-1);if(prev&&Math.abs(prev.price-r.price)<.01){prev.labels.push(r.label);if(r.label)prev.price=r.price;}else merged.push({price:r.price,labels:[r.label]});}
-  return merged.map(r=>({...M.scenario(d,r.price),labels:r.labels.filter(Boolean)}));
+function renderPayoff(d) {
+  const node = $('payoff-chart'); if (!node || currentView !== 'overview') return;
+  const width = Math.max(300, node.clientWidth || 600), height = width < 420 ? 250 : 290, L = 56, R = 16, T = 18, B = 34, W = width - L - R, H = height - T - B;
+  const [min, max] = domain(d), pk = pnlKey(), hk = holdKey(), sMin = M.scenario(d, min), sMax = M.scenario(d, max);
+  const vals = [sMin[pk], sMax[pk], sMin[hk], sMax[hk], 0], lo0 = Math.min(...vals), hi0 = Math.max(...vals), pad = Math.max(1, (hi0 - lo0) * 0.08), lo = lo0 - pad, hi = hi0 + pad;
+  const x = p => L + (p - min) / (max - min) * W, y = v => T + (hi - v) / (hi - lo) * H;
+  const grid = Array.from({ length: 5 }, (_, i) => { const v = lo + (hi - lo) * i / 4; return `<line class="gridline" x1="${L}" x2="${width - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 8}" y="${y(v) + 4}" text-anchor="end">${compact(v)}</text>`; }).join('');
+  const tc = width < 460 ? 4 : 6, ticks = Array.from({ length: tc }, (_, i) => { const v = min + (max - min) * i / (tc - 1); return `<text x="${x(v)}" y="${height - 10}" text-anchor="middle">${compact(v)}</text>`; }).join('');
+  const liq = d.loan ? d.liqPriceExit : 0, mc = d.loan ? d.mcPriceExit : 0;
+  const liqX = x(M.clamp(liq, min, max)), mcX = x(M.clamp(mc, min, max));
+  const from = Math.max(min, liq), sFrom = M.scenario(d, from), alive = from <= max;
+  const curve = alive ? `M ${x(from)} ${y(sFrom[pk])} L ${x(max)} ${y(sMax[pk])}` : '';
+  const area = alive ? `M ${x(from)} ${y(0)} L ${x(from)} ${y(sFrom[pk])} L ${x(max)} ${y(sMax[pk])} L ${x(max)} ${y(0)} Z` : '';
+  const tgt = d.at, tAlive = tgt.status !== 'Liquidation';
+  const vline = (p, cls, label, ly) => Number.isFinite(p) && p > min && p < max ? `<line class="${cls}" x1="${x(p)}" x2="${x(p)}" y1="${T}" y2="${T + H}"/><text class="marker-label" x="${x(p) + 4}" y="${ly}">${label}</text>` : '';
+  node.innerHTML = `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Payoff at the exit date. Beat-holding price ${escapeHTML(usd(d.beatHoldPrice, 0))}. Liquidation below ${escapeHTML(usd(liq, 0))}."><defs><linearGradient id="payoff-fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".22"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient><clipPath id="plot-clip"><rect x="${L}" y="${T}" width="${W}" height="${H}"/></clipPath></defs>${grid}${ticks}<g clip-path="url(#plot-clip)"><rect x="${L}" y="${T}" width="${Math.max(0, liqX - L)}" height="${H}" class="zone-liq"/><rect x="${liqX}" y="${T}" width="${Math.max(0, mcX - liqX)}" height="${H}" class="zone-mc"/><line class="zero" x1="${L}" x2="${width - R}" y1="${y(0)}" y2="${y(0)}"/><path d="M ${x(min)} ${y(sMin[hk])} L ${x(max)} ${y(sMax[hk])}" class="hold-line"/><path d="${area}" fill="url(#payoff-fill)"/><path d="${curve}" class="curve"/>${vline(d.beatHoldPrice, 'marker', 'Beat holding', T + 12)}${vline(d.price, 'marker now', 'Now', T + H - 6)}${tAlive ? `<circle cx="${x(d.target)}" cy="${y(tgt[pk])}" r="5" class="target-dot"/>` : ''}<line id="inspect-line" x1="0" x2="0" y1="${T}" y2="${T + H}" class="inspect"/><circle id="inspect-point" cx="0" cy="0" r="4" class="inspect-dot"/></g></svg><div class="chart-tooltip" id="payoff-tooltip" hidden></div>`;
+  chartScale = { x, y, min, max, L, R, width };
+  const scrub = $('chart-scrub'); scrub.min = Math.ceil(min); scrub.max = Math.floor(max); scrub.step = Math.max(1, Math.round((max - min) / 200));
+  const p = chartPrice === null ? d.target : M.clamp(chartPrice, min, max); scrub.value = p; set('scrub-output', usd(p, 0));
 }
-function renderScenarios(d){
-  const basis=$('pnl-basis').value,rows=ladder(d),hasCost=d.entry>0;
-  set('ladder-pnl-label',basis==='pnl'?'Net P/L':basis==='borrowed'?'Borrowed P/L':'Cost basis P/L');
-  $('ladder-rows').innerHTML=rows.map(s=>{const dead=s.status==='Liquidation',value=s[basis];return `<tr class="${s.labels.includes('Target')?'target-row':''}"><td><span class="row-price">${usd(s.price)}</span>${s.labels.length?`<span class="row-label">${escapeHTML(s.labels.join(' · '))}</span>`:''}</td><td>${signedPct(s.change)}</td><td class="${dead?'bad':s.status==='Margin call'?'amber':''}">${pct(s.ltv*100)}</td><td>${badge(s.status,dead?'bad':s.status==='Margin call'?'amber':'')}</td><td>${dead?'—':usd(s.equity)}</td><td class="${dead?'muted':tone(value)}">${dead?'—':signed(value)}</td></tr>`;}).join('');
-  set('ladder-note',basis==='cost'&&!hasCost?'Set your original BTC cost basis in Risk & cost basis to see this view. Loan-funded BTC uses its deployment price.':`All values include ${usd(d.interestCost)} of interest accrued over ${fmt(d.loanDays,0)} days. ${basis==='borrowed'?'Borrowed P/L isolates loan-funded BTC and subtracts the full loan interest.':basis==='cost'?'Cost-basis P/L uses each BTC holding’s actual purchase price.':'Net P/L is measured against the original collateral’s reference value.'} Values below liquidation are unavailable; an earlier barrier crossing can also invalidate a higher exit price.`);
-  const dead=d.targetStatus==='Liquidation';
-  $('decomposition').innerHTML=row('Original BTC at target',usd(d.btc*d.targetPrice))+row('Loan-funded BTC at target',usd(d.newBtc*d.targetPrice))+row('Undeployed loan cash',usd(d.undeployedUsd))+row('Principal + interest','−'+usd(d.debtOwed))+row('Net equity at target',dead?'Unavailable':usd(d.equity),'total')+row('Initial collateral value',usd(d.collateral))+row('Net P/L',dead?'Unavailable':signed(d.netProfit),'total')+`<p class="hint" style="margin-top:12px">${dead?'Liquidation threshold crossed. Net values require an execution and residual-balance model.':'Cash and loan-funded BTC are matched by debt. Borrowing itself creates no profit.'}</p>`;
-  renderLadderChart(d,rows,basis);
+function inspectChart(price, pointerX = null) {
+  if (!chartScale || !currentResult) return;
+  const d = currentResult, s = chartScale, p = M.clamp(price, s.min, s.max), out = M.scenario(d, p), pk = pnlKey(); chartPrice = p;
+  $('chart-scrub').value = p; set('scrub-output', usd(p, 0));
+  const line = $('inspect-line'), point = $('inspect-point'), tip = $('payoff-tooltip'); if (!line || !tip) return;
+  line.setAttribute('x1', s.x(p)); line.setAttribute('x2', s.x(p)); line.classList.add('on');
+  point.setAttribute('cx', s.x(p)); point.setAttribute('cy', s.y(out[pk])); point.classList.toggle('on', out.status !== 'Liquidation');
+  const dead = out.status === 'Liquidation';
+  tip.innerHTML = `<span class="muted">BTC ${usd(p, 0)}</span><strong class="${dead ? 'bad' : tone(out[pk])}">${dead ? 'Liquidation zone' : signed(out[pk])}</strong><span class="muted">${dead ? '' : 'vs. holding ' + signed(out.loanTrade) + ' · '}LTV ${pct(out.ltv * 100)}</span>`;
+  tip.hidden = false; tip.style.left = M.clamp((pointerX ?? s.x(p)) + 12, 8, Math.max(8, s.width - 200)) + 'px';
 }
-function renderLadderChart(d,rows,basis){
-  const node=$('ladder-chart'),width=Math.max(310,node.clientWidth||800),height=285,L=57,R=46,T=30,B=43,W=width-L-R,H=height-T-B;
-  const values=rows.filter(r=>r.status!=='Liquidation').map(r=>r[basis]).filter(Number.isFinite),max=Math.max(1,...values.map(Math.abs))*1.15;
-  const y=v=>T+H/2-v/max*H/2,x=i=>L+(i+.5)*W/rows.length,bw=Math.min(35,W/rows.length*.53);
-  const ltvMax=Math.max(100,...rows.map(r=>r.ltv*100))*1.1,ly=v=>T+H-v/ltvMax*H;
-  const grid=[-1,-.5,0,.5,1].map(k=>`<line class="gridline" x1="${L}" x2="${width-R}" y1="${y(max*k)}" y2="${y(max*k)}"/><text x="${L-8}" y="${y(max*k)+4}" text-anchor="end">${compact(max*k)}</text>`).join('');
-  const bars=rows.map((r,i)=>{const dead=r.status==='Liquidation',v=r[basis],nullValue=!Number.isFinite(v);return `<g><title>${escapeHTML(usd(r.price)+' · '+r.status+' · '+(dead?'P/L unavailable':signed(v))+' · LTV '+pct(r.ltv*100))}</title>${dead?`<rect x="${x(i)-bw/2}" y="${T}" width="${bw}" height="${H}" fill="var(--red)" opacity=".06"/>`:nullValue?'':`<rect x="${x(i)-bw/2}" y="${Math.min(y(0),y(v))}" width="${bw}" height="${Math.max(1,Math.abs(y(v)-y(0)))}" fill="${v>=0?'var(--green)':'var(--red)'}" opacity=".7" rx="1"/>`}${i%Math.ceil(rows.length/(width<450?4:7))===0?`<text x="${x(i)}" y="${height-15}" text-anchor="middle">${compact(r.price)}</text>`:''}</g>`;}).join('');
-  const line=rows.map((r,i)=>(i?'L':'M')+' '+x(i)+' '+ly(r.ltv*100)).join(' ');
-  const ltvTicks=[0,.5,1].map(v=>`<text x="${width-R+8}" y="${ly(ltvMax*v)+4}" text-anchor="start">${fmt(ltvMax*v)}%</text>`).join('');
-  node.innerHTML=`<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Price ladder. Bars show selected P/L basis; line shows horizon LTV. Exact values are available in the table below.">${grid}${bars}<path d="${line}" fill="none" stroke="var(--accent)" stroke-width="1.5"/>${rows.map((r,i)=>`<circle cx="${x(i)}" cy="${ly(r.ltv*100)}" r="2.3" fill="${r.status==='Liquidation'?'var(--red)':'var(--accent)'}"/>`).join('')}${ltvTicks}<text x="${L}" y="15">P/L · USD</text><text class="accent" x="${width-R}" y="15" text-anchor="end">LTV · %</text></svg>`;
+function hideInspect() { const tip = $('payoff-tooltip'); if (tip) tip.hidden = true; $('inspect-line')?.classList.remove('on'); $('inspect-point')?.classList.remove('on'); }
+
+/* ---------- scenarios ---------- */
+const LADDER_LABELS = { pnlStart: 'P/L since borrowing', pnlToday: 'P/L from today', loanTrade: 'Loan trade', costBasis: 'P/L vs. cost basis' };
+function ladder(d) {
+  const anchors = [[d.loan ? d.liqPriceExit : null, 'Liquidation'], [d.loan ? d.mcPriceExit : null, 'Margin call'], [D.floorPrice, 'Model floor'], [d.price, 'Now'], [d.target, 'Target'], [d.beatHoldPrice, 'Beat holding'], [d.breakevenStart, 'Break-even'], [D.ceilPrice, 'Model ceiling'], [D.c4Ath, 'Cycle ATH']].map(([price, label]) => ({ price, label }));
+  const steps = [0.4, 0.6, 0.8, 1.2, 1.5, 2].map(v => ({ price: d.price * v, label: '' }));
+  const sorted = [...steps, ...anchors].filter(r => Number.isFinite(r.price) && r.price > 0).sort((a, b) => a.price - b.price), merged = [];
+  for (const r of sorted) { const prev = merged.at(-1); if (prev && Math.abs(prev.price - r.price) / r.price < 0.002) { if (r.label) { prev.labels.push(r.label); prev.price = r.price; } } else merged.push({ price: r.price, labels: [r.label] }); }
+  return merged.map(r => ({ ...M.scenario(d, r.price), labels: r.labels.filter(Boolean) }));
 }
-function renderRisk(d){
-  set('risk-buffer',d.loan?pct(d.bufferPct):'No debt');set('risk-buffer-note',d.loan?`${usd(d.buffer)} price buffer before ${usd(d.mcPrice)} margin call.`:'No margin call or liquidation threshold.');
-  set('risk-probability',d.pLiq90>0&&d.pLiq90<.0001?'<0.01%':pct(d.pLiq90*100,2));$('risk-probability').className='big-metric '+(d.pLiq90<.05?'good':d.pLiq90<.15?'amber':'bad');
-  set('risk-rr',Number.isFinite(d.rrRatio)?fmt(d.rrRatio,2)+' : 1':d.entry>0?'Undefined':'Set cost basis');
-  set('risk-kelly',pct(d.kellyLtv*100,1));
-  const callRepayLtv=Math.min(.7,d.mcLtv*.8),atCallCollateral=d.btc*d.mcPrice,topup=d.loan?Math.max(0,d.currentDebt/callRepayLtv-atCallCollateral):0,repay=d.loan?Math.max(0,d.currentDebt-callRepayLtv*atCallCollateral):0;
-  $('risk-mechanics').innerHTML=row('Debt today',usd(d.currentDebt))+row('Days held',fmt(d.loanDays,0))+row('Current LTV · interest included',pct(d.currentLtvPct))+row('Margin call LTV',pct(d.mcLtv*100))+row('Liquidation LTV',pct(d.liqLtv*100))+row('Current liquidation price',d.loan?usd(d.liqPrice):'No debt','total')+`<div class="risk-track" aria-hidden="true"><span style="width:${d.currentLtvPct}%;background:var(--accent)"></span><span style="width:${Math.max(0,d.mcLtv*100-d.currentLtvPct)}%;background:var(--surface3)"></span><span style="width:${(d.liqLtv-d.mcLtv)*100}%;background:var(--red);opacity:.45"></span><span style="flex:1;background:var(--red);opacity:.8"></span></div><p class="hint">Debt uses principal plus simple interest accrued from ${d.loanDate} through ${d.asOfDate}. Unpledged loan-funded BTC does not lower the threshold.</p>`;
-  $('stress-test').innerHTML=row('Start at current margin call',d.loan?usd(d.mcPrice):'No debt')+row('After another −2% (24h)',d.loan?usd(d.mcPrice*.98):'—')+row('After −5%/day for 48h',d.loan?usd(d.mcPrice*.95**2):'—')+row('Collateral top-up at margin call',usd(topup),'total')+row('Or repay current debt',usd(repay))+`<p class="hint" style="margin-top:12px">The two alternatives restore LTV to ${pct(callRepayLtv*100,0)} at the current-debt margin-call price. A top-up adds collateral value; repayment reduces principal plus accrued interest. No warning or grace period is assumed.</p>`;
+function renderScenarios(d) {
+  const key = $('pnl-basis').value, rows = ladder(d);
+  set('ladder-pnl-label', LADDER_LABELS[key]);
+  set('ladder-sub', `Every row is valued on ${dateLabel(d.exitDate)} with ${usd(d.debtAtExit)} owed (${usd(d.exitInterest)} interest).`);
+  $('ladder-rows').innerHTML = rows.map(s => { const dead = s.status === 'Liquidation', v = s[key]; return `<tr class="${s.labels.includes('Target') ? 'target-row' : ''}"><td><span class="row-price">${usd(s.price, 0)}</span>${s.labels.length ? `<span class="row-label">${escapeHTML(s.labels.join(' · '))}</span>` : ''}</td><td>${signedPct(s.change)}</td><td class="${statusTone(s.status)}">${pct(s.ltv * 100)}</td><td>${badge(s.status, statusTone(s.status))}</td><td>${dead ? '—' : usd(s.equity)}</td><td class="${dead ? 'muted' : tone(v)}">${dead ? '—' : signed(v)}</td></tr>`; }).join('');
+  const notes = { pnlStart: d.existing ? 'Against your BTC’s value when you borrowed.' : 'Against your collateral’s value today.', pnlToday: 'Against today’s net equity: only future price moves and future interest count.', loanTrade: 'The loan’s contribution alone: loan BTC gain minus all interest. Positive means the loan beat just holding.', costBasis: d.entrySet ? 'Your BTC against your cost basis, plus the loan trade.' : 'No cost basis set, so your BTC uses the price when you borrowed. Add it under Lender terms & cost basis.' };
+  set('ladder-note', notes[key] + ' Rows past liquidation are unavailable; an earlier dip can also liquidate before a higher exit.');
+  const s = d.at, dead = s.status === 'Liquidation';
+  set('decomp-badge', s.status); $('decomp-badge').className = 'badge ' + statusTone(s.status);
+  $('decomposition').innerHTML = row('Your BTC at target', usd(d.btc * d.target)) + row('Loan BTC at target', usd(d.newBtc * d.target)) + row('Unused loan cash', usd(d.cash)) + row('Debt on exit date', '−' + usd(d.debtAtExit)) + row('Net equity', dead ? 'Unavailable' : usd(s.equity), 'total') + row(d.existing ? 'Your BTC when you borrowed' : 'Your BTC today', usd(d.startValue)) + row(d.existing ? 'P/L since borrowing' : 'P/L', dead ? '—' : signed(s.pnlStart), 'total') + (d.existing ? row('P/L from today', dead ? '—' : signed(s.pnlToday)) : '') + row('Loan trade (vs. holding)', dead ? '—' : signed(s.loanTrade));
+  renderLadderChart(d, rows, key);
 }
-function renderSignals(d){
-  const cards=[['MVRV ratio',fmt(D.mvrv,3),D.mvrv<1?'Below realized value':D.mvrv<D.histMeanMvrv?'Below historical mean':'Above historical mean',`Historical mean ${fmt(D.histMeanMvrv,3)}`,D.mvrv<D.histMeanMvrv?'good':'amber'],['Z-score',fmt(D.zscore,3),D.zscore<0?'Below mean':'Above mean','From the source MVRV dataset',D.zscore<0?'good':'amber'],['MVRV moving averages',/bull/i.test(D.maStack)?'Bullish':/bear/i.test(D.maStack)?'Bearish':'Mixed','20 / 50 / 200',`${fmt(D.ma20,3)} / ${fmt(D.ma50,3)} / ${fmt(D.ma200,3)}`,/bull/i.test(D.maStack)?'good':'amber'],['30d MVRV momentum',signedPct(D.roc30),D.roc30>=0?'Positive momentum':'Negative momentum',`90d change ${signedPct(D.roc90)}`,D.roc30>=0?'good':'bad'],['Cycle position',pct(D.cyclePos),D.cyclePos<35?'Early cycle':D.cyclePos<65?'Mid cycle':'Later cycle',D.cycleName,'cyan'],['Price vs. cycle ATH',pct(d.athDropPct),'Price drawdown',`${usd(D.c4Ath)} · ${D.c4AthDate||'date unavailable'}`,'amber']];
-  $('signal-cards').innerHTML=cards.map(([label,value,tag,note,color])=>`<div class="panel signal-card"><div class="panel-body"><div class="overline">${escapeHTML(label)}</div><div class="big-metric ${color}">${escapeHTML(value)}</div>${badge(tag,color)}<p class="hint">${escapeHTML(note)}</p></div></div>`).join('');
-  for(const k of Object.keys(M.WEIGHTS)){set('weight-value-'+k,pct(d.signals.weights[k]*100,0));}
-  set('weight-note',d.signals.usedDefaults?'All weights are zero: the default mix is used.':'Normalized to 100% · Composite score '+fmt(d.score,2)+' / 10');
-  set('cycle-title',D.cycleName+' · context');
-  $('cycle-context').innerHTML=`<div class="key-row"><span>Elapsed cycle</span><strong>${pct(D.cyclePos)}</strong></div><div class="cycle-track"><div class="cycle-fill" style="width:${M.clamp(D.cyclePos,0,100)}%"></div></div>`+row('MVRV cycle peak',fmt(D.cyclePeakMvrv,3))+row('MVRV drawdown from peak',pct(D.cycleDrawdown))+row('Model floor',usd(D.floorPrice))+row('Model ceiling',usd(D.ceilPrice))+row('Ceiling range',usd(D.ceilLow)+' – '+usd(D.ceilHigh))+row('Next estimated halving',escapeHTML(D.nextHalving||'Unavailable'))+`<p class="hint" style="margin-top:12px">MVRV drawdown is a ratio change, not BTC price drawdown. Model ranges are estimates.</p>`;
-  const maBull=/bull/i.test(D.maStack),mvrvBelow=D.mvrv<D.histMeanMvrv;
-  $('signal-reading').innerHTML=`<p><strong>Valuation:</strong> MVRV is ${mvrvBelow?'below':'above'} its historical mean by ${pct(Math.abs((D.mvrv/D.histMeanMvrv-1)*100))}. That ${mvrvBelow?'supports the lower-valuation component':'reduces the valuation component'} of the composite score.</p><p><strong>Trend:</strong> the MVRV moving-average stack is ${maBull?'bullish':'not bullish'}, while 30-day MVRV momentum is ${signedPct(D.roc30)}. These measures describe on-chain valuation, not a guarantee of BTC price direction.</p><p><strong>Risk context:</strong> current model floor ${usd(D.floorPrice)} and ceiling ${usd(D.ceilPrice)} are uncertain. Loan liquidation depends on your own LTV and terms, independently of the score. The worst reported historical MVRV drawdown is ${pct(D.worstCycleDrawdown)} (${escapeHTML(D.worstCycleTag||'unavailable')}).</p>`;
-  $('history-rows').innerHTML=history.length?history.map(h=>`<tr><td>${escapeHTML(h.date)}</td><td>${fmt(h.mvrv,3)}</td><td>${fmt(h.zscore,3)}</td><td>${usd(h.btcPrice)}</td></tr>`).join(''):'<tr><td colspan="4" style="text-align:left">No refreshed snapshots yet. Refresh data to save a valid report on this device.</td></tr>';
+function renderLadderChart(d, rows, key) {
+  const node = $('ladder-chart'), width = Math.max(300, node.clientWidth || 800), height = 270, L = 56, R = 44, T = 22, B = 36, W = width - L - R, H = height - T - B;
+  const values = rows.filter(r => r.status !== 'Liquidation').map(r => r[key]).filter(Number.isFinite), max = Math.max(1, ...values.map(Math.abs)) * 1.15;
+  const y = v => T + H / 2 - v / max * H / 2, x = i => L + (i + 0.5) * W / rows.length, bw = Math.min(30, W / rows.length * 0.55);
+  const ltvMax = Math.max(100, ...rows.map(r => Math.min(r.ltv * 100, 400))) * 1.05, ly = v => T + H - Math.min(v, ltvMax) / ltvMax * H;
+  const grid = [-1, -0.5, 0, 0.5, 1].map(k => `<line class="gridline" x1="${L}" x2="${width - R}" y1="${y(max * k)}" y2="${y(max * k)}"/><text x="${L - 8}" y="${y(max * k) + 4}" text-anchor="end">${compact(max * k)}</text>`).join('');
+  const every = Math.ceil(rows.length / (width < 460 ? 4 : 8));
+  const bars = rows.map((r, i) => { const dead = r.status === 'Liquidation', v = r[key]; return `<g><title>${escapeHTML(usd(r.price, 0) + ' · ' + r.status + ' · ' + (dead ? 'unavailable' : signed(v)))}</title>${dead ? `<rect x="${x(i) - bw / 2}" y="${T}" width="${bw}" height="${H}" class="zone-liq"/>` : `<rect x="${x(i) - bw / 2}" y="${Math.min(y(0), y(v))}" width="${bw}" height="${Math.max(1, Math.abs(y(v) - y(0)))}" rx="3" class="${v >= 0 ? 'bar-good' : 'bar-bad'}"/>`}${i % every === 0 ? `<text x="${x(i)}" y="${height - 10}" text-anchor="middle">${compact(r.price)}</text>` : ''}</g>`; }).join('');
+  const line = rows.map((r, i) => (i ? 'L' : 'M') + ' ' + x(i) + ' ' + ly(r.ltv * 100)).join(' ');
+  const ltvTicks = [0, 0.5, 1].map(v => `<text x="${width - R + 6}" y="${ly(ltvMax * v) + 4}">${fmt(ltvMax * v)}%</text>`).join('');
+  node.innerHTML = `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Price ladder: bars show ${escapeHTML(LADDER_LABELS[key])}; the line shows LTV at exit. Exact values are in the table below.">${grid}${bars}<path d="${line}" class="ltv-line"/>${rows.map((r, i) => `<circle cx="${x(i)}" cy="${ly(r.ltv * 100)}" r="2.5" class="${r.status === 'Liquidation' ? 'dot-bad' : 'dot-accent'}"/>`).join('')}${ltvTicks}<text x="${width - R}" y="12" text-anchor="end" class="axis-accent">LTV %</text></svg>`;
+}
+
+/* ---------- risk ---------- */
+function renderRisk(d) {
+  set('risk-buffer', d.loan ? pct(d.bufferPct) : 'No debt'); $('risk-buffer').className = 'big-metric ' + (d.bufferPct < 15 ? 'bad' : d.bufferPct < 35 ? 'warn' : 'good');
+  set('risk-buffer-note', d.loan ? `BTC can fall ${usd(d.price - d.mcPrice, 0)} to ${usd(d.mcPrice, 0)} before a margin call.` : 'No margin call or liquidation.');
+  set('risk-probability', !d.loan ? '—' : d.pLiq90 > 0 && d.pLiq90 < 0.0001 ? '<0.01%' : pct(d.pLiq90 * 100, 2));
+  $('risk-probability').className = 'big-metric ' + (d.pLiq90 < 0.05 ? 'good' : d.pLiq90 < 0.15 ? 'warn' : 'bad');
+  set('risk-probability-note', d.loan ? `Barrier ${usd(d.liqPrice90, 0)} (debt in 90 days) at ${pct(d.vol * 100, 0)} volatility.` : '');
+  set('risk-rr', Number.isFinite(d.rrRatio) ? fmt(d.rrRatio, 2) + ' : 1' : '—');
+  set('risk-rr-note', Number.isFinite(d.rrRatio) ? `Up ${usd(D.ceilPrice - d.price, 0)} to the ${usd(D.ceilPrice, 0)} ceiling vs. down ${usd(d.price - d.liqPrice, 0)} to liquidation.` : 'Needs a loan and a model ceiling above today’s price.');
+  const cur = M.clamp(d.currentLtv * 100, 0, 100), mc = d.mcLtv * 100, lq = d.liqLtv * 100;
+  $('risk-mechanics').innerHTML = row('Debt today', usd(d.debtToday)) + row('Days since loan', fmt(d.loanDays)) + row('LTV today (interest included)', pct(d.currentLtv * 100)) + (d.existing ? row('LTV when you borrowed', pct(d.initialLtv * 100)) : '') + row('Margin call / liquidation LTV', `${pct(mc, 0)} / ${pct(lq, 0)}`) + row('Liquidation price now', d.loan ? usd(d.liqPrice, 0) : 'No debt', 'total') + row('Liquidation price on exit date', d.loan ? usd(d.liqPriceExit, 0) : 'No debt')
+    + `<div class="risk-track" aria-hidden="true"><span class="fill" style="width:${cur}%"></span><i class="mark warn" style="left:${mc}%"></i><i class="mark bad" style="left:${lq}%"></i></div><p class="hint">Bar: today’s LTV against your margin-call and liquidation levels. BTC bought with the loan is not pledged, so it does not lower these thresholds.</p>`;
+  $('margin-response').innerHTML = d.loan ? `<p class="hint">If BTC falls to ${usd(d.mcPrice, 0)}, your lender asks you to bring LTV back to ${pct(d.restoreLtv * 100, 0)}. Either:</p>` + row('Add collateral', `${btcAmt(d.topUpBtc)} <span class="muted">(${usd(d.topUpUsd)})</span>`, 'total') + row('Or repay', usd(d.restoreRepayUsd)) + `<p class="hint">Uses today’s debt and your restore-to LTV (Lender terms). No grace period is assumed.</p>` : '<p class="hint">No debt, so no margin call.</p>';
+  $('stress-rows').innerHTML = M.stress(d).map(s => `<tr><td>−${s.drop}%</td><td>${usd(s.price, 0)}</td><td class="${statusTone(s.status)}">${pct(s.ltv * 100)}</td><td>${badge(s.status, statusTone(s.status))}</td></tr>`).join('');
+}
+
+/* ---------- signals ---------- */
+function renderSignals(d) {
+  const bull = /bull/i.test(D.maStack), bear = /bear/i.test(D.maStack);
+  const cards = [
+    ['MVRV ratio', fmt(D.mvrv, 3), D.mvrv < 1 ? 'Below realized value' : D.mvrv < D.histMeanMvrv ? 'Below long-run mean' : 'Above long-run mean', `Long-run mean ${fmt(D.histMeanMvrv, 3)}`, D.mvrv < D.histMeanMvrv ? 'good' : 'warn'],
+    ['Z-score', fmt(D.zscore, 3), D.zscore < 0 ? 'Below average' : 'Above average', 'Standard deviations from the MVRV mean', D.zscore < 0 ? 'good' : 'warn'],
+    ['MVRV moving averages', bull ? 'Bullish' : bear ? 'Bearish' : 'Mixed', '20 / 50 / 200 day', `${fmt(D.ma20, 3)} / ${fmt(D.ma50, 3)} / ${fmt(D.ma200, 3)}`, bull ? 'good' : bear ? 'bad' : 'warn'],
+    ['30-day MVRV momentum', signedPct(D.roc30), D.roc30 >= 0 ? 'Rising' : 'Falling', `90-day ${signedPct(D.roc90)}`, D.roc30 >= 0 ? 'good' : 'bad'],
+    ['Cycle position', pct(D.cyclePos), D.cyclePos < 35 ? 'Early cycle' : D.cyclePos < 65 ? 'Mid cycle' : 'Late cycle', D.cycleName, 'info'],
+    ['Price vs. cycle high', pct(d.athDropPct), 'Drawdown from ATH', `${usd(D.c4Ath, 0)} · ${D.c4AthDate || 'date unavailable'}`, 'warn']
+  ];
+  $('signal-cards').innerHTML = cards.map(([label, value, tag, note, kind]) => `<div class="card signal-card"><div class="overline">${escapeHTML(label)}</div><div class="big-metric ${kind}">${escapeHTML(value)}</div>${badge(tag, kind)}<p class="hint">${escapeHTML(note)}</p></div>`).join('');
+  for (const k of Object.keys(M.WEIGHTS)) set('weight-value-' + k, pct(d.signals.weights[k] * 100, 0));
+  set('weight-note', d.signals.usedDefaults ? 'All weights are zero, so the default mix is used.' : `Composite score ${fmt(d.score, 2)} / 10`);
+  set('cycle-title', D.cycleName + ' · context');
+  $('cycle-context').innerHTML = `<div class="key-row"><span>Elapsed cycle</span><strong>${pct(D.cyclePos)}</strong></div><div class="cycle-track"><div class="cycle-fill" style="width:${M.clamp(D.cyclePos, 0, 100)}%"></div></div>` + row('MVRV cycle peak', fmt(D.cyclePeakMvrv, 3)) + row('MVRV drop from peak', pct(D.cycleDrawdown)) + row('Model floor', usd(D.floorPrice, 0)) + row('Model ceiling', usd(D.ceilPrice, 0)) + row('Ceiling range', usd(D.ceilLow, 0) + ' – ' + usd(D.ceilHigh, 0)) + row('Next halving (est.)', escapeHTML(D.nextHalving || '—')) + '<p class="hint">MVRV drop is a ratio change, not a BTC price drop. Model ranges are estimates.</p>';
+  const below = D.mvrv < D.histMeanMvrv;
+  $('signal-reading').innerHTML = `<p><strong>Valuation:</strong> MVRV is ${below ? 'below' : 'above'} its long-run mean by ${pct(Math.abs((D.mvrv / D.histMeanMvrv - 1) * 100))}, which ${below ? 'lifts' : 'lowers'} the valuation part of the score.</p><p><strong>Trend:</strong> the MVRV moving averages are ${bull ? 'bullish' : 'not bullish'} and 30-day momentum is ${signedPct(D.roc30)}. These describe on-chain valuation, not where price goes next.</p><p><strong>Risk:</strong> the model floor (${usd(D.floorPrice, 0)}) and ceiling (${usd(D.ceilPrice, 0)}) are uncertain. Your liquidation risk depends on your LTV and lender, not on this score. Worst historical MVRV drawdown: ${pct(D.worstCycleDrawdown)} (${escapeHTML(D.worstCycleTag || '—')}).</p>`;
+  $('history-rows').innerHTML = history.length ? history.map(h => `<tr><td>${escapeHTML(h.date)}</td><td>${fmt(h.mvrv, 3)}</td><td>${fmt(h.zscore, 3)}</td><td>${usd(h.btcPrice, 0)}</td></tr>`).join('') : '<tr><td colspan="4" class="left">No refreshed snapshots yet. Refresh data to save one on this device.</td></tr>';
   updateMarket();
 }
-function renderFutures(d){
-  const f=M.futures(d),loanDead=d.targetStatus==='Liquidation',futDead=f.targetLiquidated,none=f.notionalUsd===0;
-  const cell=(value,sub='')=>escapeHTML(value)+(sub?`<small>${escapeHTML(sub)}</small>`:'');
-  const data=[
-    ['Additional BTC',cell('+'+fmt(d.newBtc,5)),cell('+'+fmt(f.notionalBtc,5),'Matched deployed exposure')],
-    ['Financed / traded notional',cell(usd(d.loan),'Full loan principal'),cell(usd(f.notionalUsd),'Only deployed capital')],
-    ['Capital committed',cell(usd(d.collateral),'Pledged BTC'),cell(usd(f.capital),'Spot BTC + cash margin')],
-    ['Collateral / margin exposed',cell(usd(d.collateral),'Original collateral subject to liquidation'),cell(usd(f.margin),'Isolated margin; spot BTC kept separate')],
-    ['Liquidation price · now',cell(d.loan?usd(d.liqPrice):'No debt',d.loan?signedPct(d.liqDropPct)+' from reference':''),cell(none?'No position':usd(f.liqPrice),none?'':signedPct(f.liqDropPct)+' from reference')],
-    ['Carry cost over '+fmt(d.loanDays,0)+' days',cell(usd(d.interestCost),pct(d.apr*100)+' fixed APR'),cell(usd(f.fundingCost),pct(f.fundingApr*100)+' funding assumption')],
-    ['Breakeven before carry',cell(usd(d.breakevenGross)),cell(usd(f.breakevenSimple))],
-    ['Breakeven after carry',cell(usd(d.breakevenPrice)),cell(usd(f.breakevenAdj))],
-    ['Net portfolio P/L at target',cell(loanDead?'Unavailable':signed(d.netProfit),loanDead?'Liquidation threshold crossed':'After loan interest'),cell(futDead?'Unavailable':signed(f.pnlFutAdj),futDead?'Liquidation threshold crossed':'After estimated funding')],
-    ['Portfolio return',cell(loanDead?'—':signedPct(d.levReturnPct),'Denominator: pledged BTC value'),cell(futDead?'—':signedPct(f.returnFutPct),'Denominator: spot BTC + margin')],
-    ['Futures leg return on margin',cell('—'),cell(futDead?'—':signedPct(f.legReturnPct),none?'No futures position':'Futures-leg P/L only')]
+
+/* ---------- futures ---------- */
+function renderFutures(d) {
+  const f = M.futures(d), s = d.at, loanDead = s.status === 'Liquidation', futDead = f.targetLiquidated, none = f.notionalUsd === 0;
+  const cell = (value, sub = '') => escapeHTML(value) + (sub ? `<small>${escapeHTML(sub)}</small>` : '');
+  const days = fmt(d.totalDays);
+  const rows = [
+    ['Extra BTC', cell(d.newBtc ? '+' + btcAmt(d.newBtc) : '—'), cell(none ? '—' : '+' + btcAmt(f.notionalBtc), 'Same exposure')],
+    ['Borrowed / traded', cell(usd(d.loan), 'Full principal accrues interest'), cell(usd(f.notionalUsd), 'Notional of the futures position')],
+    ['Your capital', cell(usd(d.startValue), 'Your BTC, pledged'), cell(usd(f.capital), 'Your BTC + cash margin')],
+    ['What can be liquidated', cell(usd(d.collateral), 'Your pledged BTC today'), cell(usd(f.margin), 'Only the margin; spot BTC stays yours')],
+    ['Liquidation price', cell(d.loan ? usd(d.liqPrice, 0) : 'No debt', d.loan ? signedPct(d.liqDropPct) + ' from now' : ''), cell(none ? 'No position' : usd(f.liqPrice, 0), none ? '' : signedPct(f.liqDropPct) + ' from now')],
+    [`Carry over ${days} days`, cell(usd(d.exitInterest), pct(d.apr * 100) + ' APR, loan date → exit'), cell(usd(f.fundingCost), pct(f.fundingApr * 100) + ' funding, same window')],
+    ['Beat-holding price', cell(d.beatHoldPrice != null ? usd(d.beatHoldPrice, 0) : '—'), cell(f.beatHoldPrice != null ? usd(f.beatHoldPrice, 0) : '—')],
+    ['P/L since borrowing, at target', cell(loanDead ? 'Unavailable' : signed(f.pnlLoan), loanDead ? 'Past liquidation' : 'After all interest'), cell(futDead ? 'Unavailable' : signed(f.pnlFut), futDead ? 'Past liquidation' : 'After funding')],
+    ['Return on your capital', cell(loanDead ? '—' : signedPct(f.returnLoanPct)), cell(futDead ? '—' : signedPct(f.returnFutPct))],
+    ['Futures leg on margin', cell('—'), cell(futDead || none ? '—' : signedPct(f.legReturnPct), none ? 'No futures position' : '')]
   ];
-  $('comparison-rows').innerHTML=data.map(([label,a,b])=>`<tr><td>${escapeHTML(label)}</td><td>${a}</td><td>${b}</td></tr>`).join('');
-  let insight=none?`At 0% deployment there is no futures leg. The loan still carries ${usd(d.interestCost)} interest on the cash you borrow. `:`Both add ${fmt(d.newBtc,5)} BTC. ${Math.abs(f.costDifference)<.005?'Carry costs are equal.':f.costDifference>0?'The loan costs '+usd(f.costDifference)+' less over this horizon.':'Futures cost '+usd(-f.costDifference)+' less over this horizon.'} `;
-  if(d.loan&&!none){const loanBuffer=1-d.liqPrice/d.price,futBuffer=1-f.liqPrice/d.price;insight+=`${loanBuffer>futBuffer?'The loan':'Futures'} has the wider current liquidation buffer at the reference price. The loan threshold includes accrued interest today; futures requires ${usd(f.margin)} in additional cash margin. `;}
-  if(loanDead||futDead)insight+='At least one target crosses liquidation; a surviving-position P/L comparison is unavailable.';else insight+='These target payoffs assume neither position is liquidated along the way.';
-  set('futures-insight',insight);
+  $('comparison-rows').innerHTML = rows.map(([label, a, b]) => `<tr><td>${escapeHTML(label)}</td><td>${a}</td><td>${b}</td></tr>`).join('');
+  let text = none ? `With 0% of the loan used, there is no futures leg. The loan still costs ${usd(d.exitInterest)} in interest on cash you hold. ` : `Both add ${btcAmt(d.newBtc)}. ${Math.abs(f.costDifference) < 0.005 ? 'Carry costs are equal.' : f.costDifference > 0 ? `The loan costs ${usd(f.costDifference)} less over ${days} days.` : `Futures cost ${usd(-f.costDifference)} less over ${days} days.`} `;
+  if (d.loan && !none) text += f.liquidatedNow ? 'The futures position would already be liquidated at today’s price. ' : `${d.liqPrice < f.liqPrice ? 'The loan' : 'Futures'} has the lower liquidation price today. Futures needs ${usd(f.margin)} of extra cash margin. `;
+  text += loanDead || futDead ? 'At least one side is past liquidation at your target.' : 'Both target results assume neither side is liquidated on the way.';
+  set('futures-insight', text);
 }
-const VIEWS={overview:'Position overview',scenarios:'Scenario analysis',risk:'Risk & liquidation',signals:'On-chain signals',futures:'Loan vs. futures'};
-function switchView(view,focus=false){
-  if(!Object.hasOwn(VIEWS,view))return;
-  currentView=view;chartAnimate=true;
-  document.querySelectorAll('[role=tab]').forEach(button=>{const active=button.dataset.view===view;button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;});
-  document.querySelectorAll('[role=tabpanel]').forEach(pane=>pane.hidden=pane.id!=='pane-'+view);
-  set('page-title',VIEWS[view]);set('breadcrumb',view[0].toUpperCase()+view.slice(1));
-  if(currentResult){if(view==='overview')renderOverview(currentResult);else renderActive(currentResult);}
-  if(focus)$('tab-'+view).focus();
+
+/* ---------- views ---------- */
+const VIEWS = { overview: 'Overview', scenarios: 'Scenarios', risk: 'Risk & liquidation', signals: 'On-chain signals', futures: 'Loan vs. futures' };
+function switchView(view, focus = false) {
+  if (!Object.hasOwn(VIEWS, view)) return;
+  currentView = view;
+  document.querySelectorAll('[role=tab]').forEach(b => { const on = b.dataset.view === view; b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1; });
+  document.querySelectorAll('[role=tabpanel]').forEach(p => p.hidden = p.id !== 'pane-' + view);
+  set('page-title', VIEWS[view]);
+  if (currentResult) { if (view === 'overview') renderOverview(currentResult); else renderActive(currentResult); }
+  if (focus) $('tab-' + view).focus();
 }
-function targetFor(which,d){return which==='current'?d.price:which==='floor'?D.floorPrice:which==='ceiling'?D.ceilPrice:d.loan?d.liqPriceH:0;}
-async function fetchLatestData(){
-  if(refreshRunning)return;
-  refreshRunning=true;$('refresh-btn').disabled=true;$('refresh-btn').classList.add('spin');$('refresh-btn').setAttribute('aria-busy','true');set('update-status','Refreshing data…');
-  const revision=editRevision;
-  try{
-    const result=await window.MarketClient.refresh();reportError=result.reportError;quoteError=result.quoteError;
-    if(result.data&&result.data.date>=D.date){D=result.data;dataSource='GitHub report';putStored(STORAGE.data,D);saveHistory(D);}
-    else if(result.data){reportError='Older report returned';}
-    if(result.quote){quote=result.quote;if(!priceEdited&&editRevision===revision)$('inp-price').value=quote.price;}
-    updateMarket();render();
-    const message=result.data&&result.quote?'Market and on-chain data refreshed':result.quote?'Market quote refreshed; previous on-chain report retained':result.data?'On-chain report refreshed; previous quote retained':'Sources unavailable; previous data retained';
-    toast(message);
-  }catch{reportError='Network request failed';quoteError='Network request failed';updateMarket();toast('Refresh failed. Previous data and inputs are preserved.');}
-  finally{refreshRunning=false;$('refresh-btn').disabled=false;$('refresh-btn').classList.remove('spin');$('refresh-btn').setAttribute('aria-busy','false');set('update-status',reportError||quoteError?'Refresh incomplete':'Data refreshed');window.__refreshComplete=true;}
+function targetFor(which, d) {
+  return which === 'now' ? d.price : which === 'beat' ? d.beatHoldPrice ?? 0 : which === 'ceiling' ? D.ceilPrice : which === 'ath' ? D.c4Ath ?? 0 : which === 'double' ? (d.entrySet ? d.entry : d.borrowPrice) * 2 : 0;
 }
-async function lookupEntryPrice(){
-  const date=$('entry-date').value,button=$('lookup-entry');
-  if(!M.dateValid(date)||date>new Date().toISOString().slice(0,10)){set('entry-lookup-status','Choose a valid date on or before today.');return;}
-  const originalEntry=$('inp-entry').value;button.disabled=true;set('entry-lookup-status','Looking up daily BTC price…');
-  try{const series=await window.MarketClient.dailySeries();const result=M.nearestPrice(series,date);if(!result)throw new Error('No daily price found within the preceding seven days.');
-    if($('entry-date').value!==date||$('inp-entry').value!==originalEntry){set('entry-lookup-status','Inputs changed while loading; the lookup did not overwrite them.');return;}
-    applyInput({entry:Math.round(result.price)});set('entry-lookup-status',`${usd(result.price)} · ${result.date}${result.exact?'':' (nearest earlier date)'}`);
-  }catch(error){set('entry-lookup-status',error.message||'Price lookup unavailable.');}finally{button.disabled=false;}
+
+/* ---------- market data ---------- */
+function updateMarket() {
+  set('market-price', usd(quote.price, 0)); set('ticker-mvrv', fmt(D.mvrv, 3)); set('ticker-zscore', fmt(D.zscore, 3));
+  $('ticker-zscore').className = 'market-value ' + (D.zscore < 0 ? 'good' : '');
+  const bull = /bull/i.test(D.maStack);
+  set('ticker-trend', bull ? 'Bullish' : /bear/i.test(D.maStack) ? 'Bearish' : 'Mixed'); $('ticker-trend').className = 'market-value ' + (bull ? 'good' : 'warn');
+  set('ticker-cycle', pct(D.cyclePos)); set('data-date', dateLabel(D.date));
+  const age = quote.fetchedAt ? (Date.now() - Date.parse(quote.fetchedAt)) / 6e4 : Infinity;
+  const src = quote.live ? (age < 5 ? 'Live' : 'Cached') + ' · ' + utcTime(quote.fetchedAt) : quote.source === 'Daily snapshot' ? `Daily close · ${dateLabel(quote.date)}` : `Snapshot · ${dateLabel(quote.date)}`;
+  set('quote-source', src); $('quote-source').className = 'live-dot ' + (quote.live && age < 5 ? 'on' : '');
+  const inputPrice = Number($('inp-price').value);
+  set('price-source', Number.isFinite(inputPrice) && Math.abs(inputPrice - quote.price) < 0.005 ? src : 'Edited manually');
+  $('use-quote').hidden = Number.isFinite(inputPrice) && Math.abs(inputPrice - quote.price) < 0.005;
+  const notes = [];
+  if (M.ageHours(D.date) > 48) notes.push(`On-chain data is from ${dateLabel(D.date)} (over 48 hours old).`);
+  if (reportError) notes.push('On-chain refresh failed; the previous report is kept.');
+  if (quoteError) notes.push('Price refresh failed; the previous price is kept.');
+  else if (quote.live && age >= 5) notes.push('The live price is over 5 minutes old. Refresh to update.');
+  $('data-notice').hidden = !notes.length; set('data-notice-text', notes.join(' '));
+  set('data-provenance', `${dataSource} · on-chain ${dateLabel(D.date)} · price ${quote.source}, ${quote.date}${quote.fetchedAt ? ' at ' + utcTime(quote.fetchedAt) : ''}`);
 }
-function exportSnapshot(){
-  const input=validateAndRead();if(!input)return;
-  const report=window.LoanReport.build({input,data:D,weights:weights(),quote,source:dataSource,history});
-  const blob=new Blob([report],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
-  a.href=url;a.download='btc-loan-analysis-'+new Date().toISOString().slice(0,10)+'.txt';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);toast('Full analysis exported.');
+async function fetchLatestData() {
+  if (refreshRunning) return;
+  refreshRunning = true; const btn = $('refresh-btn'); btn.disabled = true; btn.classList.add('spin'); btn.setAttribute('aria-busy', 'true'); set('update-status', 'Refreshing data…');
+  const revision = editRevision;
+  try {
+    const result = await window.MarketClient.refresh(); reportError = result.reportError; quoteError = result.quoteError;
+    if (result.data && result.data.date >= D.date) { D = result.data; dataSource = 'GitHub report'; putStored(STORAGE.data, D); saveHistory(D); }
+    else if (result.data) reportError = 'Older report returned';
+    if (result.quote) { quote = result.quote; if (!priceEdited && editRevision === revision) $('inp-price').value = quote.price; }
+    updateMarket(); render();
+    toast(result.data && result.quote ? 'Market and on-chain data refreshed' : result.quote ? 'Price refreshed; previous on-chain report kept' : result.data ? 'On-chain report refreshed; previous price kept' : 'Sources unavailable; previous data kept');
+  } catch { reportError = quoteError = 'Network request failed'; updateMarket(); toast('Refresh failed. Your inputs are unchanged.'); }
+  finally { refreshRunning = false; btn.disabled = false; btn.classList.remove('spin'); btn.setAttribute('aria-busy', 'false'); set('update-status', reportError || quoteError ? 'Refresh incomplete' : 'Data refreshed'); window.__refreshComplete = true; }
 }
-function setupWeights(){
-  const labels={mvrv:'MVRV',zscore:'Z-score',ma:'MA stack',roc:'Momentum',cycle:'Cycle'};
-  $('weight-controls').innerHTML=Object.keys(M.WEIGHTS).map(key=>`<div class="weight-row"><label for="weight-${key}">${labels[key]}</label><input id="weight-${key}" class="range" type="range" min="0" max="100" step="1" value="${rawWeights[key]}" data-weight="${key}"><output for="weight-${key}" id="weight-value-${key}">—</output></div>`).join('');
-  document.querySelectorAll('[data-weight]').forEach(input=>input.addEventListener('input',()=>{rawWeights[input.dataset.weight]=Number(input.value);putStored(STORAGE.weights,rawWeights);scheduleRender();}));
+function saveHistory(data) { history = history.filter(h => h.date !== data.date); history.push({ date: data.date, mvrv: data.mvrv, zscore: data.zscore, btcPrice: data.btcPrice }); history.sort((a, b) => b.date.localeCompare(a.date)); history = history.slice(0, 14); putStored(STORAGE.history, history); }
+async function lookupEntryPrice() {
+  const date = $('entry-date').value, button = $('lookup-entry');
+  if (!M.dateValid(date) || date > M.today()) { set('entry-lookup-status', 'Choose a valid date on or before today (UTC).'); return; }
+  const original = $('inp-entry').value; button.disabled = true; set('entry-lookup-status', 'Looking up the daily close…');
+  try {
+    const series = await window.MarketClient.dailySeries(), result = M.nearestPrice(series, date);
+    if (!result) throw new Error('No daily price within the 7 days before that date.');
+    if ($('entry-date').value !== date || $('inp-entry').value !== original) { set('entry-lookup-status', 'Inputs changed while loading, so nothing was overwritten.'); return; }
+    applyInput({ entry: Math.round(result.price) }, { undo: true, message: 'Cost basis filled from the daily close.' });
+    set('entry-lookup-status', `${usd(result.price, 0)} · ${result.date}${result.exact ? '' : ' (nearest earlier date)'}`);
+  } catch (e) { set('entry-lookup-status', e.message || 'Price lookup unavailable.'); } finally { button.disabled = false; }
 }
-function setTheme(theme){document.documentElement.dataset.theme=theme;$('theme-toggle').setAttribute('aria-label','Switch to '+(theme==='dark'?'light':'dark')+' theme');document.querySelector('meta[name=theme-color]').content=theme==='dark'?'#090c11':'#eaf0f5';try{localStorage.setItem('theme',theme);}catch{}if(currentResult){chartAnimate=false;renderActive(currentResult);if(currentView==='overview')renderPayoff(currentResult);}}
-function restorePosition(){const stored=getStored(STORAGE.position,null);if(stored){const v=M.validate(stored);if(v.valid){applyInput(v.value);toast('Saved position restored from this device.');return;}toast('Saved inputs were invalid. The repository preset was loaded instead.');}else toast('Repository position preset loaded.');applyInput(M.SAVED_POSITION);}
-let presetNoticeTimer=null;
-function dismissPresetNotice(){clearTimeout(presetNoticeTimer);$('preset-notice').hidden=true;}
-function runHiddenCommand(){
-  applyInput(M.SAVED_POSITION);
-  const restored=M.calculate({...M.DEFAULTS,...M.SAVED_POSITION,price:Number($('inp-price').value)||D.btcPrice},D,weights());
-  $('preset-values').innerHTML=[`BTC AMOUNT → ${fmt(M.SAVED_POSITION.btc,3)}`,`FIXED LOAN → ${usd(M.SAVED_POSITION.loanPrincipal)}`,`LOAN DATE → ${M.SAVED_POSITION.loanDate}`,`HELD → ${fmt(restored.loanDays,0)} DAYS`,`INTEREST TODAY → ${usd(restored.interestCost,2)}`,`ENTRY / DEPLOY → ${usd(M.SAVED_POSITION.entry)}`,`TARGET (2× ENTRY) → ${usd(M.SAVED_POSITION.target)}`].map(line=>'<div>'+escapeHTML(line)+'</div>').join('');
-  $('preset-notice').hidden=false;clearTimeout(presetNoticeTimer);presetNoticeTimer=setTimeout(dismissPresetNotice,4000);
+function exportSnapshot() {
+  if (!validateAndRead()) return;
+  const report = window.LoanReport.build({ input: readInputs(), data: D, weights: weights(), quote, source: dataSource, history });
+  const blob = new Blob([report], { type: 'text/plain;charset=utf-8' }), url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url; a.download = 'btc-loan-analysis-' + M.today() + '.txt'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000); toast('Analysis exported.');
 }
-function setupPresetShortcuts(){
-  const keys=window.PresetShortcuts.keyHandler(runHiddenCommand);
-  document.addEventListener('keydown',event=>{if(event.key==='Escape')dismissPresetNotice();keys(event);});
-  const input=$('inp-btc'),wrap=$('btc-amount-wrap');
-  const hold=window.PresetShortcuts.holdHandlers({activate:runHiddenCommand,charge:on=>wrap.classList.toggle('hold-charging',on),focus:()=>input.focus(),blur:()=>input.blur()});
-  input.addEventListener('pointerdown',hold.down);
-  window.addEventListener('pointermove',hold.move,{passive:true});
-  window.addEventListener('pointerup',hold.up);
-  window.addEventListener('pointercancel',hold.cancel);
-  window.addEventListener('blur',hold.cancel);
-  document.addEventListener('visibilitychange',()=>{if(document.hidden)hold.cancel();});
-  input.addEventListener('contextmenu',hold.context);
-  $('preset-dismiss').addEventListener('click',dismissPresetNotice);
+
+/* ---------- saved positions ---------- */
+function savedPosition() {
+  const v3 = getStored(STORAGE.position, null); if (v3 && typeof v3 === 'object') return v3;
+  const v2 = getStored(STORAGE.legacy, null);   // migrate the previous single-mode format
+  if (v2 && typeof v2 === 'object') { const { price, ...rest } = v2; return { ...rest, mode: Number(v2.loanPrincipal) > 0 ? 'existing' : 'new', deployPrice: v2.deployPrice || '', entry: v2.entry || '', loanPrincipal: v2.loanPrincipal || '', exitDate: '' }; }
+  return null;
 }
-function updateClock(){set('utc-clock',new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'})+' UTC');}
-$('inp-price').value=D.btcPrice;
-const nowLocal=new Date(),todayISO=new Date(nowLocal.getTime()-nowLocal.getTimezoneOffset()*60000).toISOString().slice(0,10);
-$('entry-date').max=todayISO;$('inp-loanDate').max=todayISO;
-if(!$('inp-loanDate').value)$('inp-loanDate').value=todayISO;
-fields.forEach(node=>node.addEventListener('input',()=>{if(node.dataset.field==='price')priceEdited=true;editRevision++;chartAnimate=false;chartPrice=null;scheduleRender();}));
-$('ltv-range').addEventListener('input',event=>{applyInput({ltv:event.target.value});});
-$('chart-scrub').addEventListener('input',event=>inspectChart(Number(event.target.value)));
-$('chart-scrub').addEventListener('blur',hideInspect);
-$('payoff-chart').addEventListener('pointermove',event=>{if(!chartScale)return;const rect=$('payoff-chart').getBoundingClientRect(),px=event.clientX-rect.left,scale=rect.width/chartScale.width;const x=px/scale;const price=chartScale.min+(x-chartScale.L)/(chartScale.width-chartScale.L-chartScale.R)*(chartScale.max-chartScale.min);inspectChart(price,x);});
-$('payoff-chart').addEventListener('pointerleave',hideInspect);
-document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>switchView(button.dataset.view,button.getAttribute('role')!=='tab')));
-document.querySelector('[role=tablist]').addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const keys=Object.keys(VIEWS),index=keys.indexOf(currentView);switchView(keys[event.key==='Home'?0:event.key==='End'?keys.length-1:(index+(event.key==='ArrowRight'?1:-1)+keys.length)%keys.length],true);});
-document.querySelectorAll('[data-target]').forEach(button=>button.addEventListener('click',()=>{if(!currentResult)return;const target=targetFor(button.dataset.target,currentResult);if(target>0)applyInput({target:button.dataset.target==='liq'?Math.floor(target):Math.round(target)});else toast('No liquidation price when there is no debt.');}));
-$('pnl-basis').addEventListener('change',()=>currentResult&&renderScenarios(currentResult));
-$('refresh-btn').addEventListener('click',fetchLatestData);
-$('export-btn').addEventListener('click',exportSnapshot);
-$('theme-toggle').addEventListener('click',()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark'));
-$('lookup-entry').addEventListener('click',lookupEntryPrice);
-$('reset-weights').addEventListener('click',()=>{rawWeights={...M.WEIGHTS};putStored(STORAGE.weights,rawWeights);setupWeights();render();toast('Default signal weights restored.');});
-$('save-position').addEventListener('click',()=>{const input=validateAndRead();if(!input)return;if(putStored(STORAGE.position,input)){set('restore-position','Load saved position');set('position-status','Saved on this device');toast('Position saved on this device.');}else toast('This browser blocked saving. Export your analysis instead.');});
-$('restore-position').addEventListener('click',restorePosition);
-set('restore-position',getStored(STORAGE.position,null)?'Load saved position':'Load repository position preset');
-const quoteButton=document.createElement('button');quoteButton.className='button ghost small';quoteButton.type='button';quoteButton.textContent='Use market quote';quoteButton.style.marginTop='5px';quoteButton.addEventListener('click',()=>{priceEdited=false;applyInput({price:quote.price},{markPrice:false});toast('Reference price set to the displayed market quote.');});$('inp-price').closest('.field').appendChild(quoteButton);
+function loadSaved({ silent = false } = {}) {
+  const saved = savedPosition();
+  if (!saved) { if (!silent) toast('Nothing saved on this device yet.'); return false; }
+  applyInput(saved, silent ? {} : { undo: true, message: 'Saved position loaded.' });
+  if (silent) set('position-status', 'Loaded your saved position');
+  return true;
+}
+function savePosition() {
+  if (!validateAndRead()) return;
+  const { price, ...input } = readInputs();
+  if (putStored(STORAGE.position, input)) { set('position-status', 'Saved on this device'); toast('Position saved on this device.'); }
+  else toast('This browser blocked saving. Export your analysis instead.');
+}
+
+/* ---------- appearance ---------- */
+function effectiveTheme() { return document.documentElement.dataset.theme || (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); }
+function setTheme(theme) {
+  if (theme) document.documentElement.dataset.theme = theme; else delete document.documentElement.dataset.theme;
+  $('theme-toggle').setAttribute('aria-label', 'Switch to ' + (effectiveTheme() === 'dark' ? 'light' : 'dark') + ' appearance');
+  if (currentResult) { renderActive(currentResult); if (currentView === 'overview') renderPayoff(currentResult); }
+}
+function setupWeights() {
+  const labels = { mvrv: 'MVRV', zscore: 'Z-score', ma: 'MA trend', roc: 'Momentum', cycle: 'Cycle' };
+  $('weight-controls').innerHTML = Object.keys(M.WEIGHTS).map(k => `<div class="weight-row"><label for="weight-${k}">${labels[k]}</label><input id="weight-${k}" class="range" type="range" min="0" max="100" step="1" value="${rawWeights[k]}" data-weight="${k}"><output for="weight-${k}" id="weight-value-${k}">—</output></div>`).join('');
+  document.querySelectorAll('[data-weight]').forEach(i => i.addEventListener('input', () => { rawWeights[i.dataset.weight] = Number(i.value); putStored(STORAGE.weights, rawWeights); scheduleRender(); }));
+}
+function updateClock() { set('utc-clock', new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }) + ' UTC'); }
+
+/* ---------- wiring ---------- */
+$('inp-price').value = D.btcPrice;
+$('entry-date').max = M.today(); $('inp-loanDate').max = M.today(); $('inp-exitDate').min = M.today();
+fields.forEach(n => n.addEventListener('input', () => { if (n.dataset.field === 'price') priceEdited = true; editRevision++; chartPrice = null; scheduleRender(); }));
+$('ltv-range').addEventListener('input', e => { $('inp-ltv').value = e.target.value; editRevision++; scheduleRender(); });
+document.querySelectorAll('[data-mode-btn]').forEach(b => b.addEventListener('click', () => setMode(b.dataset.modeBtn)));
+document.querySelectorAll('[data-basis]').forEach(b => b.addEventListener('click', () => setBasis(b.dataset.basis)));
+document.querySelectorAll('[data-repay]').forEach(b => b.addEventListener('click', () => setRepay(b.dataset.repay)));
+for (const group of document.querySelectorAll('[role=radiogroup]')) group.addEventListener('keydown', e => {
+  if (!['ArrowLeft', 'ArrowRight'].includes(e.key)) return; const opts = [...group.querySelectorAll('[role=radio]')], i = opts.findIndex(o => o.getAttribute('aria-checked') === 'true');
+  const next = opts[(i + (e.key === 'ArrowRight' ? 1 : -1) + opts.length) % opts.length]; e.preventDefault(); next.click(); next.focus();
+});
+$('chart-scrub').addEventListener('input', e => inspectChart(Number(e.target.value)));
+$('chart-scrub').addEventListener('blur', hideInspect);
+$('payoff-chart').addEventListener('pointermove', e => { if (!chartScale) return; const rect = $('payoff-chart').getBoundingClientRect(), px = (e.clientX - rect.left) / (rect.width / chartScale.width); inspectChart(chartScale.min + (px - chartScale.L) / (chartScale.width - chartScale.L - chartScale.R) * (chartScale.max - chartScale.min), px); });
+$('payoff-chart').addEventListener('pointerleave', hideInspect);
+document.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => switchView(b.dataset.view, b.getAttribute('role') !== 'tab')));
+document.querySelector('[role=tablist]').addEventListener('keydown', e => { if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return; e.preventDefault(); const keys = Object.keys(VIEWS), i = keys.indexOf(currentView); switchView(keys[e.key === 'Home' ? 0 : e.key === 'End' ? keys.length - 1 : (i + (e.key === 'ArrowRight' ? 1 : -1) + keys.length) % keys.length], true); });
+document.querySelectorAll('[data-target]').forEach(b => b.addEventListener('click', () => { if (!currentResult) return; const t = targetFor(b.dataset.target, currentResult); if (t > 0) applyInput({ target: Math.round(t) }); }));
+$('pnl-basis').addEventListener('change', () => currentResult && renderScenarios(currentResult));
+$('refresh-btn').addEventListener('click', fetchLatestData);
+$('export-btn').addEventListener('click', exportSnapshot);
+$('goto-error').addEventListener('click', gotoError);
+$('use-quote').addEventListener('click', () => { priceEdited = false; $('inp-price').value = quote.price; editRevision++; render(); updateMarket(); });
+$('theme-toggle').addEventListener('click', () => { const next = effectiveTheme() === 'dark' ? 'light' : 'dark'; try { localStorage.setItem(STORAGE.theme, next); } catch { } setTheme(next); });
+$('lookup-entry').addEventListener('click', lookupEntryPrice);
+$('reset-weights').addEventListener('click', () => { rawWeights = { ...M.WEIGHTS }; putStored(STORAGE.weights, rawWeights); setupWeights(); render(); toast('Default signal weights restored.'); });
+$('save-position').addEventListener('click', savePosition);
+$('restore-position').addEventListener('click', () => loadSaved());
+$('load-example').addEventListener('click', () => applyInput(M.SAVED_POSITION, { undo: true, message: 'Example position loaded.' }));
+$('toast-action').addEventListener('click', () => { if (!undoInputs) return; const prev = undoInputs; undoInputs = null; applyInput(prev); toast('Restored your previous inputs.'); });
+document.addEventListener('keydown', window.PresetShortcuts.keyHandler(() => loadSaved()));
 setupWeights();
-setupPresetShortcuts();
-document.querySelectorAll('[data-pots-mode]').forEach(button=>button.addEventListener('click',()=>setTwoPotsMode(button.dataset.potsMode)));
-try{setTheme(localStorage.getItem('theme')==='light'?'light':'dark');}catch{setTheme('dark');}
-if(window.matchMedia('(max-width: 760px)').matches)$('position-panel').open=false;
-updateClock();updateMarket();render();
-setInterval(()=>{updateClock();updateMarket();},60000);
-if(typeof ResizeObserver==='function'){let resizeFrame;const observer=new ResizeObserver(()=>{cancelAnimationFrame(resizeFrame);resizeFrame=requestAnimationFrame(()=>{if(!currentResult)return;chartAnimate=false;if(currentView==='overview')renderPayoff(currentResult);if(currentView==='scenarios')renderScenarios(currentResult);});});observer.observe($('payoff-chart'));observer.observe($('ladder-chart'));}
-// Explicit promise lets integrations wait for the complete refresh transaction.
-window.terminalRefreshPromise=fetchLatestData();
+try { const t = localStorage.getItem(STORAGE.theme); setTheme(t === 'light' || t === 'dark' ? t : null); } catch { setTheme(null); }
+window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener?.('change', () => setTheme(document.documentElement.dataset.theme || null));
+const narrow = window.matchMedia?.('(max-width: 900px)');
+if (narrow?.matches) $('position-panel').open = false;
+narrow?.addEventListener?.('change', e => { if (!e.matches) $('position-panel').open = true; });
+setMode('new', false);
+if (!loadSaved({ silent: true })) render();
+updateClock(); updateMarket();
+setInterval(() => { updateClock(); updateMarket(); }, 60000);
+if (typeof ResizeObserver === 'function') { let f; const o = new ResizeObserver(() => { cancelAnimationFrame(f); f = requestAnimationFrame(() => { if (!currentResult) return; if (currentView === 'overview') renderPayoff(currentResult); if (currentView === 'scenarios') renderScenarios(currentResult); }); }); o.observe($('payoff-chart')); o.observe($('ladder-chart')); }
+window.terminalRefreshPromise = fetchLatestData();

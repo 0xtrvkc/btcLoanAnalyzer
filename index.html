@@ -1,830 +1,404 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>BTC Loan Terminal · Collateral &amp; Risk</title>
-<meta name="description" content="Plan a BTC-backed loan, stress test liquidation risk, explore on-chain signals, and compare futures with matching exposure.">
-<meta name="theme-color" content="#090c11">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BTC Loan · Collateral &amp; Risk</title>
+<meta name="description" content="Plan or track a BTC-backed loan: repayment, liquidation risk, scenarios, on-chain signals, and a futures comparison.">
+<meta name="theme-color" content="#d9dde2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1c1d20" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="assets/terminal.css">
 </head>
 <body>
-<a href="#workspace" class="skip">Skip to analysis</a>
-<noscript>
-<div class="noscript">This calculator needs JavaScript to calculate your position. Enable JavaScript, then reload.</div>
-</noscript>
-<header class="topbar">
-<div class="topbar-inner">
-<div class="brand">
-<div class="brand-icon" aria-hidden="true">₿</div>
-<div>
-<div class="brand-name">BTC LOAN <span>/ TERMINAL</span>
-</div>
-<div class="brand-sub">COLLATERAL · EXPOSURE · RISK</div>
-</div>
-</div>
-<div class="header-tools">
-<span class="time mono" id="utc-clock">
-</span>
-<button id="theme-toggle" class="button icon" aria-label="Switch to light theme" title="Switch theme">
-<svg class="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-<circle cx="12" cy="12" r="4"/>
-<path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.4 1.4m11.2 11.2L19 19M5 19l1.4-1.4M17.6 6.4 19 5"/>
-</svg>
-</button>
-<button id="export-btn" class="button" title="Export full analysis as text">
-<svg class="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-<path d="M12 3v12m-4-4 4 4 4-4M5 16v5h14v-5"/>
-</svg>
-<span>Export</span>
-</button>
-<button id="refresh-btn" class="button primary" title="Refresh market data">
-<svg class="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-<path d="M20 7v5h-5M4 17v-5h5"/>
-<path d="M6.1 7a7 7 0 0 1 11.6-2L20 8M4 16l2.3 3A7 7 0 0 0 18 17"/>
-</svg>
-<span>Refresh data</span>
-</button>
-</div>
-</div>
+<a href="#content" class="skip">Skip to analysis</a>
+<noscript><div class="noscript">This calculator needs JavaScript. Enable it, then reload.</div></noscript>
+
+<div class="window">
+<header class="titlebar">
+  <div class="traffic" aria-hidden="true"><i></i><i></i><i></i></div>
+  <div class="app-title"><span class="app-icon" aria-hidden="true">₿</span><span>BTC Loan</span></div>
+  <nav class="tabs segmented" role="tablist" aria-label="Analysis views">
+    <button class="tab" id="tab-overview" role="tab" aria-selected="true" aria-controls="pane-overview" tabindex="0" data-view="overview">Overview</button>
+    <button class="tab" id="tab-scenarios" role="tab" aria-selected="false" aria-controls="pane-scenarios" tabindex="-1" data-view="scenarios">Scenarios</button>
+    <button class="tab" id="tab-risk" role="tab" aria-selected="false" aria-controls="pane-risk" tabindex="-1" data-view="risk">Risk</button>
+    <button class="tab" id="tab-signals" role="tab" aria-selected="false" aria-controls="pane-signals" tabindex="-1" data-view="signals">Signals</button>
+    <button class="tab" id="tab-futures" role="tab" aria-selected="false" aria-controls="pane-futures" tabindex="-1" data-view="futures">Futures</button>
+  </nav>
+  <div class="toolbar">
+    <span class="clock" id="utc-clock"></span>
+    <button id="theme-toggle" class="tool" aria-label="Switch appearance" title="Switch appearance">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9A7 7 0 0 1 12 3Z"/></svg>
+    </button>
+    <button id="export-btn" class="tool" title="Export full analysis as text" aria-label="Export analysis">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3m-4 4 4-4 4 4M5 13v7h14v-7"/></svg>
+    </button>
+    <button id="refresh-btn" class="tool primary" title="Refresh market data">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 7a7 7 0 0 1 11.6-2L20 8M4 16l2.3 3A7 7 0 0 0 18 17"/></svg>
+      <span>Refresh</span>
+    </button>
+  </div>
 </header>
-<div class="ticker" aria-label="Market snapshot">
-<div class="ticker-item">
-<div class="ticker-label">Bitcoin <span class="muted">/ USD</span>
-</div>
-<div class="ticker-val">
-<span class="ticker-price" id="market-price">—</span>
-<span class="ticker-note" id="quote-source">Snapshot</span>
-</div>
-</div>
-<div class="ticker-item">
-<div class="ticker-label">MVRV ratio</div>
-<div class="ticker-val" id="ticker-mvrv">—</div>
-</div>
-<div class="ticker-item">
-<div class="ticker-label">Z-score</div>
-<div class="ticker-val" id="ticker-zscore">—</div>
-</div>
-<div class="ticker-item">
-<div class="ticker-label">MVRV trend</div>
-<div class="ticker-val" id="ticker-trend">—</div>
-</div>
-<div class="ticker-item optional">
-<div class="ticker-label">Cycle position</div>
-<div class="ticker-val" id="ticker-cycle">—</div>
-</div>
-<div class="ticker-source">
-<div class="ticker-label">On-chain snapshot</div>
-<div class="ticker-val" style="font-size:.8125rem" id="data-date">—</div>
-</div>
-</div>
-<main class="workspace" id="workspace" tabindex="-1">
-<details class="position panel reveal" id="position-panel" open>
-<summary>
-<div>
-<div class="overline" style="margin-bottom:5px">Position builder</div>
-<h2>Your loan parameters</h2>
-</div>
-<svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-<path d="m6 9 6 6 6-6"/>
-</svg>
+
+<div class="window-body">
+<!-- ===================== SIDEBAR: position inputs ===================== -->
+<details class="sidebar" id="position-panel" open data-mode="new">
+<summary class="sidebar-summary">
+  <span class="sidebar-summary-title">Position</span>
+  <span class="sidebar-summary-meta" id="position-summary">—</span>
+  <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
 </summary>
-<div class="position-content">
-<div class="section-label">
-<span>01</span> Collateral &amp; borrowing</div>
-<div class="field">
-<div class="field-label">
-<label for="inp-btc">BTC collateral</label>
-<span class="unit">BTC</span>
-</div>
-<div class="input-shell" id="btc-amount-wrap">
-<input id="inp-btc" data-field="btc" type="number" inputmode="decimal" value="1" step="0.001" min="0.00000001" max="1000000" placeholder="" aria-describedby="error-btc" autocomplete="off"/>
-<span class="suffix">BTC</span>
-</div>
-<p class="field-error" id="error-btc">
-</p>
-</div>
-<div class="field">
-<div class="field-label">
-<label for="inp-price">Reference price</label>
-<span class="unit">USD</span>
-</div>
-<div class="input-shell">
-<input id="inp-price" data-field="price" type="number" inputmode="decimal" value="79946" step="100" min="1" max="1000000000" placeholder="" aria-describedby="error-price note-price" autocomplete="off"/>
-<span class="suffix">USD</span>
-</div>
-<p class="field-error" id="error-price">
-</p>
-<p class="field-note" id="note-price">A new loan is sized at this price. Editing it does not track a fixed existing debt.</p>
-</div>
-<div class="field wide">
-<div class="field-label">
-<label for="inp-ltv">Initial loan-to-value</label>
-<span class="unit">LTV</span>
-</div>
-<div class="input-shell">
-<input id="inp-ltv" data-field="ltv" type="number" min="0" max="99" step="1" value="40" aria-describedby="error-ltv">
-<span class="suffix">%</span>
-</div>
-<p class="field-error" id="error-ltv">
-</p>
-<input class="range" id="ltv-range" type="range" min="0" max="84" step="1" value="40" aria-label="Initial loan-to-value percentage">
-<div class="range-labels">
-<span>0% / lower debt</span>
-<span id="ltv-max-label">84%</span>
-</div>
-</div>
-<div class="section-label">
-<span>02</span> Deploy &amp; simulate</div>
-<div class="field">
-<div class="field-label">
-<label for="inp-deploy">Loan deployed into BTC</label>
-<span class="unit">%</span>
-</div>
-<div class="input-shell">
-<input id="inp-deploy" data-field="deploy" type="number" inputmode="decimal" value="100" step="5" min="0" max="100" placeholder="" aria-describedby="error-deploy" autocomplete="off"/>
-<span class="suffix">%</span>
-</div>
-<p class="field-error" id="error-deploy">
-</p>
-</div>
-<div class="field">
-<div class="field-label">
-<label for="inp-deployPrice">BTC purchase price</label>
-<span class="unit">USD</span>
-</div>
-<div class="input-shell">
-<input id="inp-deployPrice" data-field="deployPrice" type="number" inputmode="decimal" value="" step="100" min="0" max="1000000000" placeholder="Reference price" aria-describedby="error-deployPrice note-deployPrice" autocomplete="off"/>
-<span class="suffix">USD</span>
-</div>
-<p class="field-error" id="error-deployPrice">
-</p>
-<p class="field-note" id="note-deployPrice">Leave blank to use the reference price.</p>
-</div>
-<div class="field wide">
-<div class="field-label">
-<label for="inp-target">Target BTC price</label>
-<span class="unit">USD</span>
-</div>
-<div class="input-shell">
-<input id="inp-target" data-field="target" type="number" min="1" max="1000000000" step="1000" value="100000" aria-describedby="error-target">
-<span class="suffix">USD</span>
-</div>
-<p class="field-error" id="error-target">
-</p>
-<div class="presets" aria-label="Target price shortcuts">
-<button class="preset" data-target="current">Current</button>
-<button class="preset" data-target="floor">Floor</button>
-<button class="preset" data-target="ceiling">Ceiling</button>
-<button class="preset" data-target="liq">Liq.</button>
-</div>
-</div>
-<div class="split-fields">
-<div class="field">
-<div class="field-label">
-<label for="inp-apr">Loan APR</label>
-<span class="unit">%</span>
-</div>
-<div class="input-shell">
-<input id="inp-apr" data-field="apr" type="number" inputmode="decimal" value="1" step="0.1" min="0" max="100" placeholder="" aria-describedby="error-apr" autocomplete="off"/>
-<span class="suffix">%</span>
-</div>
-<p class="field-error" id="error-apr">
-</p>
-</div>
-<div class="field">
-<div class="field-label">
-<label for="inp-loanDate">Loan used to buy BTC</label>
-<span class="unit">date</span>
-</div>
-<div class="input-shell">
-<input id="inp-loanDate" data-field="loanDate" type="date" value="" min="2012-01-01" aria-describedby="error-loanDate note-loanDate" autocomplete="off"/>
-</div>
-<p class="field-error" id="error-loanDate">
-</p>
-<p class="field-note" id="note-loanDate">Defaults to today. Holding days and interest update automatically.</p>
-</div>
-</div>
-<p class="hint">Interest = principal × APR × elapsed days ÷ 365. Every view uses the same date-derived debt.</p>
-<div class="field">
-<div class="field-label"><label for="inp-loanPrincipal">Actual loan principal</label><span class="unit">USD</span></div>
-<div class="input-shell"><input id="inp-loanPrincipal" data-field="loanPrincipal" type="number" inputmode="decimal" value="" step="1" min="0" max="1000000000" placeholder="Auto from LTV" aria-describedby="error-loanPrincipal note-loanPrincipal" autocomplete="off"/><span class="suffix">USD</span></div>
-<p class="field-error" id="error-loanPrincipal"></p><p class="field-note" id="note-loanPrincipal">For an existing loan, enter its original fixed principal. Leave blank only when planning a new LTV-sized loan.</p>
-</div>
-<details class="advanced">
-<summary>Risk &amp; cost basis</summary>
-<div class="advanced-body">
-<div class="field">
-<div class="field-label">
-<label for="inp-mc">Margin call LTV</label>
-<span class="unit">%</span>
-</div>
-<div class="input-shell">
-<input id="inp-mc" data-field="mc" type="number" inputmode="decimal" value="85" step="1" min="1" max="99.9" placeholder="" aria-describedby="error-mc" autocomplete="off"/>
-<span class="suffix">%</span>
-</div>
-<p class="field-error" id="error-mc">
-</p>
-</div>
-<div class="field">
-<div class="field-label">
-<label for="inp-liq">Liquidation LTV</label>
-<span class="unit">%</span>
-</div>
-<div class="input-shell">
-<input id="inp-liq" data-field="liq" type="number" inputmode="decimal" value="90" step="1" min="1" max="99.99" placeholder="" aria-describedby="error-liq" autocomplete="off"/>
-<span class="suffix">%</span>
-</div>
-<p class="field-error" id="error-liq">
-</p>
-</div>
-<div class="field">
-<div class="field-label">
-<label for="inp-vol">Annualized volatility</label>
-<span class="unit">%</span>
-</div>
-<div class="input-shell">
-<input id="inp-vol" data-field="vol" type="number" inputmode="decimal" value="65" step="1" min="0" max="300" placeholder="" aria-describedby="error-vol" autocomplete="off"/>
-<span class="suffix">%</span>
-</div>
-<p class="field-error" id="error-vol">
-</p>
-</div>
-<div class="field">
-<div class="field-label">
-<label for="inp-entry">Original BTC cost basis</label>
-<span class="unit">USD</span>
-</div>
-<div class="input-shell">
-<input id="inp-entry" data-field="entry" type="number" inputmode="decimal" value="" step="100" min="0" max="1000000000" placeholder="Optional" aria-describedby="error-entry note-entry" autocomplete="off"/>
-<span class="suffix">USD</span>
-</div>
-<p class="field-error" id="error-entry">
-</p>
-<p class="field-note" id="note-entry">Applied only to your original collateral; loan-funded BTC keeps its own purchase price.</p>
-</div>
-<div class="field wide">
-<div class="field-label">
-<label for="entry-date">Look up entry date</label>
-<span class="unit">Optional</span>
-</div>
-<div class="input-shell">
-<input type="date" id="entry-date" min="2012-01-01">
-</div>
-<button class="button small full" style="margin-top:8px" id="lookup-entry">Look up historical price</button>
-<p id="entry-lookup-status" class="field-note" role="status">
-</p>
-</div>
-<p class="hint">Thresholds and rates are assumptions. Set them to your lender’s terms.</p>
+<div class="sidebar-scroll">
+  <div class="segmented wide mode-switch" role="radiogroup" aria-label="Loan mode">
+    <button type="button" role="radio" aria-checked="true" data-mode-btn="new">New loan</button>
+    <button type="button" role="radio" aria-checked="false" data-mode-btn="existing">Existing loan</button>
+  </div>
+  <p class="mode-hint" id="mode-hint">Plan a loan opened today. Principal is sized from LTV.</p>
+
+  <h3 class="group-title">Collateral</h3>
+  <div class="group">
+    <div class="field">
+      <label for="inp-btc">BTC pledged</label>
+      <div class="input-shell"><input id="inp-btc" data-field="btc" type="number" inputmode="decimal" step="any" min="0.00000001" value="1" aria-describedby="error-btc" autocomplete="off"><span class="suffix">BTC</span></div>
+      <p class="field-error" id="error-btc"></p>
+    </div>
+    <div class="field">
+      <label for="inp-price">Current BTC price</label>
+      <div class="input-shell"><input id="inp-price" data-field="price" type="number" inputmode="decimal" step="any" min="1" value="80000" aria-describedby="error-price note-price" autocomplete="off"><span class="suffix">USD</span></div>
+      <p class="field-error" id="error-price"></p>
+      <p class="field-note" id="note-price"><span id="price-source">Snapshot</span> · <button type="button" class="link" id="use-quote">Use live quote</button></p>
+    </div>
+  </div>
+
+  <h3 class="group-title">Loan</h3>
+  <div class="group">
+    <div class="field" data-only="new">
+      <label for="inp-ltv">Initial LTV <button type="button" class="tip" data-tip="Loan-to-value: debt ÷ collateral value. 40% means you borrow 40% of what your BTC is worth." aria-label="Loan-to-value: debt divided by collateral value.">i</button></label>
+      <div class="input-shell"><input id="inp-ltv" data-field="ltv" type="number" inputmode="decimal" step="any" min="0" max="99" value="40" aria-describedby="error-ltv" autocomplete="off"><span class="suffix">%</span></div>
+      <input class="range" id="ltv-range" type="range" min="0" max="84" step="0.5" value="40" aria-label="Initial LTV slider">
+      <p class="field-error" id="error-ltv"></p>
+    </div>
+    <div class="field" data-only="existing">
+      <label for="inp-loanPrincipal">Loan principal</label>
+      <div class="input-shell"><input id="inp-loanPrincipal" data-field="loanPrincipal" type="number" inputmode="decimal" step="any" min="0" placeholder="Required" aria-describedby="error-loanPrincipal" autocomplete="off"><span class="suffix">USD</span></div>
+      <p class="field-error" id="error-loanPrincipal"></p>
+    </div>
+    <div class="field" data-only="existing">
+      <label for="inp-loanDate">Loan date</label>
+      <div class="input-shell"><input id="inp-loanDate" data-field="loanDate" type="date" min="2012-01-01" aria-describedby="error-loanDate" autocomplete="off"></div>
+      <p class="field-error" id="error-loanDate"></p>
+    </div>
+    <div class="field" data-only="existing">
+      <label for="inp-borrowPrice">BTC price when you borrowed</label>
+      <div class="input-shell"><input id="inp-borrowPrice" data-field="borrowPrice" type="number" inputmode="decimal" step="any" min="0" placeholder="Optional" aria-describedby="error-borrowPrice note-borrowPrice" autocomplete="off"><span class="suffix">USD</span></div>
+      <p class="field-error" id="error-borrowPrice"></p>
+      <p class="field-note" id="note-borrowPrice">Sets your initial LTV and the “since borrowing” baseline.</p>
+    </div>
+    <div class="field">
+      <label for="inp-apr">Interest (APR)</label>
+      <div class="input-shell"><input id="inp-apr" data-field="apr" type="number" inputmode="decimal" step="any" min="0" max="100" value="5" aria-describedby="error-apr" autocomplete="off"><span class="suffix">%</span></div>
+      <p class="field-error" id="error-apr"></p>
+    </div>
+  </div>
+
+  <h3 class="group-title">BTC bought with the loan</h3>
+  <div class="group">
+    <div class="field">
+      <label for="inp-deploy">Share of loan used</label>
+      <div class="input-shell"><input id="inp-deploy" data-field="deploy" type="number" inputmode="decimal" step="any" min="0" max="100" value="100" aria-describedby="error-deploy" autocomplete="off"><span class="suffix">%</span></div>
+      <p class="field-error" id="error-deploy"></p>
+    </div>
+    <div class="field">
+      <label for="inp-deployPrice">Purchase price</label>
+      <div class="input-shell"><input id="inp-deployPrice" data-field="deployPrice" type="number" inputmode="decimal" step="any" min="0" placeholder="Current price" aria-describedby="error-deployPrice note-deployPrice" autocomplete="off"><span class="suffix">USD</span></div>
+      <p class="field-error" id="error-deployPrice"></p>
+      <p class="field-note" id="note-deployPrice">Blank buys at the current price.</p>
+    </div>
+  </div>
+
+  <h3 class="group-title">Plan</h3>
+  <div class="group">
+    <div class="field">
+      <label for="inp-target">Target BTC price</label>
+      <div class="input-shell"><input id="inp-target" data-field="target" type="number" inputmode="decimal" step="any" min="1" value="120000" aria-describedby="error-target" autocomplete="off"><span class="suffix">USD</span></div>
+      <p class="field-error" id="error-target"></p>
+      <div class="chips" aria-label="Target shortcuts">
+        <button type="button" class="chip" data-target="now">Now</button>
+        <button type="button" class="chip" data-target="beat">Beat holding</button>
+        <button type="button" class="chip" data-target="ceiling">Model ceiling</button>
+        <button type="button" class="chip" data-target="ath">Cycle ATH</button>
+        <button type="button" class="chip" data-target="double">2× cost basis</button>
+      </div>
+    </div>
+    <div class="field">
+      <label for="inp-exitDate">Exit date <button type="button" class="tip" data-tip="When you expect to repay. Target scenarios include all interest up to this date." aria-label="When you expect to repay. Target scenarios include interest up to this date.">i</button></label>
+      <div class="input-shell"><input id="inp-exitDate" data-field="exitDate" type="date" aria-describedby="error-exitDate note-exitDate" autocomplete="off"></div>
+      <p class="field-error" id="error-exitDate"></p>
+      <p class="field-note" id="note-exitDate">Blank = one year from today.</p>
+    </div>
+  </div>
+
+  <details class="disclosure">
+    <summary>Lender terms &amp; cost basis</summary>
+    <div class="group">
+      <div class="field">
+        <label for="inp-mc">Margin call LTV</label>
+        <div class="input-shell"><input id="inp-mc" data-field="mc" type="number" inputmode="decimal" step="any" value="85" aria-describedby="error-mc" autocomplete="off"><span class="suffix">%</span></div>
+        <p class="field-error" id="error-mc"></p>
+      </div>
+      <div class="field">
+        <label for="inp-liq">Liquidation LTV</label>
+        <div class="input-shell"><input id="inp-liq" data-field="liq" type="number" inputmode="decimal" step="any" value="90" aria-describedby="error-liq" autocomplete="off"><span class="suffix">%</span></div>
+        <p class="field-error" id="error-liq"></p>
+      </div>
+      <div class="field">
+        <label for="inp-restoreLtv">Restore-to LTV <button type="button" class="tip" data-tip="After a margin call, the LTV your lender asks you to get back to by adding collateral or repaying." aria-label="The LTV your lender asks you to restore after a margin call.">i</button></label>
+        <div class="input-shell"><input id="inp-restoreLtv" data-field="restoreLtv" type="number" inputmode="decimal" step="any" value="50" aria-describedby="error-restoreLtv" autocomplete="off"><span class="suffix">%</span></div>
+        <p class="field-error" id="error-restoreLtv"></p>
+      </div>
+      <div class="field">
+        <label for="inp-vol">Volatility (annual)</label>
+        <div class="input-shell"><input id="inp-vol" data-field="vol" type="number" inputmode="decimal" step="any" value="65" aria-describedby="error-vol" autocomplete="off"><span class="suffix">%</span></div>
+        <p class="field-error" id="error-vol"></p>
+      </div>
+      <div class="field">
+        <label for="inp-entry">Cost basis of your BTC</label>
+        <div class="input-shell"><input id="inp-entry" data-field="entry" type="number" inputmode="decimal" step="any" min="0" placeholder="Optional" aria-describedby="error-entry note-entry" autocomplete="off"><span class="suffix">USD</span></div>
+        <p class="field-error" id="error-entry"></p>
+        <p class="field-note" id="note-entry">Applies to your original BTC only.</p>
+      </div>
+      <div class="field">
+        <label for="entry-date">Look up cost basis by date</label>
+        <div class="input-row"><div class="input-shell"><input type="date" id="entry-date" min="2012-01-01"></div><button type="button" class="button small" id="lookup-entry">Look up</button></div>
+        <p id="entry-lookup-status" class="field-note" role="status"></p>
+      </div>
+    </div>
+  </details>
+
+  <div class="sidebar-actions">
+    <button type="button" class="button primary full" id="save-position">Save on this device</button>
+    <div class="button-pair">
+      <button type="button" class="button full" id="restore-position">Load saved</button>
+      <button type="button" class="button full" id="load-example">Load example</button>
+    </div>
+    <p class="field-note" id="position-status">Updates as you type</p>
+  </div>
 </div>
 </details>
-</div>
-<div class="position-footer">
-<button class="button full" id="save-position">
-<svg class="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-<path d="M4 3h13l4 4v14H3V3h1Zm3 0v6h10V3M7 21v-8h10v8"/>
-</svg> Save position on this device</button>
-<button class="button ghost full" id="restore-position">Load saved position</button>
-<p class="auto-note" id="position-status">Calculations update as you type</p>
-</div>
-</details>
-<div class="desk">
-<div class="desk-heading reveal">
-<div>
-<div class="overline">Workspace / <span id="breadcrumb">Overview</span>
-</div>
-<h1 id="page-title">Position overview</h1>
-</div>
-<div class="view-meta">
-<span class="badge" id="plan-status">NEW LOAN SCENARIO</span>
-<div id="horizon-label">0 days held · USD</div>
-</div>
-</div>
-<div class="data-notice" id="data-notice" role="status">
-<svg class="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-<circle cx="12" cy="12" r="9"/>
-<path d="M12 11v6m0-10v1"/>
-</svg>
-<span id="data-notice-text">Bundled market snapshot. Refresh to check for newer data.</span>
-<button class="button ghost small" data-view="signals">Details <svg class="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-<path d="M5 12h14m-5-5 5 5-5 5"/>
-</svg>
-</button>
-</div>
-<div class="data-notice validation-banner" id="validation-banner" role="alert" hidden>
-<svg class="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-<circle cx="12" cy="12" r="9"/>
-<path d="M12 11v6m0-10v1"/>
-</svg>
-<span id="validation-message">
-</span>
-</div>
-<section class="kpis reveal delay" aria-label="Loan summary">
-<div class="kpi">
-<div class="kpi-label">Loan principal</div>
-<div class="kpi-value amber" id="kpi-loan">—</div>
-<div class="kpi-sub" id="kpi-loan-sub">— of collateral</div>
-</div>
-<div class="kpi">
-<div class="kpi-label">Collateral value</div>
-<div class="kpi-value" id="kpi-collateral">—</div>
-<div class="kpi-sub" id="kpi-collateral-sub">— BTC pledged</div>
-</div>
-<div class="kpi">
-<div class="kpi-label">Liquidation price · now</div>
-<div class="kpi-value bad" id="kpi-liq">—</div>
-<div class="kpi-sub" id="kpi-liq-sub">— drop from reference</div>
-</div>
-<div class="kpi">
-<div class="kpi-label">Financing cost</div>
-<div class="kpi-value" id="kpi-cost">—</div>
-<div class="kpi-sub" id="kpi-cost-sub">— simple interest</div>
-</div>
-</section>
-<nav class="tabs" role="tablist" aria-label="Analysis views">
-<button class="tab" id="tab-overview" role="tab" aria-selected="true" aria-controls="pane-overview" tabindex="0" data-view="overview">
-<span>01</span>Overview</button>
-<button class="tab" id="tab-scenarios" role="tab" aria-selected="false" aria-controls="pane-scenarios" tabindex="-1" data-view="scenarios">
-<span>02</span>Scenarios</button>
-<button class="tab" id="tab-risk" role="tab" aria-selected="false" aria-controls="pane-risk" tabindex="-1" data-view="risk">
-<span>03</span>Risk</button>
-<button class="tab" id="tab-signals" role="tab" aria-selected="false" aria-controls="pane-signals" tabindex="-1" data-view="signals">
-<span>04</span>Signals</button>
-<button class="tab" id="tab-futures" role="tab" aria-selected="false" aria-controls="pane-futures" tabindex="-1" data-view="futures">
-<span>05</span>Futures</button>
-</nav>
-<section class="pane" id="pane-overview" role="tabpanel" aria-labelledby="tab-overview" tabindex="0">
-<div class="overview-grid">
-<div class="panel chart-panel">
-<div class="panel-head">
-<div>
-<h2>Scenario payoff</h2>
-<p class=hint>Loan-funded BTC vs. holding your original BTC</p>
-</div>
-<span class="badge">AFTER INTEREST</span>
-</div>
-<div class="chart-topline">
-<div>
-<div class="overline">Net P/L at target</div>
-<div class="chart-result num" id="target-pnl">—</div>
-<div class="chart-return" id="target-return">— return on collateral</div>
-</div>
-<div class="chart-target">
-<div class="overline">At BTC price</div>
-<div class="num" id="target-value">—</div>
-<span class="badge" id="target-status">ACTIVE</span>
-</div>
-</div>
-<div class="chart-legend">
-<span class="legend-item">
-<i class="swatch">
-</i>Loan strategy</span>
-<span class="legend-item">
-<i class="swatch hold">
-</i>Spot only</span>
-<span class="legend-item">
-<i class="swatch zone">
-</i>Liquidation zone</span>
-</div>
-<div class="chart" id="payoff-chart" aria-label="Profit and loss at hypothetical BTC prices">
-</div>
-<div class="chart-controls">
-<label for="chart-scrub">Inspect price</label>
-<input class="range" id="chart-scrub" type="range" min="1" max="200000" step="100" value="100000">
-<output id="scrub-output" for="chart-scrub">—</output>
-</div>
-<div class="chart-foot">
-<span>Breakeven <span class="num" id="overview-breakeven">—</span>
-</span>
-<span>Edge vs. spot <span class="num" id="overview-edge">—</span>
-</span>
-</div>
-</div>
-<div class="stack">
-<div class="panel">
-<div class="panel-body">
-<div class="overline">Cycle signal</div>
-<div class="score-display">
-<span class="score-number amber" id="score-number">—</span>
-<span class="score-max">/ 10</span>
-<span class="badge amber" style="margin-left:auto" id="score-badge">HEURISTIC</span>
-</div>
-<div class="score-track" id="score-track" aria-hidden="true">
-</div>
-<h3 id="score-title">Reading market signals</h3>
-<p class="score-sentence" id="score-context">Weighted on-chain model.</p>
-<div class="signal-mini">
-<span>Snapshot</span>
-<b id="score-date">—</b>
-</div>
-<button class="link-button" style="margin-top:12px" data-view="signals">Explore signals <svg class="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-<path d="M5 12h14m-5-5 5 5-5 5"/>
-</svg>
-</button>
-</div>
-</div>
-<div class="panel">
-<div class="panel-body">
-<div class="overline">Capital allocation</div>
-<div class="allocation-track">
-<div class="allocation-fill" id="allocation-fill">
-</div>
-</div>
-<div class="key-row">
-<span>Deployed in BTC</span>
-<strong id="allocation-deployed">—</strong>
-</div>
-<div class="key-row">
-<span>Cash held</span>
-<strong id="allocation-cash">—</strong>
-</div>
-<div class="key-row total">
-<span>Additional BTC</span>
-<strong id="allocation-btc">—</strong>
-</div>
-<div class="key-row">
-<span>Total BTC</span>
-<strong id="allocation-total">—</strong>
-</div>
-</div>
-</div>
-</div>
-</div>
-<section class="panel wide-panel" id="two-pots" aria-labelledby="two-pots-title">
-<div class="panel-head flexible"><div><h2 id="two-pots-title">Two Separate Pots</h2><p class="hint">At the reference BTC price, after the selected holding period’s interest.</p></div>
-<div class="segmented" role="group" aria-label="Two Separate Pots display"><button id="pots-simple-btn" data-pots-mode="simple" aria-pressed="true" aria-controls="pots-simple">Simple</button><button id="pots-quant-btn" data-pots-mode="quant" aria-pressed="false" aria-controls="pots-quant">Quant</button></div></div>
-<div class="panel-body"><p class="hint bad" id="pots-warning" hidden></p><div id="pots-simple"><div class="pots-grid">
-<article class="pot-card"><div class="overline">POT 01 · YOUR ORIGINAL BTC</div><h3>What remains after repayment</h3><div id="pot-original-details"></div><div class="pot-total"><span class="hint">BTC you keep</span><strong class="num good" id="pot-original-btc">—</strong><span class="hint" id="pot-original-value">—</span></div></article>
-<article class="pot-card"><div class="overline">POT 02 · LOAN-FUNDED BTC</div><h3>The BTC bought with your loan</h3><p class="hint">The debt is repaid in Pot 01. This BTC stays separate from your pledged collateral.</p><div id="pot-new-details"></div><div class="pot-total"><span class="hint">Additional BTC you keep</span><strong class="num amber" id="pot-new-btc">—</strong><span class="hint" id="pot-new-value">—</span></div></article>
-</div><div class="pots-combined"><div><div class="overline">POT 01 + POT 02</div><div class="num" id="pots-total-btc">—</div><p class="hint" id="pots-total-note">—</p></div><div class="pots-cash"><span class="hint">Unused loan cash</span><strong class="num" id="pots-cash">—</strong><span class="hint" id="pots-net-value">—</span></div></div></div>
-<div id="pots-quant" hidden><div id="pots-quant-rows"></div><div class="formula">Residual BTC = pledged BTC − (principal + interest) ÷ reference price<br>Wallet BTC = residual BTC + loan-funded BTC<br>Net assets = wallet BTC × reference price + unused cash</div></div>
-<p class="hint" style="margin-top:14px">Illustrative repayment by selling collateral at the reference price. Fees are excluded, and the position must survive liquidation. Unused cash is shown separately; borrowing itself creates no profit.</p></div></section>
-<section class="panel wide-panel" id="collateral-repayment" aria-labelledby="repay-title">
-<div class="panel-head flexible"><div><h2 id="repay-title">What if I repay today with collateral?</h2><p class="hint">Uses fixed principal + interest calculated automatically from the loan date.</p></div><span class="badge" id="repay-status">AT TARGET</span></div>
-<div class="panel-body">
-<p class="hint" id="repay-benchmark"></p>
-<div class="pots-grid repayment-grid">
-<article class="pot-card"><div class="overline">CURRENT BTC · REPAY TODAY</div><h3>BTC now price</h3><div class="repayment-value num amber" id="repay-recovery-price">—</div><p class="hint" id="repay-recovery-note"></p></article>
-<article class="pot-card"><div class="overline">WALLET AFTER REPAYMENT</div><h3 id="repay-target-label">If repaid now</h3><div class="repayment-value num" id="repay-wallet">—</div><p class="hint" id="repay-btc-change"></p><p class="hint" id="repay-warning"></p></article>
-</div>
-<div class="break-even-summary">
-<div class="overline">AT CURRENT BTC PRICE</div>
-<h3 id="repay-be-title">Separate legs and combined result</h3>
-<p class="hint" id="repay-be-note">If you repay now: where every dollar and BTC comes from.</p>
-<div class="repay-insight"><div class="insight-head"><div><div class="overline">GLANCE VIEW</div><h3>BTC advantage vs. simply holding</h3></div><span class="badge" id="repay-insight-badge">—</span></div><div id="repay-insight-chart" class="repay-insight-chart" role="img" aria-label="BTC advantage at break-even, current, and target prices"></div><p class="hint">Bars show BTC gained or lost versus keeping your original collateral untouched. Final wallet and dollar advantage appear beside each scenario.</p></div>
-<div class="wallet-flow-card"><div class="insight-head"><div><div class="overline">WHERE YOUR BTC GOES</div><h3>Repay-now wallet flow</h3></div><span class="badge" id="wallet-flow-badge">—</span></div><div id="repay-wallet-flow" class="wallet-flow" role="img" aria-label="Original BTC minus collateral sold plus loan-funded BTC equals final debt-free wallet"></div><div class="wallet-compose"><div class="compose-head"><span>Final wallet composition</span><strong class="num" id="wallet-compose-total">—</strong></div><div class="compose-track" id="wallet-compose-track"></div><div class="compose-legend"><span><i class="original"></i>Original BTC remaining</span><span><i class="funded"></i>Loan-funded BTC</span><span><i class="benchmark"></i>Holding benchmark</span></div></div><p class="wallet-verdict" id="wallet-flow-verdict">—</p></div>
-<details class="advanced repayment-details"><summary>Detailed repayment numbers</summary><div class="advanced-body"><div class="break-even-grid">
-<article class="pot-card"><div class="overline">01 · ORIGINAL HOLDING</div><h3>Holding benchmark</h3><div id="repay-be-hold"></div></article>
-<article class="pot-card"><div class="overline">02 · LOAN-FUNDED BTC</div><h3>Loan leg</h3><div id="repay-be-loan"></div></article>
-<article class="pot-card"><div class="overline">03 · DEBT-FREE TOTAL</div><h3>Combined wallet</h3><div id="repay-be-total"></div></article>
-</div></div></details>
-</div>
-<details class="advanced"><summary>BTC quantity vs. dollar value</summary><div class="advanced-body notes">
-<p>The final wallet combines two sources: original collateral left after repayment, plus BTC previously bought with the loan. It never treats sold collateral as still owned.</p>
-<div class="formula">Debt today = fixed principal + accrued interest today<br>BTC sold = debt today ÷ target price<br>Final BTC = original BTC − BTC sold + loan-funded BTC<br>BTC quantity break-even = debt today ÷ loan-funded BTC</div>
-<p id="repay-value-recovery"></p>
-<p>Net P/L = remaining BTC value + unused cash − original collateral value at borrowing. P/L % uses that original collateral value. Unused loan cash is counted once in net assets; it is neither spent on repayment nor converted into BTC.</p>
-</div></details>
-<p class="hint" style="margin-top:14px">Conditional on no earlier liquidation and a lender allowing collateral sale for repayment. Fees, slippage and tax are excluded. Change Target BTC price to explore repayment; a filled Actual loan principal will not resize with market price.</p>
-</div></section>
-<div class="panel wide-panel">
-<div class="panel-head">
-<div>
-<h2>Price checkpoints</h2>
-<p class=hint>Loan thresholds include the selected holding period’s interest.</p>
-</div>
-<button class="link-button" style="width:auto" data-view="risk">Risk details <svg class="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-<path d="M5 12h14m-5-5 5 5-5 5"/>
-</svg>
-</button>
-</div>
-<div class="level-strip">
-<div class="level-item">
-<div class="level-label">
-<i class="level-bar bad">
-</i>Liquidation</div>
-<div class="num bad" id="level-liq">—</div>
-<p class="hint" id="level-liq-sub">—</p>
-</div>
-<div class="level-item">
-<div class="level-label">
-<i class="level-bar">
-</i>Margin call</div>
-<div class="num amber" id="level-mc">—</div>
-<p class="hint" id="level-mc-sub">—</p>
-</div>
-<div class="level-item">
-<div class="level-label">
-<i class="level-bar cyan">
-</i>Model floor</div>
-<div class="num cyan" id="level-floor">—</div>
-<p class="hint">MVRV model estimate</p>
-</div>
-<div class="level-item">
-<div class="level-label">
-<i class="level-bar good">
-</i>Model ceiling</div>
-<div class="num good" id="level-ceiling">—</div>
-<p class="hint">MVRV model estimate</p>
-</div>
-</div>
-</div>
-<div class="insight">
-<h3 id="overview-insight-title">Position assessment</h3>
-<p id="overview-insight">—</p>
-</div>
-</section>
-<section class="pane" id="pane-scenarios" role="tabpanel" aria-labelledby="tab-scenarios" tabindex="0" hidden>
-<div class="panel">
-<div class="panel-head flexible">
-<div>
-<h2>Price ladder</h2>
-<p class="hint">Collateral, LTV, and P/L at each exit price.</p>
-</div>
-<div>
-<label for="pnl-basis" class="sr-only">Profit and loss basis</label>
-<select id="pnl-basis" class="select">
-<option value="pnl">P/L vs. reference price</option>
-<option value="borrowed">P/L on borrowed capital</option>
-<option value="cost">P/L vs. actual cost basis</option>
-</select>
-</div>
-</div>
-<div class="chart" id="ladder-chart">
-</div>
-<div class="table-wrap" tabindex="0" aria-label="Scrollable price ladder">
-<table>
-<thead>
-<tr>
-<th scope="col">BTC price</th>
-<th scope="col">Δ reference</th>
-<th scope="col">LTV today</th>
-<th scope="col">Position status</th>
-<th scope="col">Net equity</th>
-<th scope="col" id="ladder-pnl-label">Net P/L</th>
-</tr>
-</thead>
-<tbody id="ladder-rows">
-</tbody>
-</table>
-</div>
-<div class="table-note" id="ladder-note">
-</div>
-</div>
-<div class="section-grid wide-panel">
-<div class="panel">
-<div class="panel-head">
-<h2>Position decomposition</h2>
-<span class="badge">AT TARGET</span>
-</div>
-<div class="panel-body" id="decomposition">
-</div>
-</div>
-<div class="panel">
-<div class="panel-head">
-<h2>How the numbers connect</h2>
-</div>
-<div class="panel-body notes">
-<p>Your original BTC and loan-funded BTC keep <strong>separate cost bases</strong>. Undeployed borrowing stays as cash, with matching debt.</p>
-<div class="formula">Assets = total BTC × exit price + cash<br>Debt = principal + simple interest<br>Net P/L = assets − debt − initial collateral value</div>
-<p style="margin-top:14px">Below liquidation, the open-position model stops. Actual proceeds depend on sale execution, fees, remaining collateral, and your lender’s terms. A rebound to a higher target does not undo an earlier liquidation.</p>
-</div>
-</div>
-</div>
-</section>
-<section class="pane" id="pane-risk" role="tabpanel" aria-labelledby="tab-risk" tabindex="0" hidden>
-<div class="metrics-three">
-<div class="panel">
-<div class="panel-body">
-<div class="metric-label">Drop to margin call · now</div>
-<div class="big-metric amber" id="risk-buffer">—</div>
-<p class="hint" id="risk-buffer-note">—</p>
-</div>
-</div>
-<div class="panel">
-<div class="panel-body">
-<div class="metric-label">90d liquidation-barrier touch</div>
-<div class="big-metric" id="risk-probability">—</div>
-<p class="hint">Illustrative, fixed barrier, zero log drift.</p>
-</div>
-</div>
-<div class="panel">
-<div class="panel-body">
-<div class="metric-label">Reward / risk from cost basis</div>
-<div class="big-metric" id="risk-rr">—</div>
-<p class="hint">Model ceiling vs. current liquidation threshold.</p>
-</div>
-</div>
-</div>
-<div class="section-grid">
-<div class="panel">
-<div class="panel-head">
-<h2>Liquidation mechanics</h2>
-</div>
-<div class="panel-body" id="risk-mechanics">
-</div>
-</div>
-<div class="panel">
-<div class="panel-head">
-<h2>Margin call stress test</h2>
-</div>
-<div class="panel-body" id="stress-test">
-</div>
-</div>
-</div>
-<div class="panel wide-panel">
-<div class="panel-head">
-<h2>Model assumptions &amp; limits</h2>
-<span class="badge">READ WITH RESULTS</span>
-</div>
-<div class="panel-body notes">
-<p>
-<strong>Loan sizing:</strong> a new loan is sized from your reference price and initial LTV. This is a scenario planner; existing loan debt must not be inferred by changing today’s price.</p>
-<p>
-<strong>Interest:</strong> all views use fixed principal + simple interest accrued from the loan date through today: principal × APR × elapsed days ÷ 365. No trading fees, liquidation fees, tax, slippage, or compounding are included.</p>
-<p>
-<strong>Barrier probability:</strong> 2Φ[ln(liquidation price ÷ reference price) ÷ (σ√(90/365))], assuming constant volatility and zero log-price drift. It estimates touching a fixed principal-only barrier, and excludes jumps and interest-driven barrier changes. It is not a calibrated forecast.</p>
-<p>
-<strong>Cycle score &amp; sizing:</strong> the score uses heuristic weights, not backtested success probabilities. The retained half-Kelly illustration maps the score to an assumed win probability; it is not an optimal or recommended LTV.</p>
-<div class="key-row total">
-<span>Illustrative half-Kelly output</span>
-<strong id="risk-kelly">—</strong>
-</div>
-<p>
-<a href="https://www.itl.nist.gov/div898/handbook/eda/section3/eda3661.htm" target="_blank" rel="noopener noreferrer">Normal distribution reference</a> · <a href="https://almostsuremath.com/2023/04/18/the-maximum-of-brownian-motion-and-the-reflection-principle/" target="_blank" rel="noopener noreferrer">Reflection principle derivation</a>
-</p>
-</div>
-</div>
-</section>
-<section class="pane" id="pane-signals" role="tabpanel" aria-labelledby="tab-signals" tabindex="0" hidden>
-<div class="signal-grid" id="signal-cards">
-</div>
-<div class="section-grid">
-<div class="panel">
-<div class="panel-head">
-<h2>Signal weights</h2>
-<button class="button ghost small" id="reset-weights">Reset</button>
-</div>
-<div class="panel-body">
-<p class="hint" style="margin-bottom:12px">Weights normalize to 100%. Set an individual weight to zero to exclude it.</p>
-<div id="weight-controls">
-</div>
-<p class="hint" id="weight-note" style="margin-top:14px">
-</p>
-</div>
-</div>
-<div class="panel">
-<div class="panel-head">
-<h2 id="cycle-title">Cycle context</h2>
-</div>
-<div class="panel-body" id="cycle-context">
-</div>
-</div>
-</div>
-<div class="panel wide-panel">
-<div class="panel-head">
-<h2>Signal reading</h2>
-<span class="badge">MODEL CONTEXT</span>
-</div>
-<div class="panel-body notes" id="signal-reading">
-</div>
-</div>
-<div class="panel wide-panel">
-<div class="panel-head">
-<div>
-<h2>Data provenance &amp; recent snapshots</h2>
-<p class="hint" id="data-provenance">—</p>
-</div>
-</div>
-<div class="table-wrap" tabindex="0" aria-label="Recent local snapshots">
-<table>
-<thead>
-<tr>
-<th scope="col">Date</th>
-<th scope="col">MVRV</th>
-<th scope="col">Z-score</th>
-<th scope="col">Report BTC price</th>
-</tr>
-</thead>
-<tbody id="history-rows">
-</tbody>
-</table>
-</div>
-<p class="table-note">Up to 14 daily on-chain snapshots are kept on this device. Market quotes and on-chain reports have separate timestamps. A fresh quote never makes an older MVRV report current.</p>
-</div>
-</section>
-<section class="pane" id="pane-futures" role="tabpanel" aria-labelledby="tab-futures" tabindex="0" hidden>
-<div class="panel">
-<div class="panel-head">
-<div>
-<h2>Loan vs. spot + futures</h2>
-<p class=hint>The same additional BTC exposure, with different capital requirements.</p>
-</div>
-<span class="badge">ISOLATED LONG</span>
-</div>
-<div class="comparison-controls">
-<div class="field">
-<div class="field-label">
-<label for="inp-leverage">Futures leverage</label>
-<span class="unit">×</span>
-</div>
-<div class="input-shell">
-<input id="inp-leverage" data-field="leverage" type="number" inputmode="decimal" value="5" step="1" min="1" max="50" placeholder="" aria-describedby="error-leverage" autocomplete="off"/>
-<span class="suffix">×</span>
-</div>
-<p class="field-error" id="error-leverage">
-</p>
-</div>
-<div class="field">
-<div class="field-label">
-<label for="inp-mm">Maintenance margin</label>
-<span class="unit">%</span>
-</div>
-<div class="input-shell">
-<input id="inp-mm" data-field="mm" type="number" inputmode="decimal" value="0.5" step="0.1" min="0" max="20" placeholder="" aria-describedby="error-mm" autocomplete="off"/>
-<span class="suffix">%</span>
-</div>
-<p class="field-error" id="error-mm">
-</p>
-</div>
-<div class="field">
-<div class="field-label">
-<label for="inp-funding">Assumed funding APR</label>
-<span class="unit">%</span>
-</div>
-<div class="input-shell">
-<input id="inp-funding" data-field="funding" type="number" inputmode="decimal" value="10" step="0.5" min="-100" max="200" placeholder="" aria-describedby="error-funding" autocomplete="off"/>
-<span class="suffix">%</span>
-</div>
-<p class="field-error" id="error-funding">
-</p>
-</div>
-</div>
-<div class="table-wrap" tabindex="0" aria-label="Loan and futures comparison">
-<table class="compare-table">
-<thead>
-<tr>
-<th scope="col">Metric</th>
-<th scope="col">BTC-backed loan</th>
-<th scope="col">Spot + futures</th>
-</tr>
-</thead>
-<tbody id="comparison-rows">
-</tbody>
-</table>
-</div>
-<div class="table-note">Loan carry is charged on the full principal; futures funding is estimated on deployed entry notional. Funding can vary and become negative. Futures margin is additional cash; your spot BTC remains outside the isolated futures account.</div>
-</div>
-<div class="insight">
-<h3>Cost &amp; liquidation trade-off</h3>
-<p id="futures-insight">—</p>
-</div>
-<div class="panel wide-panel">
-<div class="panel-head">
-<div>
-<h2>Comparison assumptions</h2>
-</div>
-</div>
-<div class="panel-body notes">
-<p>
-<strong>Consistent returns:</strong> loan return uses pledged collateral value. Futures portfolio return uses spot value plus posted margin. Futures-leg return uses only the futures P/L and its margin.</p>
-<p>
-<strong>Liquidation:</strong> the simplified isolated-long threshold is entry × (1 − 1/leverage) ÷ (1 − maintenance margin). Funding deductions, exchange margin tiers, fees, and changing maintenance requirements can move it. Targets below a liquidation threshold are shown as unavailable, because the open-position comparison no longer applies.</p>
-<p>
-<strong>Zero deployment:</strong> no futures position is opened. There is no futures funding, margin requirement, or futures liquidation price.</p>
-</div>
-</div>
-</section>
-<div class="bottom-note">
-<span>Scenario estimates, not execution prices. Model targets are uncertain; loan terms, fees, and liquidation paths can change the outcome.</span>
-<span class="mono" id="update-status" role="status">Ready</span>
-</div>
-</div>
+
+<!-- ===================== MAIN CONTENT ===================== -->
+<main class="content" id="content" tabindex="-1">
+  <div class="market-strip" aria-label="Market snapshot">
+    <div class="market-item"><span class="market-label">Bitcoin</span><span class="market-value" id="market-price">—</span><span class="live-dot" id="quote-source">Snapshot</span></div>
+    <div class="market-item"><span class="market-label">MVRV <button type="button" class="tip" data-tip="Market value ÷ realized value: BTC price vs. the average price coins last moved at. Above 1 = holders in profit on average." aria-label="MVRV: market value divided by realized value.">i</button></span><span class="market-value" id="ticker-mvrv">—</span></div>
+    <div class="market-item"><span class="market-label">Z-score <button type="button" class="tip" data-tip="How many standard deviations MVRV sits from its long-run average. Below 0 = cheaper than usual." aria-label="Z-score: standard deviations of MVRV from its average.">i</button></span><span class="market-value" id="ticker-zscore">—</span></div>
+    <div class="market-item"><span class="market-label">MVRV trend</span><span class="market-value" id="ticker-trend">—</span></div>
+    <div class="market-item optional"><span class="market-label">Cycle</span><span class="market-value" id="ticker-cycle">—</span></div>
+    <div class="market-item optional"><span class="market-label">On-chain data</span><span class="market-value small" id="data-date">—</span></div>
+  </div>
+
+  <div class="notice" id="data-notice" role="status" hidden><span id="data-notice-text"></span></div>
+  <div class="notice bad" id="validation-banner" role="alert" hidden><span id="validation-message"></span> <button type="button" class="link" id="goto-error">Go to field</button></div>
+  <div class="notice warn" id="warning-banner" role="status" hidden><span id="warning-message"></span></div>
+
+  <div class="page-head">
+    <div>
+      <h1 id="page-title">Overview</h1>
+      <p class="page-sub" id="horizon-label">—</p>
+    </div>
+    <span class="badge" id="plan-status">New loan plan</span>
+  </div>
+
+  <section class="kpis" aria-label="Loan summary">
+    <div class="kpi"><div class="kpi-label">Debt today</div><div class="kpi-value" id="kpi-debt">—</div><div class="kpi-sub" id="kpi-debt-sub">—</div></div>
+    <div class="kpi"><div class="kpi-label">LTV today</div><div class="kpi-value" id="kpi-ltv">—</div><div class="kpi-sub" id="kpi-ltv-sub">—</div></div>
+    <div class="kpi"><div class="kpi-label">Liquidation price · now</div><div class="kpi-value bad" id="kpi-liq">—</div><div class="kpi-sub" id="kpi-liq-sub">—</div></div>
+    <div class="kpi"><div class="kpi-label">Interest</div><div class="kpi-value" id="kpi-interest">—</div><div class="kpi-sub" id="kpi-interest-sub">—</div></div>
+  </section>
+
+  <!-- ---------- OVERVIEW ---------- -->
+  <section class="pane" id="pane-overview" role="tabpanel" aria-labelledby="tab-overview" tabindex="0">
+    <div class="verdict card" id="verdict">
+      <span class="badge" id="verdict-badge">—</span>
+      <p id="verdict-text">—</p>
+    </div>
+
+    <div class="overview-grid">
+      <div class="card chart-card">
+        <div class="card-head">
+          <div><h2>Payoff at exit date</h2><p class="hint" id="payoff-sub">Loan strategy vs. just holding your BTC</p></div>
+          <div class="segmented small" role="radiogroup" aria-label="Profit baseline" id="basis-switch">
+            <button type="button" role="radio" aria-checked="true" data-basis="start">Since borrowing</button>
+            <button type="button" role="radio" aria-checked="false" data-basis="today">From today</button>
+          </div>
+        </div>
+        <div class="chart-topline">
+          <div><div class="overline" id="target-pnl-label">P/L at target</div><div class="hero-num num" id="target-pnl">—</div><div class="hint" id="target-return">—</div></div>
+          <div class="right"><div class="overline">At BTC</div><div class="num strong" id="target-value">—</div><span class="badge" id="target-status">—</span></div>
+        </div>
+        <div class="chart-legend"><span class="legend-item"><i class="swatch"></i>Loan strategy</span><span class="legend-item"><i class="swatch hold"></i>Just holding</span><span class="legend-item"><i class="swatch zone"></i>Liquidation zone</span></div>
+        <div class="chart" id="payoff-chart"></div>
+        <div class="chart-controls"><label for="chart-scrub">Inspect price</label><input class="range" id="chart-scrub" type="range" min="1" max="200000" step="100" value="100000"><output id="scrub-output" for="chart-scrub" aria-live="polite">—</output></div>
+      </div>
+      <div class="stack">
+        <div class="card">
+          <div class="overline">Cycle signal <button type="button" class="tip" data-tip="A weighted mix of on-chain indicators. It describes market context, not your loan’s safety." aria-label="A weighted mix of on-chain indicators; context, not loan safety.">i</button></div>
+          <div class="score-display"><span class="score-number" id="score-number">—</span><span class="score-max">/ 10</span><span class="badge" id="score-badge">Heuristic</span></div>
+          <div class="score-track" id="score-track" aria-hidden="true"></div>
+          <h3 id="score-title">Reading market signals</h3>
+          <p class="hint" id="score-context">—</p>
+          <button type="button" class="link" data-view="signals">Explore signals →</button>
+        </div>
+        <div class="card">
+          <div class="overline">Where the loan went</div>
+          <div class="allocation-track"><div class="allocation-fill" id="allocation-fill"></div></div>
+          <div class="key-row"><span>Bought BTC</span><strong id="allocation-deployed">—</strong></div>
+          <div class="key-row"><span>Kept as cash</span><strong id="allocation-cash">—</strong></div>
+          <div class="key-row total"><span>BTC bought</span><strong id="allocation-btc">—</strong></div>
+          <div class="key-row"><span>Total BTC exposure</span><strong id="allocation-total">—</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <section class="card" id="repay" aria-labelledby="repay-title">
+      <div class="card-head">
+        <div><h2 id="repay-title">If you repay</h2><p class="hint" id="repay-sub">—</p></div>
+        <div class="segmented small" role="radiogroup" aria-label="Repayment timing" id="repay-switch">
+          <button type="button" role="radio" aria-checked="true" data-repay="now">Now</button>
+          <button type="button" role="radio" aria-checked="false" data-repay="exit">At target</button>
+        </div>
+      </div>
+      <div class="repay-headline">
+        <div><div class="overline">BTC left after repaying</div><div class="hero-num num" id="repay-wallet">—</div><p class="hint" id="repay-change">—</p></div>
+        <span class="badge" id="repay-badge">—</span>
+      </div>
+      <div class="wallet-flow" id="repay-flow" role="group" aria-label="How your BTC changes when you repay"></div>
+      <div class="compose">
+        <div class="compose-head"><span>Final wallet vs. just holding</span><strong class="num" id="compose-total">—</strong></div>
+        <div class="compose-track" id="compose-track" aria-hidden="true"></div>
+        <div class="compose-legend"><span><i class="original"></i>Your BTC left</span><span><i class="funded"></i>BTC bought with loan</span><span><i class="benchmark"></i>Just holding</span></div>
+      </div>
+      <p class="hint" id="repay-note"></p>
+      <details class="disclosure">
+        <summary>Show the math</summary>
+        <div class="math-grid">
+          <div id="repay-rows"></div>
+          <div class="formula" id="repay-formula"></div>
+        </div>
+      </details>
+    </section>
+
+    <section class="card" aria-labelledby="checkpoints-title">
+      <div class="card-head"><div><h2 id="checkpoints-title">Price checkpoints</h2><p class="hint" id="checkpoints-sub">—</p></div><button type="button" class="link" data-view="risk">Risk details →</button></div>
+      <div class="level-strip" id="checkpoints"></div>
+    </section>
+  </section>
+
+  <!-- ---------- SCENARIOS ---------- -->
+  <section class="pane" id="pane-scenarios" role="tabpanel" aria-labelledby="tab-scenarios" tabindex="0" hidden>
+    <div class="card">
+      <div class="card-head">
+        <div><h2>Price ladder at exit date</h2><p class="hint" id="ladder-sub">—</p></div>
+        <div><label for="pnl-basis" class="sr-only">Profit and loss basis</label>
+          <select id="pnl-basis" class="select">
+            <option value="pnlStart">P/L since borrowing</option>
+            <option value="pnlToday">P/L from today</option>
+            <option value="loanTrade">Loan trade only (vs. holding)</option>
+            <option value="costBasis">P/L vs. your cost basis</option>
+          </select></div>
+      </div>
+      <div class="chart" id="ladder-chart"></div>
+      <div class="table-wrap" tabindex="0" aria-label="Price ladder table">
+        <table><thead><tr><th scope="col">BTC price</th><th scope="col">vs. now</th><th scope="col">LTV at exit</th><th scope="col">Status</th><th scope="col">Net equity</th><th scope="col" id="ladder-pnl-label">P/L</th></tr></thead><tbody id="ladder-rows"></tbody></table>
+      </div>
+      <p class="table-note" id="ladder-note"></p>
+    </div>
+    <div class="two-col">
+      <div class="card"><div class="card-head"><h2>At your target</h2><span class="badge" id="decomp-badge">—</span></div><div id="decomposition"></div></div>
+      <div class="card notes"><div class="card-head"><h2>How the numbers connect</h2></div>
+        <p>Your original BTC and the BTC bought with the loan keep <strong>separate cost bases</strong>. Unused loan cash stays as cash and is used first when you repay.</p>
+        <div class="formula">Debt at exit = principal × (1 + APR × days from loan date to exit ÷ 365)<br>Equity = all BTC × price + cash − debt at exit<br>P/L since borrowing = equity − your BTC × price when you borrowed<br>P/L from today = equity − today’s equity<br>Loan trade = loan BTC × (price − purchase price) − all interest</div>
+        <p>Below the liquidation price the open-position model stops: real proceeds depend on your lender. A later rebound does not undo an earlier liquidation.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- RISK ---------- -->
+  <section class="pane" id="pane-risk" role="tabpanel" aria-labelledby="tab-risk" tabindex="0" hidden>
+    <div class="three-col">
+      <div class="card"><div class="overline">Drop to margin call · now</div><div class="big-metric" id="risk-buffer">—</div><p class="hint" id="risk-buffer-note">—</p></div>
+      <div class="card"><div class="overline">Chance of touching liquidation in 90 days <button type="button" class="tip" data-tip="Probability BTC dips to your liquidation price at any point in 90 days, assuming random moves at your volatility setting with no trend. Uses the debt you will owe in 90 days. Illustrative only." aria-label="Probability of touching the liquidation price within 90 days under a no-trend random-walk model.">i</button></div><div class="big-metric" id="risk-probability">—</div><p class="hint" id="risk-probability-note">—</p></div>
+      <div class="card"><div class="overline">Reward / risk from today <button type="button" class="tip" data-tip="Upside to the model ceiling ÷ downside to your liquidation price, both measured from the current price." aria-label="Upside to the model ceiling divided by downside to liquidation, from the current price.">i</button></div><div class="big-metric" id="risk-rr">—</div><p class="hint" id="risk-rr-note">—</p></div>
+    </div>
+    <div class="two-col">
+      <div class="card"><div class="card-head"><h2>Liquidation mechanics</h2></div><div id="risk-mechanics"></div></div>
+      <div class="card"><div class="card-head"><h2>If you get a margin call</h2></div><div id="margin-response"></div></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><h2>Price drop stress test</h2><p class="hint">Today’s debt against lower prices.</p></div></div>
+      <div class="table-wrap" tabindex="0" aria-label="Stress test table"><table><thead><tr><th scope="col">Drop</th><th scope="col">BTC price</th><th scope="col">LTV</th><th scope="col">Status</th></tr></thead><tbody id="stress-rows"></tbody></table></div>
+    </div>
+    <div class="card notes">
+      <div class="card-head"><h2>Model assumptions &amp; limits</h2></div>
+      <p><strong>Interest:</strong> simple interest, principal × APR × days ÷ 365. “Now” views use interest to today; target views use interest to your exit date. Fees, tax, slippage and compounding are excluded.</p>
+      <p><strong>90-day probability:</strong> 2Φ[ln(barrier ÷ price) ÷ (σ√(90/365))], the reflection principle for a driftless log-price. The barrier uses the debt you will owe in 90 days. No jumps or volatility changes; not a forecast.</p>
+      <p><strong>Cycle score:</strong> heuristic weights, not backtested probabilities. It is not a borrowing recommendation.</p>
+      <p><a href="https://www.itl.nist.gov/div898/handbook/eda/section3/eda3661.htm" target="_blank" rel="noopener noreferrer">Normal distribution reference</a> · <a href="https://almostsuremath.com/2023/04/18/the-maximum-of-brownian-motion-and-the-reflection-principle/" target="_blank" rel="noopener noreferrer">Reflection principle derivation</a></p>
+    </div>
+  </section>
+
+  <!-- ---------- SIGNALS ---------- -->
+  <section class="pane" id="pane-signals" role="tabpanel" aria-labelledby="tab-signals" tabindex="0" hidden>
+    <div class="signal-grid" id="signal-cards"></div>
+    <div class="two-col">
+      <div class="card"><div class="card-head"><h2>Signal weights</h2><button type="button" class="button small" id="reset-weights">Reset</button></div>
+        <p class="hint">Weights normalize to 100%. Set one to zero to exclude it.</p>
+        <div id="weight-controls"></div><p class="hint" id="weight-note"></p></div>
+      <div class="card"><div class="card-head"><h2 id="cycle-title">Cycle context</h2></div><div id="cycle-context"></div></div>
+    </div>
+    <div class="card notes"><div class="card-head"><h2>Signal reading</h2><span class="badge">Context</span></div><div id="signal-reading"></div></div>
+    <div class="card">
+      <div class="card-head"><div><h2>Data sources &amp; recent snapshots</h2><p class="hint" id="data-provenance">—</p></div></div>
+      <div class="table-wrap" tabindex="0" aria-label="Recent local snapshots"><table><thead><tr><th scope="col">Date</th><th scope="col">MVRV</th><th scope="col">Z-score</th><th scope="col">Report BTC price</th></tr></thead><tbody id="history-rows"></tbody></table></div>
+      <p class="table-note">Up to 14 daily snapshots are kept on this device. Quotes and on-chain reports keep separate dates.</p>
+    </div>
+  </section>
+
+  <!-- ---------- FUTURES ---------- -->
+  <section class="pane" id="pane-futures" role="tabpanel" aria-labelledby="tab-futures" tabindex="0" hidden>
+    <div class="card">
+      <div class="card-head"><div><h2>Loan vs. spot + futures</h2><p class="hint" id="futures-sub">The same extra BTC, opened at your purchase price, over the same loan-date-to-exit window.</p></div><span class="badge">Isolated long</span></div>
+      <div class="three-col inputs">
+        <div class="field"><label for="inp-leverage">Futures leverage</label><div class="input-shell"><input id="inp-leverage" data-field="leverage" type="number" inputmode="decimal" step="any" value="5" aria-describedby="error-leverage" autocomplete="off"><span class="suffix">×</span></div><p class="field-error" id="error-leverage"></p></div>
+        <div class="field"><label for="inp-mm">Maintenance margin</label><div class="input-shell"><input id="inp-mm" data-field="mm" type="number" inputmode="decimal" step="any" value="0.5" aria-describedby="error-mm" autocomplete="off"><span class="suffix">%</span></div><p class="field-error" id="error-mm"></p></div>
+        <div class="field"><label for="inp-funding">Funding APR <button type="button" class="tip" data-tip="Perpetual futures charge (or pay) funding between longs and shorts. This is a flat yearly estimate." aria-label="Perpetual futures funding, as a flat yearly estimate.">i</button></label><div class="input-shell"><input id="inp-funding" data-field="funding" type="number" inputmode="decimal" step="any" value="10" aria-describedby="error-funding" autocomplete="off"><span class="suffix">%</span></div><p class="field-error" id="error-funding"></p></div>
+      </div>
+      <div class="table-wrap" tabindex="0" aria-label="Loan and futures comparison"><table class="compare-table"><thead><tr><th scope="col">Metric</th><th scope="col">BTC-backed loan</th><th scope="col">Spot + futures</th></tr></thead><tbody id="comparison-rows"></tbody></table></div>
+      <p class="table-note">Futures margin is extra cash; your spot BTC stays outside the isolated position. Liquidation = entry × (1 − 1/leverage) ÷ (1 − maintenance margin). Funding drift, fees and margin tiers are excluded.</p>
+    </div>
+    <div class="verdict card"><span class="badge">Trade-off</span><p id="futures-insight">—</p></div>
+  </section>
+
+  <footer class="footer">
+    <span>Scenario estimates, not execution prices.</span>
+    <span id="update-status" role="status">Ready</span>
+    <a href="https://github.com/0xtrvkc/btcLoanAnalyzer" target="_blank" rel="noopener noreferrer">Source</a>
+  </footer>
 </main>
-<footer class="footer">
-<span>BTC LOAN TERMINAL <span class="muted">/ v2.0</span>
-</span>
-<span>Built on <a href="https://github.com/0xtrvkc/btcLoanAnalyzer" target="_blank" rel="noopener noreferrer">0xtrvkc/btcLoanAnalyzer</a>
-</span>
-<span>LOCAL SCENARIOS · USD DENOMINATED</span>
-</footer>
-<aside id="preset-notice" class="preset-notice" role="status" hidden><button id="preset-dismiss" class="button icon" aria-label="Dismiss preset confirmation">×</button><div class="overline">III / POSITION RESTORED</div><h2>Welcome back.</h2><div id="preset-values" class="mono"></div></aside>
-<div class="toast" id="toast" role="status" aria-live="polite">
 </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"><span id="toast-text"></span><button type="button" class="link" id="toast-action" hidden>Undo</button></div>
+
 <script src="assets/user-config.js"></script>
-<script src="assets/engine.js">
-</script>
-<script src="assets/snapshot.js">
-</script>
-<script src="assets/data-client.js">
-</script>
-<script src="assets/report.js">
-</script>
+<script src="assets/engine.js"></script>
+<script src="assets/snapshot.js"></script>
+<script src="assets/data-client.js"></script>
+<script src="assets/report.js"></script>
 <script src="assets/shortcuts.js"></script>
-<script src="assets/app.js">
-</script>
+<script src="assets/app.js"></script>
 </body>
 </html>

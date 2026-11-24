@@ -1,13 +1,13 @@
 {
-  "name": "BTC Loan Terminal",
+  "name": "BTC Loan",
   "short_name": "BTC Loan",
   "description": "BTC collateral, scenarios, signals, and risk.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#090c11",
-  "theme_color": "#090c11",
+  "background_color": "#d9dde2",
+  "theme_color": "#d9dde2",
   "icons": [
     {
       "src": "icons/icon-192.png",
